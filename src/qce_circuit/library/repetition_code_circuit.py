@@ -6,8 +6,8 @@ from typing import List, Union
 
 import numpy as np
 
-from qce_utils.custom_exceptions import ElementNotIncludedException
-from qce_utils.control_interfaces.intrf_channel_identifier import (
+from qce_circuit.custom_exceptions import ElementNotIncludedException
+from qce_circuit.structure.intrf_channel_identifier import (
     IQubitID,
     IEdgeID,
     QubitIDObj,
@@ -18,7 +18,7 @@ from qce_utils.control_interfaces.intrf_connectivity_dance import (
     IFluxDanceLayer,
     FluxDanceLayer,
 )
-from qce_utils.control_interfaces.circuit_definitions import (
+from qce_circuit.structure.circuit_operations import (
     DeclarativeCircuit,
     Reset,
     Identity,
@@ -532,20 +532,24 @@ def get_circuit_qec_with_detectors(connectivity: Connectivity1D, qec_cycles: int
 
 
 if __name__ == '__main__':
-    from qce_utils.addon_stim.circuit_mapper import convert_circuit_to_stim
+    from qce_circuit.visualization.display_circuit import plot_circuit
+    import matplotlib.pyplot as plt
 
-    initial_state: InitialStateContainer = InitialStateContainer(
-        initial_states={
-            qubit_index: InitialStateEnum.ONE if qubit_index in [1, 3, 5, 7] else InitialStateEnum.ZERO
-            for qubit_index in [0, 1, 2, 3, 4, 5, 6, 7, 8]
-        }
-    )
+    initial_state: InitialStateContainer = InitialStateContainer.from_ordered_list([
+        InitialStateEnum.ZERO,
+        InitialStateEnum.ONE,
+        InitialStateEnum.ZERO,
+        InitialStateEnum.ONE,
+        InitialStateEnum.ZERO,
+    ])
     circuit = construct_repetition_code_circuit(
         initial_state=initial_state,
         qec_cycles=6,
     )
     print(initial_state.as_array)
+    plot_circuit(circuit)
+    plt.show()
 
-    stim_circuit = convert_circuit_to_stim(circuit)
-    print(stim_circuit.diagram())
+    # stim_circuit = convert_circuit_to_stim(circuit)
+    # print(stim_circuit.diagram())
 
