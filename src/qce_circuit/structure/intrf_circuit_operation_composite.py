@@ -6,9 +6,9 @@ from dataclasses import dataclass, field
 import warnings
 from typing import List, Iterator, Optional, Dict
 import numpy as np
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.support_classes.utilities_array_shaping import unique_in_order
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.array_manipulation import unique_in_order
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitNode,
     IRelationLink,
     RelationLink,
@@ -18,12 +18,12 @@ from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_op
     ChannelIdentifier,
     ICircuitOperation,
 )
-from qce_utils.graph_traversal.intrf_graph_structure import (
+from qce_circuit.structure.graph_traversal.intrf_graph_structure import (
     IEndpoint,
     GraphNode,
     GraphBranch,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_repetition import (
+from qce_circuit.structure.registry_repetition import (
     IRepetitionStrategy,
     FixedRepetitionStrategy,
 )

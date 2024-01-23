@@ -5,14 +5,14 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Optional
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_registry import (
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.structure.intrf_registry import (
     IRegistryGetter,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_acquisition_operation import (
+from qce_circuit.structure.intrf_acquisition_operation import (
     IAcquisitionOperation,
     AcquisitionIdentifier,
 )

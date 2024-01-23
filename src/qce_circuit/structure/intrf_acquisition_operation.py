@@ -3,8 +3,8 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass, field
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 
 
 @dataclass(frozen=True)

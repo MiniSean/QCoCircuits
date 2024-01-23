@@ -1,9 +1,9 @@
 import unittest
 from numpy.testing import assert_array_equal
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.kernel_calibration import (
+from qce_circuit.structure.acquisition_indexing.kernel_calibration import (
     QutritCalibrationIndexKernel,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_strategy import (
+from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import (
     FixedIndexStrategy,
     RelativeIndexStrategy,
 )

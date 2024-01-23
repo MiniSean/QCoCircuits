@@ -5,26 +5,26 @@ from multipledispatch import dispatch
 from typing import List, Dict
 import numpy as np
 from numpy.typing import NDArray
-from qce_utils.custom_exceptions import NoReferenceOperationException
-from qce_utils.support_classes.utilities_array_shaping import unique_in_order
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.utilities.custom_exceptions import NoReferenceOperationException
+from qce_circuit.utilities.array_manipulation import unique_in_order
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
     CircuitCompositeOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     ChannelIdentifier,
     RelationLink,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_repetition import (
+from qce_circuit.structure.registry_repetition import (
     IRepetitionStrategy,
     FixedRepetitionStrategy,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_acquisition_operation import (
+from qce_circuit.structure.intrf_acquisition_operation import (
     IAcquisitionOperation,
     AcquisitionTag,
 )
-from qce_utils.control_interfaces.circuit_definitions.language.intrf_declarative_circuit import (
+from qce_circuit.language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )

@@ -6,20 +6,19 @@ import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Callable, Optional
-import uuid
 from enum import Enum, unique
-from qce_utils.definitions import Singleton
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.support_classes.readwrite_yaml import (
+from qce_circuit.utilities.singleton_base import Singleton
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.readwrite_yaml import (
     get_yaml_file_path,
     write_yaml,
     read_yaml,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_registry import (
+from qce_circuit.structure.intrf_registry import (
     IRegistry,
     IRegistryGetter,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 
 
 TRegistryKey = str

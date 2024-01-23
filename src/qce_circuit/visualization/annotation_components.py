@@ -3,17 +3,18 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from matplotlib import pyplot as plt, patches as patches
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_draw_component import IDrawComponent
-from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform import (
+from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     TransformAlignment,
     IRectTransform,
     RectTransform,
     FixedPivot,
     FixedLength,
+    Vec2D,
+    Line2D
 )
-from qce_utils.support_classes.geometric_definitions.vector_elements import Vec2D, Line2D
-from qce_utils.control_interfaces.circuit_definitions.visualization.style_manager import (
+from qce_circuit.visualization.style_manager import (
     StyleManager,
     IndicatorStyleSettings,
     HighlightStyleSettings,

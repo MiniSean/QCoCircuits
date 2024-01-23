@@ -2,24 +2,19 @@
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
 from dataclasses import dataclass
-from typing import List, Union
-
+from typing import List, Union, Dict, Tuple, Optional
 import numpy as np
-
-from qce_circuit.custom_exceptions import ElementNotIncludedException
-from qce_circuit.structure.intrf_channel_identifier import (
+from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+from qce_circuit.connectivity import (
+    IConnectivityLayer,
+    IFluxDanceLayer,
+    FluxDanceLayer,
     IQubitID,
     IEdgeID,
     QubitIDObj,
     EdgeIDObj,
 )
-from qce_utils.control_interfaces.intrf_connectivity import IConnectivityLayer
-from qce_utils.control_interfaces.intrf_connectivity_dance import (
-    IFluxDanceLayer,
-    FluxDanceLayer,
-)
 from qce_circuit.structure.circuit_operations import (
-    DeclarativeCircuit,
     Reset,
     Identity,
     Rx180,
@@ -31,20 +26,25 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     Wait,
     DispersiveMeasure,
+)
+from qce_circuit.structure.registry_acquisition import (
     RegistryAcquisitionStrategy,
     AcquisitionRegistry,
-    FixedDurationStrategy,
-    FixedRepetitionStrategy,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import ICircuitOperation
-from qce_utils.addon_stim.circuit_mapper import (
+from qce_circuit.structure.registry_repetition import FixedRepetitionStrategy
+from qce_circuit.structure.registry_duration import FixedDurationStrategy
+from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
+from qce_circuit.language import (
+    DeclarativeCircuit,
+    InitialStateEnum,
+)
+
+from qce_circuit.addon_stim.circuit_operations import (
     DetectorOperation,
     LogicalObservableOperation,
     CoordinateShiftOperation,
-    get_last_acquisition_operation,
 )
-from qce_utils.control_interfaces.circuit_definitions.language.intrf_declarative_circuit import InitialStateEnum
-from typing import Dict, Tuple
 
 
 @dataclass(frozen=True)
@@ -285,6 +285,19 @@ class InitialStateContainer:
             initial_states={i: state for i, state in enumerate(initial_states)}
         )
     # endregion
+
+
+def get_last_acquisition_operation(_circuit: DeclarativeCircuit, qubit_index: Optional[int] = None) -> Optional[IAcquisitionOperation]:
+    """:return: (Optional) last DispersiveMeasure for specific qubit index, added to the circuit."""
+    added_operations: List[ICircuitOperation] = _circuit.operations
+    for i in range(len(added_operations)):
+        operation: ICircuitOperation = added_operations[-1 - i]
+        operation_acceptance: bool = isinstance(operation, IAcquisitionOperation)
+        if operation_acceptance:
+            qubit_index_acceptance: bool = qubit_index is None or operation.qubit_index == qubit_index
+            if qubit_index_acceptance:
+                return operation
+    return None
 
 
 def get_repetition_code_connectivity(initial_state: InitialStateContainer) -> Connectivity1D:

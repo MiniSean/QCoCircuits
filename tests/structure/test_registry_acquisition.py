@@ -1,25 +1,25 @@
 import unittest
 import numpy as np
 from numpy.testing import assert_array_equal
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_acquisition import (
+from qce_circuit.structure.registry_acquisition import (
     AcquisitionRegistry,
     RegistryAcquisitionStrategy,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_repetition import (
+from qce_circuit.structure.registry_repetition import (
     FixedRepetitionStrategy,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_acquisition_operation import (
+from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
 )
-from qce_utils.control_interfaces.circuit_definitions.language.declarative_circuit import (
+from qce_circuit.language.declarative_circuit import (
     IDeclarativeCircuit,
     DeclarativeCircuit,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
     CircuitCompositeOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operations import (
+from qce_circuit.structure.circuit_operations import (
     DispersiveMeasure,
 )
 

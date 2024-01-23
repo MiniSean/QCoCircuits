@@ -7,12 +7,11 @@ from functools import lru_cache
 from enum import unique, Enum, auto
 from typing import TypeVar, Generic, List, Dict, Optional
 from warnings import warn
-from qce_utils.custom_exceptions import (
+from qce_circuit.utilities.custom_exceptions import (
     InterfaceMethodException,
-    NoReferenceOperationException,
     RelationTypeNotImplementedException,
 )
-from qce_utils.custom_warnings import OperationNotFoundWarning
+from qce_circuit.utilities.custom_warnings import OperationNotFoundWarning
 
 
 @unique

@@ -8,16 +8,16 @@ from typing import List, Union
 from enum import Enum, unique
 import numpy as np
 from numpy.typing import NDArray
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     IDurationComponent,
     ChannelIdentifier,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_acquisition_operation import (
+from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
 )
 

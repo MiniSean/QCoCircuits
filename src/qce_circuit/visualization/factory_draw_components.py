@@ -2,15 +2,15 @@
 # Module containing functionality for constructing draw components from operation class types.
 # -------------------------------------------
 from typing import List
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     ChannelIdentifier,
     QubitChannel,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operations import (
+from qce_circuit.structure.circuit_operations import (
     CPhase,
     DispersiveMeasure,
     Rx180,
@@ -26,29 +26,28 @@ from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operatio
     Hadamard,
     Barrier,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_draw_component import IDrawComponent
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_factory_draw_components import (
+from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.intrf_factory_draw_components import (
     IOperationDrawComponentFactory,
     ITransformConstructor,
 )
-from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform import (
+from qce_circuit.utilities.geometric_definitions.intrf_rectilinear_transform import (
     IRectTransform,
-    IPivotStrategy,
     DynamicLength,
     DynamicPivot,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.operation_components import (
+from qce_circuit.visualization.operation_components import (
     RectangleTextBlock,
     BlockRotation,
     BlockMeasure,
     RotationAxis,
     RotationAngle,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.multi_pivot_components import (
+from qce_circuit.visualization.multi_pivot_components import (
     BlockTwoQubitGate,
     BlockVerticalBarrier,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.annotation_components import (
+from qce_circuit.visualization.annotation_components import (
     HorizontalVariableIndicator,
     RoundedRectangleHighlight,
 )

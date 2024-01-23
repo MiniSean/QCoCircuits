@@ -4,9 +4,9 @@
 from dataclasses import dataclass, field
 from typing import List
 from matplotlib import pyplot as plt, patches as patches
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_draw_component import IDrawComponent
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_factory_draw_components import ITransformConstructor
-from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform import (
+from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.intrf_factory_draw_components import ITransformConstructor
+from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     TransformAlignment,
     IRectTransform,
@@ -15,14 +15,15 @@ from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform
     ILengthStrategy,
     DynamicPivot,
     DynamicLength,
+    Vec2D,
+    Line2D,
 )
-from qce_utils.support_classes.geometric_definitions.vector_elements import Vec2D, Line2D
-from qce_utils.control_interfaces.circuit_definitions.visualization.operation_components import (
+from qce_circuit.visualization.operation_components import (
     RotationAngle,
     RotationAxis,
     BlockRotation,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.style_manager import (
+from qce_circuit.visualization.style_manager import (
     StyleManager,
     OperationStyleSettings,
     IndicatorStyleSettings,

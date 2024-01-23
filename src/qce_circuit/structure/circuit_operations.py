@@ -3,24 +3,24 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.structure.intrf_circuit_operation import (
     QubitChannel,
     IRelationLink,
     RelationLink,
     ChannelIdentifier,
     ICircuitOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_acquisition_operation import (
+from qce_circuit.structure.intrf_acquisition_operation import (
     IAcquisitionOperation,
     AcquisitionIdentifier,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_duration import (
+from qce_circuit.structure.registry_duration import (
     IDurationStrategy,
     FixedDurationStrategy,
     GlobalDurationStrategy,
     GlobalRegistryKey,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_acquisition import (
+from qce_circuit.structure.registry_acquisition import (
     IAcquisitionStrategy,
 )
 
@@ -761,11 +761,11 @@ class Barrier(ICircuitOperation):
 
 
 if __name__ == '__main__':
-    from qce_utils.control_interfaces.circuit_definitions.structure.registry_duration import (
+    from qce_circuit.structure.registry_duration import (
         DurationRegistry,
         RegistryDurationStrategy, IDurationStrategy, FixedDurationStrategy,
     )
-    from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+    from qce_circuit.structure.intrf_circuit_operation import (
         RelationLink,
         RelationType,
     )

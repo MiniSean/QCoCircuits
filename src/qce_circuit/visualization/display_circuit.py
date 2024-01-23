@@ -5,7 +5,7 @@ from dataclasses import dataclass
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Optional, TypeVar
-from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operations import (
+from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
     Rx180,
@@ -22,24 +22,24 @@ from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operatio
     Hadamard,
     Barrier,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.annotation_components import (
+from qce_circuit.visualization.annotation_components import (
     HorizontalVariableIndicator,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.channel_components import (
+from qce_circuit.visualization.channel_components import (
     ChannelHeader,
     ChannelBar,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_draw_component import IDrawComponent
-from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform import (
+from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     IRectTransform,
     TransformAlignment,
     DynamicLength,
     FixedLength,
     FixedPivot,
+    Vec2D,
 )
-from qce_utils.support_classes.geometric_definitions.vector_elements import Vec2D
-from qce_utils.control_interfaces.circuit_definitions.visualization.operation_components import (
+from qce_circuit.visualization.operation_components import (
     RotationAxis,
     RotationAngle,
     GateType,
@@ -47,26 +47,26 @@ from qce_utils.control_interfaces.circuit_definitions.visualization.operation_co
     BlockRotation,
     BlockGate,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.multi_pivot_components import (
+from qce_circuit.visualization.multi_pivot_components import (
     BlockTwoQubitGate,
 )
-from qce_utils.control_interfaces.circuit_definitions.language.declarative_circuit import (
+from qce_circuit.language.declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.structure.intrf_circuit_operation import (
     IDurationComponent,
     ICircuitOperation,
     ChannelIdentifier,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_factory_draw_components import (
+from qce_circuit.visualization.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
 )
-from qce_utils.control_interfaces.circuit_definitions.visualization.factory_draw_components import (
+from qce_circuit.visualization.factory_draw_components import (
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
@@ -85,8 +85,8 @@ from qce_utils.control_interfaces.circuit_definitions.visualization.factory_draw
     HadamardFactory,
     BarrierFactory,
 )
-from qce_utils.support_classes.utilities_array_shaping import unique_in_order
-from qce_utils.support_classes.plotting_functionality import (
+from qce_circuit.utilities.array_manipulation import unique_in_order
+from qce_circuit.visualization.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
     IAxesFormat,
@@ -510,19 +510,19 @@ def plot_circuit_description(description: VisualCircuitDescription, **kwargs) ->
 
 
 if __name__ == '__main__':
-    from qce_utils.control_interfaces.circuit_definitions.language.declarative_circuit import (
+    from qce_circuit.language.declarative_circuit import (
         DeclarativeCircuit,
     )
-    from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+    from qce_circuit.structure.intrf_circuit_operation import (
         ICircuitOperation,
         RelationLink,
         RelationType,
     )
-    from qce_utils.control_interfaces.circuit_definitions.structure.registry_duration import (
+    from qce_circuit.structure.registry_duration import (
         DurationRegistry,
         RegistryDurationStrategy,
     )
-    from qce_utils.control_interfaces.circuit_definitions.structure.registry_repetition import (
+    from qce_circuit.structure.registry_repetition import (
         RepetitionRegistry,
         RegistryRepetitionStrategy,
     )

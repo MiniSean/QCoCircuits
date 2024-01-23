@@ -1,10 +1,10 @@
 import unittest
-from qce_utils.control_interfaces.circuit_definitions.language.declarative_circuit import DeclarativeCircuit
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import RelationType
-from qce_utils.control_interfaces.circuit_definitions.structure.registry_repetition import FixedRepetitionStrategy
-from qce_utils.control_interfaces.circuit_definitions.display_circuit import plot_circuit
-from qce_utils.control_interfaces.circuit_definitions.structure.circuit_operations import *
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation_composite import (
+from qce_circuit.language.declarative_circuit import DeclarativeCircuit
+from qce_circuit.structure.intrf_circuit_operation import RelationType
+from qce_circuit.structure.registry_repetition import FixedRepetitionStrategy
+from qce_circuit.display_circuit import plot_circuit
+from qce_circuit.structure.circuit_operations import *
+from qce_circuit.structure.intrf_circuit_operation_composite import (
     OperationGraphNode,
     CircuitCompositeOperation,
 )

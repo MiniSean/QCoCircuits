@@ -5,7 +5,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
+from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
 
 
 class IIndexStrategy(ABC):

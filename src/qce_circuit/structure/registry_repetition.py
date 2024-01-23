@@ -5,12 +5,9 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Callable
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_registry import (
-    IRegistry,
-    IRegistryGetter,
-)
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.structure.intrf_registry import IRegistry
+from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 
 
 class RepetitionRegistry(IRegistry[str, int]):

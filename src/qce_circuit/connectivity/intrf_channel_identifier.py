@@ -6,7 +6,10 @@
 from abc import ABCMeta, abstractmethod, ABC
 from dataclasses import dataclass, field
 from typing import List, Dict
-from qce_utils.custom_exceptions import InterfaceMethodException, IsolatedGroupException
+from qce_circuit.utilities.custom_exceptions import (
+    InterfaceMethodException,
+    IsolatedGroupException,
+)
 
 QID = str  # Might become int in future
 QName = str

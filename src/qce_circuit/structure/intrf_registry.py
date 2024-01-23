@@ -4,7 +4,7 @@
 from abc import ABC, abstractmethod, ABCMeta
 from typing import Generic, TypeVar
 import uuid
-from qce_utils.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 
 
 TRegistryKey = TypeVar('TRegistryKey')

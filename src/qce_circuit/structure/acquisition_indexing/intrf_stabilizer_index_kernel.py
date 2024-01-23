@@ -5,7 +5,7 @@ from abc import abstractmethod, ABCMeta
 import numpy as np
 from numpy.typing import NDArray
 from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
+from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
 from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID
 from qce_utils.qed_error_correction.state_classification.intrf_state_classification import StateKey
 

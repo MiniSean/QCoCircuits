@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from matplotlib import pyplot as plt
-from qce_utils.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 
 
 class IDrawComponent(ABC):

@@ -4,8 +4,8 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from typing import List
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_strategy import IIndexStrategy
+from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
+from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import IIndexStrategy
 from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID
 
 

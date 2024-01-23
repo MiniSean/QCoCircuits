@@ -3,9 +3,8 @@
 # -------------------------------------------
 import os
 from dataclasses import dataclass, field
-import numpy as np
-from qce_utils.definitions import Singleton
-from qce_utils.support_classes.readwrite_yaml import (
+from qce_circuit.utilities.singleton_base import Singleton
+from qce_circuit.utilities.readwrite_yaml import (
     get_yaml_file_path,
     write_yaml,
     read_yaml,
@@ -87,14 +86,14 @@ class StyleSettings:
     # Widths
     width_line: float = field(default=2.0)
     width_line_small: float = field(default=1.0)
-    width_line_icon: float = field(default=13.0)
+    width_line_icon: float = field(default=6.0)
     width_border: float = field(default=2.0)
 
     # Radius
     radius_dot: float = field(default=0.1)
 
     # Font sizes
-    font_size: float = field(default=12.0)
+    font_size: float = field(default=16.0)
     font_size_small: float = field(default=10.0)
 
     # region Class Properties

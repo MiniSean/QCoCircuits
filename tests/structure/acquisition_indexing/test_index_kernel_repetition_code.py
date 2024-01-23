@@ -2,11 +2,11 @@ import unittest
 from typing import List
 import numpy as np
 from numpy.testing import assert_array_equal
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.kernel_repetition_code import (
+from qce_circuit.structure.acquisition_indexing.kernel_repetition_code import (
     RepetitionIndexKernel,
     RepetitionExperimentKernel,
 )
-from qce_utils.control_interfaces.circuit_definitions.structure.acquisition_indexing.intrf_index_strategy import (
+from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import (
     FixedIndexStrategy,
     RelativeIndexStrategy,
 )

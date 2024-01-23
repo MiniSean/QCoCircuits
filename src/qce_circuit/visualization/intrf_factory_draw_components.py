@@ -5,24 +5,22 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Dict, List
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.measurement_control.intrf_factory_manager import IFactoryManager
-from qce_utils.control_interfaces.circuit_definitions.structure.intrf_circuit_operation import (
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.intrf_factory_manager import IFactoryManager
+from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     IDurationComponent,
     ChannelIdentifier,
 )
-from qce_utils.support_classes.geometric_definitions.intrf_rectilinear_transform import (
+from qce_circuit.utilities.geometric_definitions import (
     IRectTransform,
     TransformAlignment,
     RectTransform,
-    DynamicLength,
-    DynamicPivot,
+    Vec2D,
     FixedLength,
     FixedPivot,
 )
-from qce_utils.support_classes.geometric_definitions.vector_elements import Vec2D
-from qce_utils.control_interfaces.circuit_definitions.visualization.intrf_draw_component import (
+from qce_circuit.visualization.intrf_draw_component import (
     IDrawComponent,
 )
 
