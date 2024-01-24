@@ -20,6 +20,10 @@ from qce_circuit.structure.registry_repetition import (
     IRepetitionStrategy,
     FixedRepetitionStrategy,
 )
+from qce_circuit.structure.registry_acquisition import (
+    AcquisitionRegistry,
+    RegistryAcquisitionStrategy,
+)
 from qce_circuit.structure.intrf_acquisition_operation import (
     IAcquisitionOperation,
     AcquisitionTag,
@@ -58,6 +62,11 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         return self._structure.get_sub_composite_operations()
 
     @property
+    def acquisition_registry(self) -> AcquisitionRegistry:
+        """:return: Acquisition Registry."""
+        return self._acquisition_registry
+
+    @property
     def start_time(self) -> float:
         """:return: Start time [a.u.]."""
         return self._structure.start_time
@@ -77,6 +86,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         )
         self._added_operations: List[ICircuitOperation] = list()
         self._initial_state_lookup: Dict[int, InitialStateEnum] = {}
+        self._acquisition_registry: AcquisitionRegistry = AcquisitionRegistry(circuit=self.circuit_structure)
     # endregion
 
     # region Interface Methods
@@ -153,4 +163,8 @@ class DeclarativeCircuit(IDeclarativeCircuit):
                 if key_match:
                     result.append(operation.acquisition_index)
         return np.asarray(result)
+
+    def get_acquisition_strategy(self) -> RegistryAcquisitionStrategy:
+        """:return: Acquisition Strategy based on internal registry."""
+        return RegistryAcquisitionStrategy(registry=self.acquisition_registry)
     # endregion

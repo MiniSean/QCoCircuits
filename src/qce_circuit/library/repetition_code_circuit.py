@@ -311,7 +311,7 @@ def construct_repetition_code_circuit(initial_state: InitialStateContainer, qec_
     connectivity: Connectivity1D = get_repetition_code_connectivity(initial_state=initial_state)
 
     result: DeclarativeCircuit = DeclarativeCircuit()
-    registry: AcquisitionRegistry = AcquisitionRegistry(circuit=result.circuit_structure)
+    registry: AcquisitionRegistry = result.acquisition_registry
     result.add(get_circuit_initialize_with_heralded(
         connectivity=connectivity,
         initial_state=initial_state,

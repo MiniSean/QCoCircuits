@@ -2,7 +2,7 @@ import unittest
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
 from qce_circuit.structure.intrf_circuit_operation import RelationType
 from qce_circuit.structure.registry_repetition import FixedRepetitionStrategy
-from qce_circuit.display_circuit import plot_circuit
+from qce_circuit.visualization.display_circuit import plot_circuit
 from qce_circuit.structure.circuit_operations import *
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     OperationGraphNode,
@@ -59,10 +59,12 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit.add(DispersiveMeasure(
             qubit_index=2,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy()
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=8,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy()
         ))
         plot_circuit(circuit=circuit)
 
@@ -114,14 +116,17 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit.add(DispersiveMeasure(
             qubit_index=2,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=8,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=0,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
 
     def test_circuit_example_2(self):
@@ -181,14 +186,17 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit.add(DispersiveMeasure(
             qubit_index=2,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=8,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=0,
             relation=relation,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
 
     def test_circuit_example_3(self):
@@ -250,6 +258,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
         dynamic_decoupled_measure_circuit.add(DispersiveMeasure(
             qubit_index=8,
+            acquisition_strategy=dynamic_decoupled_measure_circuit.get_acquisition_strategy()
         ))
         dynamic_decoupled_measure_circuit.add(Wait(
             qubit_index=2,
@@ -289,12 +298,15 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit.add(sub_circuit._structure.copy())
         circuit.add(DispersiveMeasure(
             qubit_index=8,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=2,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=0,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
 
     def test_circuit_example_4(self):
@@ -335,6 +347,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
         repeated_parity_circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla_index,
+            acquisition_strategy=repeated_parity_circuit.get_acquisition_strategy()
         ))
         repeated_parity_circuit.add(Wait(
             qubit_index=qubit_data1_index,
@@ -364,12 +377,15 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit.add(individual_parity_circuit._structure)
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data1_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data2_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
 
     def test_circuit_example_5(self):
@@ -419,9 +435,11 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
         repeated_parity_circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla1_index,
+            acquisition_strategy=repeated_parity_circuit.get_acquisition_strategy(),
         ))
         repeated_parity_circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla2_index,
+            acquisition_strategy=repeated_parity_circuit.get_acquisition_strategy(),
         ))
         repeated_parity_circuit.add(Wait(
             qubit_index=qubit_data1_index,
@@ -460,35 +478,45 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         circuit: DeclarativeCircuit = DeclarativeCircuit(nr_qubits=5)
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data3_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data2_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data1_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla1_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla2_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(repeated_parity_circuit._structure)
         circuit.add(individual_parity_circuit._structure)
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla1_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_ancilla2_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data1_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data2_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_data3_index,
+            acquisition_strategy=circuit.get_acquisition_strategy(),
         ))
 
     def test_apply_simple_one_channel_repetition_modifier(self):
@@ -506,7 +534,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         ))
 
         circuit: DeclarativeCircuit = DeclarativeCircuit(nr_qubits=1)
-        circuit.add(repeated_circuit._structure.copy())
+        circuit.add(repeated_circuit)
         circuit.add(Rx90(
             qubit_index=qubit1_index,
         ))
@@ -522,6 +550,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         self.assertEqual(
             len(circuit.operations),
             expected_operation_length,
+            msg="Expects original circuit te remain unaffected by applying the modifiers."
         )
         self.assertEqual(
             len(modified_circuit.operations),
@@ -599,13 +628,13 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
 
         # Nest single circuit in main circuit
         circuit: DeclarativeCircuit = DeclarativeCircuit(nr_qubits=1)
-        circuit.add(repeated_circuit._structure)
-        circuit.add(parallel_circuit._structure)
+        added_repeated_circuit: ICircuitOperation = circuit.add(repeated_circuit)
+        added_parallel_circuit: ICircuitOperation = circuit.add(parallel_circuit)
 
         self.assertEqual(
-            parallel_circuit._structure.relation.reference_node,
-            repeated_circuit._structure,
-            msg=f"Expects relation to be established and not be none. Instead: {parallel_circuit._structure.relation.reference_node}."
+            added_parallel_circuit.relation_link.reference_node,
+            added_repeated_circuit,
+            msg=f"Expects relation to be established and not be none. Instead: {added_parallel_circuit.relation_link.reference_node}."
         )
 
         high_level_nodes: List[OperationGraphNode] = list(circuit._structure._circuit_graph.get_node_iterator())
@@ -791,6 +820,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             repeated_parity_circuit.add(DispersiveMeasure(
                 qubit_index=ancilla_index,
                 relation=relation,
+                acquisition_strategy=repeated_parity_circuit.get_acquisition_strategy(),
             ))
         for data_index in data_indices:
             repeated_parity_circuit.add(Wait(
@@ -813,6 +843,7 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             circuit.add(DispersiveMeasure(
                 qubit_index=qubit_index,
                 relation=relation,
+                acquisition_strategy=circuit.get_acquisition_strategy(),
             ))
 
         # Apply modifier

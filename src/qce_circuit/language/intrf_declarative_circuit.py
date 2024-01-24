@@ -20,6 +20,10 @@ from qce_circuit.structure.intrf_circuit_operation_composite import (
 from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
 )
+from qce_circuit.structure.registry_acquisition import (
+    AcquisitionRegistry,
+    IAcquisitionStrategy,
+)
 
 
 @unique
@@ -82,6 +86,12 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     def composite_operations(self) -> List[ICircuitCompositeOperation]:
         """:return: Array-like of all operations that are of instance ICircuitCompositeOperation."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def acquisition_registry(self) -> AcquisitionRegistry:
+        """:return: Acquisition Registry."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods
@@ -137,5 +147,10 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
         Currently only used for visualization.
         :return: A cosmetic representation of a channels (qubit) initial state. Defaults to InitialStateEnum.ZERO
         """
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def get_acquisition_strategy(self) -> IAcquisitionStrategy:
+        """:return: Acquisition Strategy based on internal registry."""
         raise InterfaceMethodException
     # endregion
