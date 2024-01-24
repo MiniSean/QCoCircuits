@@ -95,8 +95,8 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     # endregion
 
     # region Interface Methods
-    def add(self, operation: Union[ICircuitOperation, 'IDeclarativeCircuit']) -> 'IDeclarativeCircuit':
-        """:return: Self. Adds operation to circuit."""
+    def add(self, operation: Union[ICircuitOperation, 'IDeclarativeCircuit']) -> 'ICircuitOperation':
+        """:return: Added operation. Adds operation to circuit."""
         if isinstance(operation, IDeclarativeCircuit):
             return self.add_declarative_circuit(circuit=operation)
         if isinstance(operation, ICircuitCompositeOperation):
@@ -105,18 +105,18 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
             return self.add_operation(operation=operation)
         raise InterfaceMethodException
 
-    def add_declarative_circuit(self, circuit: 'IDeclarativeCircuit') -> 'IDeclarativeCircuit':
-        """:return: Self. Adds declarative-circuit to circuit."""
+    def add_declarative_circuit(self, circuit: 'IDeclarativeCircuit') -> 'ICircuitOperation':
+        """:return: Added operation. Adds declarative-circuit to circuit."""
         return self.add_sub_circuit(operation=circuit.circuit_structure)
 
     @abstractmethod
-    def add_operation(self, operation: ICircuitOperation) -> 'IDeclarativeCircuit':
-        """:return: Self. Adds operation to circuit."""
+    def add_operation(self, operation: ICircuitOperation) -> 'ICircuitOperation':
+        """:return: Added operation. Adds operation to circuit."""
         raise InterfaceMethodException
 
     @abstractmethod
-    def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'IDeclarativeCircuit':
-        """:return: Self. Adds sub-circuit to circuit."""
+    def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'ICircuitOperation':
+        """:return: Added operation. Adds sub-circuit to circuit."""
         raise InterfaceMethodException
 
     @abstractmethod

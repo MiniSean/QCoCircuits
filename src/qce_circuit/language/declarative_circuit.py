@@ -90,19 +90,19 @@ class DeclarativeCircuit(IDeclarativeCircuit):
     # endregion
 
     # region Interface Methods
-    def add_operation(self, operation: ICircuitOperation) -> 'IDeclarativeCircuit':
-        """:return: Self. Adds operation to circuit."""
+    def add_operation(self, operation: ICircuitOperation) -> 'ICircuitOperation':
+        """:return: Added operation. Adds operation to circuit."""
         self._structure.add(operation)
         self._added_operations.append(operation)
-        return self
+        return operation
 
-    def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'DeclarativeCircuit':
-        """:return: Self. Adds sub-circuit to circuit."""
+    def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'ICircuitCompositeOperation':
+        """:return: Added operation. Adds sub-circuit to circuit."""
         reference_transfer_lookup = {operation: self._structure}
         copied_operation: ICircuitCompositeOperation = operation.copy(relation_transfer_lookup=reference_transfer_lookup)
         self._structure.add(copied_operation)
         self._added_operations.append(copied_operation)
-        return self
+        return copied_operation
 
     def get_last_entry(self) -> ICircuitOperation:
         """:return: Last (circuit) operation entry added to the circuit."""
@@ -120,7 +120,10 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         result: DeclarativeCircuit = DeclarativeCircuit(
             nr_qubits=self.nr_qubits,
         )
-        result._structure = self._structure.apply_modifiers_to_self()
+        relation_transfer_lookup = {self._structure: result._structure}
+        copied_structure = self._structure.copy(relation_transfer_lookup=relation_transfer_lookup)
+        result._structure = copied_structure.apply_modifiers_to_self()
+
         result._added_operations = self._added_operations
         return result
 
