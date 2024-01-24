@@ -4,8 +4,8 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from typing import List
-from qce_utils.custom_exceptions import InterfaceMethodException
-from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
 
 
 class IIndexingKernel(ABC):

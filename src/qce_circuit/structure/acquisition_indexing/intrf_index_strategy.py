@@ -4,7 +4,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from qce_utils.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
 
 

@@ -7,7 +7,7 @@ from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import (
     FixedIndexStrategy,
     RelativeIndexStrategy,
 )
-from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID, QubitIDObj
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 
 
 class QutritCalibrationKernelTestCase(unittest.TestCase):
