@@ -4,10 +4,17 @@
 from abc import abstractmethod, ABCMeta
 import numpy as np
 from numpy.typing import NDArray
-from qce_utils.custom_exceptions import InterfaceMethodException
+from enum import Enum, unique
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
-from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID
-from qce_utils.qed_error_correction.state_classification.intrf_state_classification import StateKey
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
+
+
+@unique
+class StateKey(Enum):
+    STATE_0 = 0
+    STATE_1 = 1
+    STATE_2 = 2
 
 
 class IStabilizerIndexingKernel(IIndexingKernel, metaclass=ABCMeta):
@@ -40,7 +47,7 @@ class IStabilizerIndexingKernel(IIndexingKernel, metaclass=ABCMeta):
         raise InterfaceMethodException
 
     @abstractmethod
-    def get_stabilizer_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
+    def get_stabilizer_and_projected_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
         """
         :param qubit_id: Identifier to which these acquisition indices correspond to.
         :param cycle_stabilizer_count: Identifies the indices to only include cycles with this number of stabilizers.

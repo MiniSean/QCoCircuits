@@ -5,7 +5,6 @@
 from dataclasses import dataclass, field
 from typing import List
 import warnings
-import deprecated
 import numpy as np
 from numpy.typing import NDArray
 from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
@@ -18,10 +17,8 @@ from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import (
 from qce_circuit.structure.acquisition_indexing.kernel_calibration import (
     QutritCalibrationIndexKernel,
 )
-from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID
-from qce_utils.qed_error_correction.state_classification.intrf_state_classification import (
-    StateKey,
-)
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
+from qce_circuit.structure.acquisition_indexing.intrf_stabilizer_index_kernel import StateKey
 
 
 @dataclass(frozen=True)
@@ -245,7 +242,7 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
                 return self.create_sliced_arrays(heralded_indices, self.kernel_cycle_length, self.experiment_repetitions)
         return np.asarray([])  # If kernel with specific number of repeated parities is not found
 
-    def get_stabilizer_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
+    def get_stabilizer_and_projected_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
         """
         Note: Includes final acquisition.
         :param qubit_id: Identifier to which these acquisition indices correspond to.
@@ -270,22 +267,6 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
                 final_measurement_indices = repetition_kernel.get_final_measurement_index(element=qubit_id)
                 return self.create_sliced_arrays(final_measurement_indices, self.kernel_cycle_length,
                                                  self.experiment_repetitions)
-        return np.asarray([])  # If kernel with specific number of repeated parities is not found
-    # endregion
-
-    # region Class Methods
-    @deprecated.deprecated("Stabilizer acquisitions should include final measurement of ancilla qubit.")
-    def get_stabilizer_and_final_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
-        """
-        :param qubit_id: Identifier to which these acquisition indices correspond to.
-        :param cycle_stabilizer_count: Identifies the indices to only include cycles with this number of stabilizers.
-        :return: Tensor of indices pointing at all stabilizer AND projection acquisition within/after stabilizer cycles.
-        """
-        for repetition_kernel in self._repetition_kernels:
-            if repetition_kernel.nr_repeated_parities == cycle_stabilizer_count:
-                stabilizer_measurement_indices = repetition_kernel.get_ordered_stabilizer_measurement_indices(element=qubit_id)
-                final_measurement_indices = repetition_kernel.get_final_measurement_index(element=qubit_id)
-                return self.create_sliced_arrays(stabilizer_measurement_indices + final_measurement_indices, self.kernel_cycle_length, self.experiment_repetitions)
         return np.asarray([])  # If kernel with specific number of repeated parities is not found
     # endregion
 

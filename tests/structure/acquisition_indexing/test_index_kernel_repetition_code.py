@@ -10,7 +10,7 @@ from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import (
     FixedIndexStrategy,
     RelativeIndexStrategy,
 )
-from qce_utils.control_interfaces.intrf_channel_identifier import IQubitID, QubitIDObj
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 
 
 class RepetitionCodeKernelTestCase(unittest.TestCase):
@@ -259,8 +259,7 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
         for i, nr_repeated_parities in enumerate(self.rounds):
             cycle_offset: int = i * use_heralded_initialization + sum(self.rounds[:i])
             assert_array_equal(
-                index_kernel.get_heralded_cycle_acquisition_indices(qubit_id=data_qubit_id,
-                                                                    cycle_stabilizer_count=nr_repeated_parities),
+                index_kernel.get_heralded_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
                     [0 * index_kernel.kernel_cycle_length + cycle_offset],
                     [1 * index_kernel.kernel_cycle_length + cycle_offset],
@@ -270,8 +269,7 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
                 ],
             )
             assert_array_equal(
-                index_kernel.get_heralded_cycle_acquisition_indices(qubit_id=ancilla_qubit_id,
-                                                                    cycle_stabilizer_count=nr_repeated_parities),
+                index_kernel.get_heralded_cycle_acquisition_indices(qubit_id=ancilla_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
                     [0 * index_kernel.kernel_cycle_length + cycle_offset],
                     [1 * index_kernel.kernel_cycle_length + cycle_offset],
@@ -281,31 +279,18 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
                 ],
             )
             assert_array_equal(
-                index_kernel.get_stabilizer_acquisition_indices(qubit_id=data_qubit_id,
-                                                                cycle_stabilizer_count=nr_repeated_parities),
+                index_kernel.get_stabilizer_and_projected_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
-                    [],
-                    [],
-                    [],
-                    [],
-                    [],
+                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
                 ],
-                err_msg="Data qubit are not expected to have stabilizer acquisition indices."
+                err_msg="Data qubit are not expected to have stabilizer acquisition indices. But they are expected to have a single final projected acquisition index."
             )
             assert_array_equal(
-                index_kernel.get_stabilizer_and_final_acquisition_indices(qubit_id=ancilla_qubit_id,
-                                                                          cycle_stabilizer_count=nr_repeated_parities),
-                [
-                    list(range(0 * index_kernel.kernel_cycle_length + cycle_offset + 1, 0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities + 1)),
-                    list(range(1 * index_kernel.kernel_cycle_length + cycle_offset + 1, 1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities + 1)),
-                    list(range(2 * index_kernel.kernel_cycle_length + cycle_offset + 1, 2 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities + 1)),
-                    list(range(3 * index_kernel.kernel_cycle_length + cycle_offset + 1, 3 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities + 1)),
-                    list(range(4 * index_kernel.kernel_cycle_length + cycle_offset + 1, 4 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities + 1)),
-                ],
-            )
-            assert_array_equal(
-                index_kernel.get_projected_cycle_acquisition_indices(qubit_id=data_qubit_id,
-                                                                     cycle_stabilizer_count=nr_repeated_parities),
+                index_kernel.get_projected_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
                     [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
                     [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
@@ -315,8 +300,7 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
                 ],
             )
             assert_array_equal(
-                index_kernel.get_projected_cycle_acquisition_indices(qubit_id=ancilla_qubit_id,
-                                                                     cycle_stabilizer_count=nr_repeated_parities),
+                index_kernel.get_projected_cycle_acquisition_indices(qubit_id=ancilla_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
                     [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
                     [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
