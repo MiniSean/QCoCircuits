@@ -165,7 +165,7 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
     def setUpClass(cls) -> None:
         """Set up for all test cases"""
         cls.start_index: int = 0
-        cls.rounds: List[int] = [3, 6, 2]
+        cls.rounds: List[int] = [0, 3, 6, 2]
         cls.use_heralded_initialization: bool = False
         cls.use_qutrit_calibration_points: bool = True
         cls.nr_experiment_repetitions: int = 5
@@ -206,8 +206,9 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
             self.index_kernel.start_index,
             self.start_index,
         )
+
         count_heralded: int = len(self.rounds) * self.use_heralded_initialization
-        count_parities: int = sum(self.rounds)
+        count_parities: int = sum([1 if round == 0 else round for round in self.rounds])
         count_calibration: int = 3 * (1 + self.use_heralded_initialization) * self.use_qutrit_calibration_points
         self.assertEqual(
             self.index_kernel.stop_index,
@@ -231,7 +232,7 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
             self.start_index,
         )
         count_heralded: int = len(self.rounds) * use_heralded_initialization
-        count_parities: int = sum(self.rounds)
+        count_parities: int = sum([1 if round == 0 else round for round in self.rounds])
         count_calibration: int = 3 * (1 + use_heralded_initialization) * self.use_qutrit_calibration_points
         self.assertEqual(
             index_kernel.stop_index,
@@ -257,7 +258,9 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
         )
 
         for i, nr_repeated_parities in enumerate(self.rounds):
-            cycle_offset: int = i * use_heralded_initialization + sum(self.rounds[:i])
+            cycle_offset: int = i * use_heralded_initialization + sum([1 if round == 0 else round for round in self.rounds[:i]])
+            nr_acquisitions: int = nr_repeated_parities + 1 if nr_repeated_parities == 0 else nr_repeated_parities
+
             assert_array_equal(
                 index_kernel.get_heralded_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
@@ -281,34 +284,47 @@ class RepetitionCodeExperimentKernelTestCase(unittest.TestCase):
             assert_array_equal(
                 index_kernel.get_stabilizer_and_projected_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
-                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
                 ],
                 err_msg="Data qubit are not expected to have stabilizer acquisition indices. But they are expected to have a single final projected acquisition index."
             )
             assert_array_equal(
                 index_kernel.get_projected_cycle_acquisition_indices(qubit_id=data_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
                 [
-                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
+                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
                 ],
             )
-            assert_array_equal(
-                index_kernel.get_projected_cycle_acquisition_indices(qubit_id=ancilla_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
-                [
-                    [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                    [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_repeated_parities],
-                ],
-            )
+            # At 0 QEC-rounds, no final acquisition for ancilla qubits
+            if nr_repeated_parities == 0:
+                assert_array_equal(
+                    index_kernel.get_projected_cycle_acquisition_indices(qubit_id=ancilla_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
+                    [
+                        [],
+                        [],
+                        [],
+                        [],
+                        [],
+                    ],
+                )
+            else:
+                assert_array_equal(
+                    index_kernel.get_projected_cycle_acquisition_indices(qubit_id=ancilla_qubit_id, cycle_stabilizer_count=nr_repeated_parities),
+                    [
+                        [0 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                        [1 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                        [2 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                        [3 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                        [4 * index_kernel.kernel_cycle_length + cycle_offset + nr_acquisitions],
+                    ],
+                )
     # endregion
 
     # region Teardown
