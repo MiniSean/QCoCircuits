@@ -1,0 +1,2 @@
+[run]
+omit = *__init__.py, *run_coverage.py, *venv/*, *AppData/*, *PycQED_py3/*

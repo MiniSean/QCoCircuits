@@ -1,0 +1,13 @@
+# --- Public packages ---
+# General utility
+numpy
+pyyaml
+# lmfit
+# xarray
+# tqdm
+# h5py
+# scikit-learn
+multipledispatch
+coverage
+matplotlib
+stim
