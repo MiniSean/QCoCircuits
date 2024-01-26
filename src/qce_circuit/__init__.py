@@ -41,7 +41,7 @@ from .library.repetition_code_circuit import (
     InitialStateContainer,
     Connectivity1D as RepetitionCodeConnectivity,
 )
-from src.qce_circuit.visualization.display_circuit import plot_circuit
+from .visualization.display_circuit import plot_circuit
 
 __all__ = [
     "DeclarativeCircuit",
