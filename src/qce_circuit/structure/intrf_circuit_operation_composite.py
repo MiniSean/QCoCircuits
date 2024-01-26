@@ -210,10 +210,6 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        # # Used to re-establish relation link
-        # if relation_transfer_lookup is None:
-        #     relation_transfer_lookup = {}
-
         result = CircuitCompositeOperation(
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
             repetition_strategy=self.repetition_strategy,

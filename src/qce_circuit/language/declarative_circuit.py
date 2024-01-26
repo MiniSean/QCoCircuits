@@ -120,10 +120,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         result: DeclarativeCircuit = DeclarativeCircuit(
             nr_qubits=self.nr_qubits,
         )
-        relation_transfer_lookup = {self._structure: result._structure}
-        copied_structure = self._structure.copy(relation_transfer_lookup=relation_transfer_lookup)
-        result._structure = copied_structure.apply_modifiers_to_self()
-
+        result._structure = self._structure.apply_modifiers_to_self()
         result._added_operations = self._added_operations
         return result
 

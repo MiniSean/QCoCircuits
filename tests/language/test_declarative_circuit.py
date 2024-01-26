@@ -549,8 +549,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         modified_circuit = circuit.apply_modifiers()
         self.assertEqual(
             len(circuit.operations),
-            expected_operation_length,
-            msg="Expects original circuit te remain unaffected by applying the modifiers."
+            expected_modified_operation_length,
+            msg="Expects original circuit to be affected by applying the modifiers."
         )
         self.assertEqual(
             len(modified_circuit.operations),
@@ -592,7 +592,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         modified_circuit = circuit.apply_modifiers()
         self.assertEqual(
             len(circuit.operations),
-            expected_operation_length,
+            expected_modified_operation_length,
+            msg="Expects original circuit to be affected by applying the modifiers."
         )
         self.assertEqual(
             len(modified_circuit.operations),
@@ -648,10 +649,10 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         )
         for i in range(len(high_level_nodes)):
             with self.subTest(i):
-                self.assertNotEqual(
+                self.assertEqual(
                     high_level_nodes[i],
                     modified_high_level_nodes[i],
-                    msg="Modified nodes are not equal."
+                    msg="Modified nodes are equal."
                 )
 
         self.assertEqual(

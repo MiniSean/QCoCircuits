@@ -72,16 +72,15 @@ class AcquisitionIdentifierTestCase(unittest.TestCase):
 
         circuit: IDeclarativeCircuit = DeclarativeCircuit()
 
-        registry: AcquisitionRegistry = AcquisitionRegistry(circuit=circuit._structure)
         acquisition_0 = DispersiveMeasure(
             qubit_index=qubit_index,
-            acquisition_strategy=RegistryAcquisitionStrategy(registry=registry),
+            acquisition_strategy=circuit.get_acquisition_strategy(),
             acquisition_tag=tag_heralded,
         )
         circuit.add(acquisition_0)
         acquisition_1 = DispersiveMeasure(
             qubit_index=qubit_index,
-            acquisition_strategy=RegistryAcquisitionStrategy(registry=registry),
+            acquisition_strategy=circuit.get_acquisition_strategy(),
             acquisition_tag=tag_final,
         )
         circuit.add(acquisition_1)
@@ -115,16 +114,15 @@ class AcquisitionIdentifierTestCase(unittest.TestCase):
             repetition_strategy=FixedRepetitionStrategy(repetitions=3)
         )
 
-        registry: AcquisitionRegistry = AcquisitionRegistry(circuit=circuit._structure)
         acquisition_0 = DispersiveMeasure(
             qubit_index=qubit_index,
-            acquisition_strategy=RegistryAcquisitionStrategy(registry=registry),
+            acquisition_strategy=circuit.get_acquisition_strategy(),
             acquisition_tag=tag_heralded,
         )
         circuit.add(acquisition_0)
         acquisition_1 = DispersiveMeasure(
             qubit_index=qubit_index,
-            acquisition_strategy=RegistryAcquisitionStrategy(registry=registry),
+            acquisition_strategy=circuit.get_acquisition_strategy(),
             acquisition_tag=tag_final,
         )
         circuit.add(acquisition_1)
@@ -158,7 +156,7 @@ class AcquisitionIdentifierTestCase(unittest.TestCase):
         tag_final: str = 'final'
 
         sub_circuit: IDeclarativeCircuit = DeclarativeCircuit()
-        sub_registry: AcquisitionRegistry = AcquisitionRegistry(circuit=sub_circuit._structure)
+        sub_registry: AcquisitionRegistry = AcquisitionRegistry(circuit=sub_circuit.circuit_structure)
         sub_circuit.add(DispersiveMeasure(
             qubit_index=qubit_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry=sub_registry),
@@ -171,7 +169,7 @@ class AcquisitionIdentifierTestCase(unittest.TestCase):
         ))
 
         circuit: IDeclarativeCircuit = DeclarativeCircuit()
-        registry: AcquisitionRegistry = AcquisitionRegistry(circuit=circuit._structure)
+        registry: AcquisitionRegistry = AcquisitionRegistry(circuit=circuit.circuit_structure)
         circuit.add(DispersiveMeasure(
             qubit_index=qubit_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry=registry),
