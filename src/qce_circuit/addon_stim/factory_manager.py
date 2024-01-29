@@ -3,10 +3,9 @@
 # -------------------------------------------
 from typing import List, Type, Union
 import stim
-from qce_circuit.utilities.singleton_base import Singleton
+from qce_circuit.utilities.singleton_base import SingletonABCMeta
 from qce_circuit.addon_stim.intrf_stim_factory import (
     IStimCircuitFactory,
-    IStimOperationFactory,
     StimCircuitFactoryManager,
 )
 from qce_circuit.language.intrf_declarative_circuit import IDeclarativeCircuit
@@ -29,16 +28,22 @@ from qce_circuit.addon_stim.circuit_operations import (
     CoordinateShiftOperation,
 )
 from qce_circuit.addon_stim.operation_factories.factory_basic_operations import NameBasedOperationsFactory
+from qce_circuit.addon_stim.operation_factories.factory_barrier_operations import TickOperationsFactory
+from qce_circuit.addon_stim.operation_factories.factory_detector_operations import (
+    DetectorOperationsFactory,
+    CoordinateShiftOperationsFactory,
+    LogicalObservableOperationsFactory,
+)
 
 
-class StimFactoryManager(IStimCircuitFactory):
+class StimFactoryManager(IStimCircuitFactory, metaclass=SingletonABCMeta):
     """
     Behaviour Class, describing default declarative to stim circuit conversion.
     """
     _factory: IStimCircuitFactory = StimCircuitFactoryManager(
         factory_lookup={
             Reset: NameBasedOperationsFactory('R'),
-            Barrier: NameBasedOperationsFactory('TICK'),
+            Barrier: TickOperationsFactory(),
             Hadamard: NameBasedOperationsFactory('H'),
             Identity: NameBasedOperationsFactory('I'),
             CPhase: NameBasedOperationsFactory('CZ'),
@@ -46,9 +51,9 @@ class StimFactoryManager(IStimCircuitFactory):
             Rx180: NameBasedOperationsFactory('X'),
             Rym90: NameBasedOperationsFactory('H'),
             Ry90: NameBasedOperationsFactory('H'),
-            # DetectorOperation: 'DETECTOR',
-            # LogicalObservableOperation: 'OBSERVABLE_INCLUDE',
-            # CoordinateShiftOperation: 'SHIFT_COORDS',
+            DetectorOperation: DetectorOperationsFactory(),
+            LogicalObservableOperation: LogicalObservableOperationsFactory(),
+            CoordinateShiftOperation: CoordinateShiftOperationsFactory(),
         }
     )
 
@@ -70,17 +75,36 @@ class StimFactoryManager(IStimCircuitFactory):
     # endregion
 
 
+def to_stim(circuit: IDeclarativeCircuit, factory: IStimCircuitFactory = StimFactoryManager()) -> stim.Circuit:
+    return factory.construct(circuit=circuit)
+
+
 if __name__ == '__main__':
     from qce_circuit import (
         DeclarativeCircuit,
         plot_circuit,
+    )
+    from qce_circuit.library.repetition_code_circuit import (
+        construct_repetition_code_circuit,
+        InitialStateEnum,
+        InitialStateContainer,
     )
     import matplotlib.pylab as plt
 
     factory = StimFactoryManager()
     circuit = DeclarativeCircuit()
     circuit.add(Hadamard(qubit_index=0))
-    plot_circuit(circuit)
-    stim_circuit = factory.construct(circuit=circuit)
-    print(stim_circuit.diagram())
+
+    rep_circuit = construct_repetition_code_circuit(
+        initial_state=InitialStateContainer.from_ordered_list([
+            InitialStateEnum.ZERO,
+            InitialStateEnum.ONE,
+            InitialStateEnum.ZERO,
+        ]),
+        qec_cycles=5,
+    )
+
+    plot_circuit(rep_circuit)
+    stim_circuit = factory.construct(circuit=rep_circuit)
+    print(stim_circuit.__repr__())
     plt.show()

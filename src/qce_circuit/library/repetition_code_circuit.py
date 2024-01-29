@@ -547,6 +547,7 @@ def get_circuit_qec_with_detectors(connectivity: Connectivity1D, qec_cycles: int
 if __name__ == '__main__':
     from qce_circuit.visualization.display_circuit import plot_circuit
     import matplotlib.pyplot as plt
+    from qce_circuit.addon_stim import to_stim
 
     initial_state: InitialStateContainer = InitialStateContainer.from_ordered_list([
         InitialStateEnum.ZERO,
@@ -563,6 +564,6 @@ if __name__ == '__main__':
     plot_circuit(circuit)
     plt.show()
 
-    # stim_circuit = convert_circuit_to_stim(circuit)
-    # print(stim_circuit.diagram())
+    stim_circuit = to_stim(circuit)
+    print(stim_circuit.diagram())
 
