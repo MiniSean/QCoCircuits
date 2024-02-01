@@ -45,13 +45,15 @@ class DetectorOperationsFactory(IStimOperationFactory):
     # region Interface Methods
     def construct(self, operation: DetectorOperation) -> StimOperationConstructor:
         """:return: Stim operation based on operation type."""
-        if operation.get_stim_arguments() is None:
+        constructor_kwargs = operation.get_stim_arguments()
+        if constructor_kwargs is None:
             print('Detector kwargs are None, expected to fail.')
+            constructor_kwargs = {}
         return StimOperationConstructor(
             _args=(
                 'DETECTOR',
             ),
-            _kwargs=operation.get_stim_arguments(),
+            _kwargs=constructor_kwargs,
         )
     # endregion
 
@@ -64,11 +66,14 @@ class LogicalObservableOperationsFactory(IStimOperationFactory):
     # region Interface Methods
     def construct(self, operation: LogicalObservableOperation) -> StimOperationConstructor:
         """:return: Stim operation based on operation type."""
-        # Guard clause, if operation not p
+        constructor_kwargs = operation.get_stim_arguments()
+        if constructor_kwargs is None:
+            print('Detector kwargs are None, expected to fail.')
+            constructor_kwargs = {}
         return StimOperationConstructor(
             _args=(
                 'OBSERVABLE_INCLUDE',
             ),
-            _kwargs=operation.get_stim_arguments(),
+            _kwargs=constructor_kwargs,
         )
     # endregion
