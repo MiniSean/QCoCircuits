@@ -22,14 +22,24 @@ class PlaquetteStyleSettings:
 
 
 @dataclass(frozen=True)
+class ElementStyleSettings:
+    """
+    Data class, containing (dot) element style settings.
+    """
+    background_color: str
+    dot_radius: float
+
+
+@dataclass(frozen=True)
 class StyleSettings:
     """
     Data class, describing a variety of parameter settings for stylization.
     """
     # Color schemes
-    color_background: str = field(default='white')
+    color_background: str = field(default='lightgrey')
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
+    color_element: str = field(default='black')
 
     # Widths
     width_line: float = field(default=2.0)
@@ -47,6 +57,13 @@ class StyleSettings:
             background_color=self.color_background,
             line_color=self.color_outline,
             line_width=self.width_line,
+        )
+
+    @property
+    def element_style(self) -> ElementStyleSettings:
+        return ElementStyleSettings(
+            background_color=self.color_element,
+            dot_radius=self.radius_dot,
         )
     # endregion
 
