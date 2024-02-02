@@ -2,7 +2,7 @@
 # Module containing rectilinear/draw components that represent layout plaquettes.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 from enum import unique, Enum, auto
 import numpy as np
 from matplotlib import pyplot as plt, patches as patches
@@ -36,6 +36,7 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
     pivot: Vec2D
     width: float
     height: float
+    rotation: float = field(default=0)
     background_type: BackgroundType = field(default=BackgroundType.X)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style)
@@ -59,6 +60,8 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
             xy=self.rectilinear_transform.origin_pivot.to_tuple(),
             width=self.rectilinear_transform.width,
             height=self.rectilinear_transform.height,
+            rotation_point=self.rectilinear_transform.pivot.to_tuple(),
+            angle=self.rotation,
             edgecolor='black',
             facecolor=self.style_settings.background_color,  # Depends on background type
             zorder=1,
@@ -98,8 +101,9 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
     def polygon_vertices(self) -> List[Vec2D]:
         transform: IRectTransform = self.rectilinear_transform
         vertices: List[Vec2D] = [Vec2D(0, 0), Vec2D(-self.width/2, +self.height/2), Vec2D(+self.width/2, +self.height/2)]
-        vertices = [vertex.rotate(np.deg2rad(self.rotation)) for vertex in vertices]
-        vertices = [transform.origin_pivot + vertex for vertex in vertices]
+        vertices = [transform.pivot + vertex for vertex in vertices]
+        rotation_pivot: Vec2D = transform.pivot
+        vertices = [vertex.rotate(np.deg2rad(self.rotation), rotation_pivot.to_tuple()) for vertex in vertices]
         return vertices
     # endregion
 

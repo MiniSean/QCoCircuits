@@ -37,29 +37,54 @@ class VisualConnectivityDescription:
     Implements basic visualization.
     """
     connectivity: ISurfaceCodeLayer
-    layout_spacing: float = field(default=1)
-    rotation: float = field(default=45)
+    layout_spacing: float = field(default=1.0)
+    pivot: Vec2D = field(default=Vec2D(0, 0))
+    rotation: float = field(default=-55)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
         result: List[IDrawComponent] = []
+        diagonal_spacing: float = self.layout_spacing * np.sqrt(2)
+
         for parity_group in self.connectivity.parity_group_x:
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
-                        width=self.layout_spacing,
-                        height=self.layout_spacing,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        width=diagonal_spacing,
+                        height=diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
                     )
                 )
             if len(parity_group.data_ids) == 2:
                 result.append(
                     TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
-                        width=self.layout_spacing,
-                        height=self.layout_spacing,
-                        rotation=90,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        width=diagonal_spacing,
+                        height=diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        alignment=TransformAlignment.MID_CENTER,
+                    )
+                )
+        for parity_group in self.connectivity.parity_group_z:
+            if len(parity_group.data_ids) == 4:
+                result.append(
+                    RectanglePlaquette(
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        width=diagonal_spacing,
+                        height=diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        alignment=TransformAlignment.MID_CENTER,
+                    )
+                )
+            if len(parity_group.data_ids) == 2:
+                result.append(
+                    TrianglePlaquette(
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        width=diagonal_spacing,
+                        height=diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
                     )
                 )
@@ -68,14 +93,14 @@ class VisualConnectivityDescription:
     def get_element_components(self) -> List[IDrawComponent]:
         return [
             DotComponent(
-                pivot=self.identifier_to_pivot(qubit_id),
+                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for qubit_id in self.connectivity.qubit_ids
         ]
 
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
-        """:return: Pivot based on channel identifier and duration component."""
+        """:return: Pivot based on qubit identifier."""
         # Surface-17 layout
         map_qubits: Dict[IQubitID, Vec2D] = {
             QubitIDObj('Z3'): Vec2D(-2, -1) * self.layout_spacing,
@@ -97,8 +122,27 @@ class VisualConnectivityDescription:
             QubitIDObj('D1'): Vec2D(0, -2) * self.layout_spacing,
         }
         if identifier in map_qubits:
-            return map_qubits[identifier].rotate(np.deg2rad(self.rotation))
-        return (Vec2D(0, 0) * self.layout_spacing).rotate(np.deg2rad(self.rotation))  # Default
+            return map_qubits[identifier].rotate(np.deg2rad(self.rotation)) + self.pivot
+        return self.pivot  # Default
+
+    def identifier_to_rotation(self, identifier: IQubitID) -> float:
+        """:return: Rotation based on (parity group) ancilla identifier."""
+        rotation_offset: float = -45
+
+        # Surface-17 layout
+        map_qubits: Dict[IQubitID, float] = {
+            QubitIDObj('Z3'): self.rotation + rotation_offset + 0,
+            QubitIDObj('X4'): self.rotation + rotation_offset + 270,
+            QubitIDObj('Z4'): self.rotation + rotation_offset,
+            QubitIDObj('X3'): self.rotation + rotation_offset,
+            QubitIDObj('X2'): self.rotation + rotation_offset,
+            QubitIDObj('Z1'): self.rotation + rotation_offset,
+            QubitIDObj('X1'): self.rotation + rotation_offset + 90,
+            QubitIDObj('Z2'): self.rotation + rotation_offset + 180,
+        }
+        if identifier in map_qubits:
+            return map_qubits[identifier]
+        return self.rotation  # default
     # endregion
 
 
