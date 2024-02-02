@@ -27,7 +27,8 @@ class ElementStyleSettings:
     Data class, containing (dot) element style settings.
     """
     background_color: str
-    dot_radius: float
+    line_color: str
+    element_radius: float
 
 
 @dataclass(frozen=True)
@@ -36,34 +37,54 @@ class StyleSettings:
     Data class, describing a variety of parameter settings for stylization.
     """
     # Color schemes
-    color_background: str = field(default='lightgrey')
+    color_background_x: str = field(default='#7ba3e3')
+    color_background_z: str = field(default='#3870c9')
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
-    color_element: str = field(default='black')
+    color_element: str = field(default='#7ba3e3')
+    color_element_outline: str = field(default='#1c50a3')
 
     # Widths
     width_line: float = field(default=2.0)
 
     # Radius
-    radius_dot: float = field(default=0.1)
+    radius_dot: float = field(default=0.2)
+    radius_hexagon: float = field(default=0.3)
 
     # Font sizes
     font_size: float = field(default=12.0)
 
     # region Class Properties
     @property
-    def plaquette_style(self) -> PlaquetteStyleSettings:
+    def plaquette_style_x(self) -> PlaquetteStyleSettings:
         return PlaquetteStyleSettings(
-            background_color=self.color_background,
+            background_color=self.color_background_x,
             line_color=self.color_outline,
             line_width=self.width_line,
         )
 
     @property
-    def element_style(self) -> ElementStyleSettings:
+    def plaquette_style_z(self) -> PlaquetteStyleSettings:
+        return PlaquetteStyleSettings(
+            background_color=self.color_background_z,
+            line_color=self.color_outline,
+            line_width=self.width_line,
+        )
+
+    @property
+    def dot_style(self) -> ElementStyleSettings:
         return ElementStyleSettings(
             background_color=self.color_element,
-            dot_radius=self.radius_dot,
+            line_color=self.color_element,
+            element_radius=self.radius_dot,
+        )
+
+    @property
+    def hexagon_style(self) -> ElementStyleSettings:
+        return ElementStyleSettings(
+            background_color=self.color_element_outline,
+            line_color=self.color_element_outline,
+            element_radius=self.radius_hexagon,
         )
     # endregion
 

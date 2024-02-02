@@ -3,9 +3,7 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from typing import Dict, List
-
 import numpy as np
-
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.utilities.geometric_definitions import (
@@ -13,12 +11,14 @@ from qce_circuit.utilities.geometric_definitions import (
     Vec2D,
 )
 from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_layout.style_manager import StyleManager
 from qce_circuit.visualization.visualize_layout.plaquette_components import (
     RectanglePlaquette,
     TrianglePlaquette,
 )
 from qce_circuit.visualization.visualize_layout.element_components import (
-    DotComponent
+    DotComponent,
+    HexagonComponent,
 )
 from qce_circuit.visualization.plotting_functionality import (
     construct_subplot,
@@ -55,6 +55,7 @@ class VisualConnectivityDescription:
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_x,
                     )
                 )
             if len(parity_group.data_ids) == 2:
@@ -65,6 +66,7 @@ class VisualConnectivityDescription:
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_x,
                     )
                 )
         for parity_group in self.connectivity.parity_group_z:
@@ -76,6 +78,7 @@ class VisualConnectivityDescription:
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_z,
                     )
                 )
             if len(parity_group.data_ids) == 2:
@@ -86,13 +89,15 @@ class VisualConnectivityDescription:
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group.ancilla_id),
                         alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_z,
                     )
                 )
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
         return [
-            DotComponent(
+            HexagonComponent(
+                rotation=self.identifier_to_rotation(qubit_id),
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
@@ -128,6 +133,7 @@ class VisualConnectivityDescription:
     def identifier_to_rotation(self, identifier: IQubitID) -> float:
         """:return: Rotation based on (parity group) ancilla identifier."""
         rotation_offset: float = -45
+        hexagon_rotation: float = 30
 
         # Surface-17 layout
         map_qubits: Dict[IQubitID, float] = {
@@ -139,6 +145,15 @@ class VisualConnectivityDescription:
             QubitIDObj('Z1'): self.rotation + rotation_offset,
             QubitIDObj('X1'): self.rotation + rotation_offset + 90,
             QubitIDObj('Z2'): self.rotation + rotation_offset + 180,
+            QubitIDObj('D1'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D2'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D3'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D4'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D5'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D6'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D7'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D8'): self.rotation + rotation_offset + hexagon_rotation,
+            QubitIDObj('D9'): self.rotation + rotation_offset + hexagon_rotation,
         }
         if identifier in map_qubits:
             return map_qubits[identifier]

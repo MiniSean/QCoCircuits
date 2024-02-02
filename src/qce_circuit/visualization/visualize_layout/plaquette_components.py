@@ -39,7 +39,7 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
     rotation: float = field(default=0)
     background_type: BackgroundType = field(default=BackgroundType.X)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style)
+    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style_x)
 
     # region Interface Properties
     @property
@@ -62,7 +62,7 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
             height=self.rectilinear_transform.height,
             rotation_point=self.rectilinear_transform.pivot.to_tuple(),
             angle=self.rotation,
-            edgecolor='black',
+            edgecolor='none',
             facecolor=self.style_settings.background_color,  # Depends on background type
             zorder=1,
         )
@@ -82,7 +82,7 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
     rotation: float = field(default=0)
     background_type: BackgroundType = field(default=BackgroundType.X)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style)
+    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style_x)
 
     # region Interface Properties
     @property
@@ -102,6 +102,7 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
         transform: IRectTransform = self.rectilinear_transform
         vertices: List[Vec2D] = [Vec2D(0, 0), Vec2D(-self.width/2, +self.height/2), Vec2D(+self.width/2, +self.height/2)]
         vertices = [transform.pivot + vertex for vertex in vertices]
+        # Apply rotation
         rotation_pivot: Vec2D = transform.pivot
         vertices = [vertex.rotate(np.deg2rad(self.rotation), rotation_pivot.to_tuple()) for vertex in vertices]
         return vertices
@@ -113,7 +114,7 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
         rectangle = patches.Polygon(
             [vertex.to_tuple() for vertex in self.polygon_vertices],
             closed=True,
-            edgecolor='black',
+            edgecolor='none',
             facecolor=self.style_settings.background_color,  # Depends on background type
             zorder=1,
         )
