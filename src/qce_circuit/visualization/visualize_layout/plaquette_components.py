@@ -64,7 +64,7 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
             angle=self.rotation,
             edgecolor='none',
             facecolor=self.style_settings.background_color,  # Depends on background type
-            zorder=1,
+            zorder=self.style_settings.zorder,
         )
         axes.add_patch(rectangle)
         return axes
@@ -116,7 +116,7 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
             closed=True,
             edgecolor='none',
             facecolor=self.style_settings.background_color,  # Depends on background type
-            zorder=1,
+            zorder=self.style_settings.zorder,
         )
         axes.add_patch(rectangle)
         return axes

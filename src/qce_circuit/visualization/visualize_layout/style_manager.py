@@ -19,6 +19,7 @@ class PlaquetteStyleSettings:
     background_color: str
     line_color: str
     line_width: float
+    zorder: int
 
 
 @dataclass(frozen=True)
@@ -29,6 +30,18 @@ class ElementStyleSettings:
     background_color: str
     line_color: str
     element_radius: float
+    zorder: int
+
+
+@dataclass(frozen=True)
+class LineSettings:
+    """
+    Data class, containing line style settings.
+    """
+    line_color: str
+    line_width: float
+    line_style: str
+    zorder: int
 
 
 @dataclass(frozen=True)
@@ -41,11 +54,12 @@ class StyleSettings:
     color_background_z: str = field(default='#3870c9')
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
-    color_element: str = field(default='#7ba3e3')
+    color_element: str = field(default='#b3c7e8')
     color_element_outline: str = field(default='#1c50a3')
 
     # Widths
-    width_line: float = field(default=2.0)
+    width_line_small: float = field(default=2.0)
+    width_line_large: float = field(default=8.0)
 
     # Radius
     radius_dot: float = field(default=0.2)
@@ -54,13 +68,19 @@ class StyleSettings:
     # Font sizes
     font_size: float = field(default=12.0)
 
+    # Draw order
+    zorder_plaquette: int = field(default=-1)
+    zorder_element: int = field(default=3)
+    zorder_line: int = field(default=1)
+
     # region Class Properties
     @property
     def plaquette_style_x(self) -> PlaquetteStyleSettings:
         return PlaquetteStyleSettings(
             background_color=self.color_background_x,
             line_color=self.color_outline,
-            line_width=self.width_line,
+            line_width=self.width_line_small,
+            zorder=self.zorder_plaquette,
         )
 
     @property
@@ -68,7 +88,8 @@ class StyleSettings:
         return PlaquetteStyleSettings(
             background_color=self.color_background_z,
             line_color=self.color_outline,
-            line_width=self.width_line,
+            line_width=self.width_line_small,
+            zorder=self.zorder_plaquette,
         )
 
     @property
@@ -77,6 +98,7 @@ class StyleSettings:
             background_color=self.color_element,
             line_color=self.color_element,
             element_radius=self.radius_dot,
+            zorder=self.zorder_element,
         )
 
     @property
@@ -85,6 +107,16 @@ class StyleSettings:
             background_color=self.color_element_outline,
             line_color=self.color_element_outline,
             element_radius=self.radius_hexagon,
+            zorder=self.zorder_element,
+        )
+
+    @property
+    def line_style(self) -> LineSettings:
+        return LineSettings(
+            line_color=self.color_outline,
+            line_width=self.width_line_large,
+            line_style='-',
+            zorder=self.zorder_line,
         )
     # endregion
 

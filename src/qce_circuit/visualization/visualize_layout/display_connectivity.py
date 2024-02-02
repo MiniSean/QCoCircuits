@@ -20,6 +20,10 @@ from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
     HexagonComponent,
 )
+from qce_circuit.visualization.visualize_layout.polygon_component import (
+    PolylineComponent,
+)
+from qce_circuit.visualization.display_circuit import CircuitAxesFormat
 from qce_circuit.visualization.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
@@ -39,7 +43,7 @@ class VisualConnectivityDescription:
     connectivity: ISurfaceCodeLayer
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
-    rotation: float = field(default=-55)
+    rotation: float = field(default=-45)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
@@ -96,12 +100,33 @@ class VisualConnectivityDescription:
 
     def get_element_components(self) -> List[IDrawComponent]:
         return [
-            HexagonComponent(
-                rotation=self.identifier_to_rotation(qubit_id),
+            # HexagonComponent(
+            #     rotation=self.identifier_to_rotation(qubit_id),
+            #     pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+            #     alignment=TransformAlignment.MID_CENTER,
+            # )
+            DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for qubit_id in self.connectivity.qubit_ids
+        ]
+
+    def get_line_components(self) -> List[IDrawComponent]:
+        return [
+            PolylineComponent(
+                vertices=[
+                    self.identifier_to_pivot(QubitIDObj('D7')),
+                    self.identifier_to_pivot(QubitIDObj('Z3')),
+                    self.identifier_to_pivot(QubitIDObj('D4')),
+                    self.identifier_to_pivot(QubitIDObj('Z1')),
+                    self.identifier_to_pivot(QubitIDObj('D5')),
+                    self.identifier_to_pivot(QubitIDObj('Z4')),
+                    self.identifier_to_pivot(QubitIDObj('D6')),
+                    self.identifier_to_pivot(QubitIDObj('Z2')),
+                    self.identifier_to_pivot(QubitIDObj('D3')),
+                ],
+            )
         ]
 
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
@@ -163,7 +188,7 @@ class VisualConnectivityDescription:
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
-    # kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
+    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
 
@@ -171,6 +196,9 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
         draw_component.draw(axes=ax)
 
     for draw_component in description.get_element_components():
+        draw_component.draw(axes=ax)
+
+    for draw_component in description.get_line_components():
         draw_component.draw(axes=ax)
 
     ax.set_aspect('equal')

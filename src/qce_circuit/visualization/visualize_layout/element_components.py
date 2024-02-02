@@ -49,7 +49,7 @@ class DotComponent(IRectTransformComponent, IDrawComponent):
             xy=self.rectilinear_transform.center_pivot.to_tuple(),
             radius=self.style_settings.element_radius,
             color=self.style_settings.background_color,
-            zorder=2,
+            zorder=self.style_settings.zorder,
         )
         # Apply patches
         axes.add_patch(dot)
@@ -106,7 +106,7 @@ class HexagonComponent(IRectTransformComponent, IDrawComponent):
             [vertex.to_tuple() for vertex in self.hexagon_vertices],
             closed=True,
             color=self.style_settings.background_color,
-            zorder=2,
+            zorder=self.style_settings.zorder,
         )
         # Apply patches
         axes.add_patch(hexagon)
