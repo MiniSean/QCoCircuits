@@ -25,8 +25,8 @@ class CoordinateShiftOperation(Barrier, ICircuitOperation):
     Basic channel operation covers all qubit channels.
     """
     duration_strategy: IDurationStrategy = field(init=False, default=FixedDurationStrategy(duration=0.0))
-    time_shift: int = field(init=True, default=0),
-    space_shift: int = field(init=True, default=0),
+    time_shift: int = field(init=True, default=0)
+    space_shift: int = field(init=True, default=0)
 
     # region Interface Methods
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'CoordinateShiftOperation':
