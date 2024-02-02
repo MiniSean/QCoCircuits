@@ -51,7 +51,7 @@ class StyleSettings:
     """
     # Color schemes
     color_background_x: str = field(default='#7ba3e3')
-    color_background_z: str = field(default='#3870c9')
+    color_background_z: str = field(default='#2bab4b')  # '#3870c9'
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
     color_element: str = field(default='#b3c7e8')
