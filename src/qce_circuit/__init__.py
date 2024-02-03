@@ -70,6 +70,7 @@ __all__ = [
     "connectivity_repetition_code",
     "circuit_repetition_code",
     "InitialStateContainer",
+    "InitialStateEnum",
     "RepetitionCodeConnectivity",
     "plot_circuit",
 ]

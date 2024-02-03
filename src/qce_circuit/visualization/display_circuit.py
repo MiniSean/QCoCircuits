@@ -313,6 +313,10 @@ class CircuitAxesFormat(IAxesFormat):
         """
         axes.set_axisbelow(True)  # Puts grid on background
         axes.set_aspect('equal', adjustable='box')  # Ensures the aspect ratio stays equal and adapts to internal data
+        # Assuming ax is an Axes instance
+        fig = axes.get_figure()
+        fig.subplots_adjust(left=0.0, bottom=0.0, right=1.0, top=1.0, wspace=0.0, hspace=0.0)
+
         # Remove ticks
         axes.set_xticks([])
         axes.set_yticks([])
