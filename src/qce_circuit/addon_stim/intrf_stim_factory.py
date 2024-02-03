@@ -1,5 +1,5 @@
 # -------------------------------------------
-# Module containing conversion factory for stim circuit.
+# Module containing interface for conversion factory for stim circuit.
 # -------------------------------------------
 from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass, field
@@ -108,7 +108,7 @@ class StimCircuitFactoryManager(IStimCircuitFactory):
         if isinstance(circuit, IDeclarativeCircuit):
             process_circuit = circuit.circuit_structure
 
-        for operation_node in  process_circuit._circuit_graph.get_node_iterator():
+        for operation_node in process_circuit._circuit_graph.get_node_iterator():
             operation: ICircuitOperation = operation_node.operation
 
             # Recursion, if operation is a composite operation
