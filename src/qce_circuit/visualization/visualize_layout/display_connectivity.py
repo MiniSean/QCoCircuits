@@ -188,6 +188,7 @@ class VisualConnectivityDescription:
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5, 5)
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
