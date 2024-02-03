@@ -210,7 +210,6 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
 
 if __name__ == '__main__':
     from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
-    from qce_circuit.connectivity.connectivity_repetition_code import Repetition9Layer
     import matplotlib.pyplot as plt
 
     layout = Surface17Layer()
