@@ -27,8 +27,6 @@ from qce_circuit.visualization.display_circuit import CircuitAxesFormat
 from qce_circuit.visualization.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
-    IAxesFormat,
-    AxesFormat,
     LabelFormat,
     IFigureAxesPair,
 )
@@ -206,18 +204,3 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
     ax.set_xlim([-3, 3])
     ax.set_ylim([-3, 3])
     return fig, ax
-
-
-if __name__ == '__main__':
-    from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
-    import matplotlib.pyplot as plt
-
-    layout = Surface17Layer()
-    descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
-        connectivity=layout,
-        layout_spacing=1.0
-    )
-    print(descriptor.get_plaquette_components())
-    plot_layout_description(descriptor)
-
-    plt.show()
