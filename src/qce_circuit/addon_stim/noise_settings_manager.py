@@ -22,6 +22,21 @@ class OperationDurationParameters:
     duration_h: float = field(default=20e-9)
     duration_x: float = field(default=20e-9)
 
+    # region Class Properties
+    @property
+    def duration_mapper(self) -> Dict[str, float]:
+        return {
+            'MZ': self.duration_mz,
+            'CZ': self.duration_cz,
+            'H': self.duration_h,
+            'X': self.duration_x,
+        }
+
+    @property
+    def default_duration(self) -> float:
+        return 0.0
+    # endregion
+
 
 @dataclass(frozen=True)
 class QubitNoiseModelParameters:
@@ -134,6 +149,12 @@ class IndexedNoiseSettings:
             return self.noise_settings.get_noise_settings(qubit_id)
         return self.noise_settings.get_default_noise_settings()
 
+    def get_operation_duration(self, identifier: str) -> float:
+        duration_mapper: Dict[str, float] = self.noise_settings.operation_durations.duration_mapper
+        if identifier in duration_mapper:
+            return duration_mapper[identifier]
+        return self.noise_settings.operation_durations.default_duration
+
     @classmethod
     def from_noise_manager(cls, qubit_ids: List[IQubitID]) -> 'IndexedNoiseSettings':
         return IndexedNoiseSettings(
@@ -144,23 +165,3 @@ class IndexedNoiseSettings:
             },
         )
     # endregion
-
-
-if __name__ == '__main__':
-    from pprint import pprint
-
-    settings = NoiseSettings(
-        individual_noise={
-            QubitIDObj('D3'): QubitNoiseModelParameters(
-                t1=20e-6,
-                t2=40e-6,
-                assignment_error=0.02,
-                single_qubit_gate_error=0.01,
-            )
-        }
-    )
-    settings = NoiseSettingManager.read_config()
-    settings_dict = settings.to_dict()
-    reconstructed_settings = NoiseSettings.from_dict(settings_dict)
-    pprint(settings_dict)
-    pprint(reconstructed_settings)
