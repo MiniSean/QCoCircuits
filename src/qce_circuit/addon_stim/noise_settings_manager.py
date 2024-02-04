@@ -3,8 +3,8 @@
 # Allows for importing noise settings from config *.yaml file.
 # -------------------------------------------
 import os
-from dataclasses import dataclass, field, asdict
-from typing import Dict, List
+from dataclasses import dataclass, field, asdict, fields, is_dataclass
+from typing import Dict, List, Any, get_type_hints
 from qce_circuit.utilities.singleton_base import Singleton
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.utilities.readwrite_yaml import (
@@ -12,6 +12,26 @@ from qce_circuit.utilities.readwrite_yaml import (
     write_yaml,
     read_yaml,
 )
+
+
+def typecast_dataclass_fields(instance: Any):
+    """Typecasts the fields of a dataclass instance based on their annotations."""
+    if not is_dataclass(instance):
+        raise ValueError("typecast_dataclass_fields should only be called with dataclass instances")
+
+    type_hints = get_type_hints(instance.__class__)
+
+    for _field in fields(instance):
+        field_name = _field.name
+        current_value = getattr(instance, field_name)
+        desired_type = type_hints[field_name]
+
+        # Cast the current value to the desired type
+        try:
+            casted_value = desired_type(current_value)
+            object.__setattr__(instance, field_name, casted_value)
+        except ValueError as e:
+            raise TypeError(f"Could not convert field {field_name} to {desired_type}") from e
 
 
 @dataclass(frozen=True)
@@ -37,6 +57,11 @@ class OperationDurationParameters:
         return 0.0
     # endregion
 
+    # region Class Methods
+    def __post_init__(self):
+        typecast_dataclass_fields(self)
+    # endregion
+
 
 @dataclass(frozen=True)
 class QubitNoiseModelParameters:
@@ -45,6 +70,11 @@ class QubitNoiseModelParameters:
     t2: float = field(default=2e-3)
     assignment_error: float = field(default=0.0)
     single_qubit_gate_error: float = field(default=0.0)
+
+    # region Class Methods
+    def __post_init__(self):
+        typecast_dataclass_fields(self)
+    # endregion
 
 
 @dataclass(frozen=True)
