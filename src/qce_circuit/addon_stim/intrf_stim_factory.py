@@ -27,30 +27,6 @@ class IStimCircuitFactory(IFactoryManager[Type[ICircuitOperation]], metaclass=AB
     # endregion
 
 
-class IStimOperationConstructor(ABC):
-
-    # region Interface Properties
-    @property
-    @abstractmethod
-    def args(self) -> Tuple:
-        """:return: Constructor arguments."""
-        raise InterfaceMethodException
-
-    @property
-    @abstractmethod
-    def kwargs(self) -> Dict:
-        """:return: Constructor keyword arguments."""
-        raise InterfaceMethodException
-    # endregion
-
-    # # region Interface Methods
-    # @abstractmethod
-    # def append_to_circuit(self, reference_circuit: TStimCircuit) -> TStimCircuit:
-    #     """:return: Reference Stim-circuit after appending operation."""
-    #     raise InterfaceMethodException
-    # # endregion
-
-
 class IStimOperationFactory(ABC):
     """
     Interface class, describing methods for constructing stim-operation from circuit operation.
@@ -58,30 +34,9 @@ class IStimOperationFactory(ABC):
 
     # region Interface Methods
     @abstractmethod
-    def construct(self, operation: ICircuitOperation) -> IStimOperationConstructor:
+    def construct(self, operation: ICircuitOperation) -> stim.CircuitInstruction:
         """:return: Stim operation based on operation type."""
         raise InterfaceMethodException
-    # endregion
-
-
-@dataclass(frozen=True)
-class StimOperationConstructor(IStimOperationConstructor):
-    """
-    Data class, containing construction (keyword) arguments.
-    """
-    _args: Tuple = field(default_factory=tuple)
-    _kwargs: Dict = field(default_factory=dict)
-
-    # region Interface Properties
-    @property
-    def args(self) -> Tuple:
-        """:return: Constructor arguments."""
-        return self._args
-
-    @property
-    def kwargs(self) -> Dict:
-        """:return: Constructor keyword arguments."""
-        return self._kwargs
     # endregion
 
 
@@ -121,8 +76,8 @@ class StimCircuitFactoryManager(IStimCircuitFactory):
             if not operation_supported:
                 continue  # TODO: Maybe provide warning for skipped operation.
 
-            stim_operation: IStimOperationConstructor = self.factory_lookup[type(operation)].construct(operation)
-            result_circuit.append(*stim_operation.args, **stim_operation.kwargs)
+            stim_operation: stim.CircuitInstruction = self.factory_lookup[type(operation)].construct(operation)
+            result_circuit.append(stim_operation)
 
         return result_circuit
 

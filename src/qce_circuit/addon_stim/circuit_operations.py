@@ -43,6 +43,16 @@ class CoordinateShiftOperation(Barrier, ICircuitOperation):
     # endregion
 
     # region Class Methods
+    def to_stim_instruction(self) -> stim.CircuitInstruction:
+        return stim.CircuitInstruction(
+            name='SHIFT_COORDS',
+            targets=[],
+            gate_args=[
+                float(self.space_shift),
+                float(self.time_shift)
+            ],
+        )
+
     def __hash__(self):
         """Overwrites @dataclass behaviour. Circuit operation requires hash based on instance identity."""
         return id(self)
@@ -87,31 +97,50 @@ class DetectorOperation(SingleQubitOperation, ICircuitOperation):
         )
     # endregion
 
-    def get_stim_arguments(self) -> Optional[Any]:
+    # region Class Methods
+    def to_stim_instruction(self) -> stim.CircuitInstruction:
+        instruction_name: str = 'DETECTOR'
         arg_index: int = 0
         # Main target
         if self.main_target is not None and self.secondary_target is None and self.reference_offset is None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
-            return dict(targets=[stim.target_rec(main_target)], arg=(self.qubit_index, arg_index))
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target)],
+                gate_args=[self.qubit_index, arg_index],
+            )
         # Main target and reference target
         if self.main_target is not None and self.secondary_target is None and self.reference_offset is not None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
             ref_target: int = main_target - self.reference_offset
-            return dict(targets=[stim.target_rec(main_target), stim.target_rec(ref_target)], arg=(self.qubit_index, arg_index))
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target), stim.target_rec(ref_target)],
+                gate_args=[self.qubit_index, arg_index],
+            )
         # Main target, secondary target and reference target
         if self.main_target is not None and self.secondary_target is not None and self.reference_offset is not None and self.secondary_offset is None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
             secondary_target: int = self.secondary_target - (self.last_acquisition_index + 1)
             ref_target: int = -self.reference_offset
-            return dict(targets=[stim.target_rec(main_target), stim.target_rec(secondary_target), stim.target_rec(ref_target)], arg=(self.qubit_index, arg_index))
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target), stim.target_rec(secondary_target), stim.target_rec(ref_target)],
+                gate_args=[self.qubit_index, arg_index],
+            )
         # Main target, secondary target and reference target
         if self.main_target is not None and self.secondary_target is not None and self.reference_offset is not None and self.secondary_offset is not None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
             secondary_target: int = self.secondary_target - (self.last_acquisition_index + 1)
             ref_target: int = -self.reference_offset
             second_ref_target: int = ref_target - self.secondary_offset
-            return dict(targets=[stim.target_rec(main_target), stim.target_rec(secondary_target), stim.target_rec(ref_target), stim.target_rec(second_ref_target)], arg=(self.qubit_index, arg_index))
-        return None
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target), stim.target_rec(secondary_target), stim.target_rec(ref_target), stim.target_rec(second_ref_target)],
+                gate_args=[self.qubit_index, arg_index],
+            )
+        return stim.CircuitInstruction(name=instruction_name, targets=[])
+    # endregion
 
 
 @dataclass(frozen=False, unsafe_hash=True)
@@ -146,10 +175,17 @@ class LogicalObservableOperation(SingleQubitOperation, ICircuitOperation):
         )
     # endregion
 
-    def get_stim_arguments(self) -> Optional[Any]:
+    # region Class Methods
+    def to_stim_instruction(self) -> stim.CircuitInstruction:
+        instruction_name: str = 'OBSERVABLE_INCLUDE'
         arg_index: int = 0
         # Main target
         if self.last_acquisition_index is not None and self.main_target is not None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
-            return dict(targets=[stim.target_rec(main_target)], arg=(arg_index))
-        return None
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target)],
+                gate_args=[arg_index],
+            )
+        return stim.CircuitInstruction(name=instruction_name, targets=[])
+    # endregion
