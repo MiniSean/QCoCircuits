@@ -5,14 +5,12 @@ from dataclasses import dataclass, field
 from typing import Dict, List
 import numpy as np
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
-from qce_circuit.connectivity.intrf_connectivity import IConnectivityLayer
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     IGateSequenceLayer,
     GateSequenceLayer,
-    OperationType,
-    Operation,
 )
+from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLayer
 from qce_circuit.utilities.geometric_definitions import (
     TransformAlignment,
     Vec2D,
@@ -222,8 +220,8 @@ class VisualConnectivityDescription:
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
-    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5, 5)
-    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, (5, 5))
+    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(SubplotKeywordEnum.AXES_FORMAT.value, CircuitAxesFormat())
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
 
@@ -242,6 +240,22 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
     return fig, ax
 
 
+def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFigureAxesPair:
+    sequence_count: int = description.gate_sequence_count
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
+    fig, axes = construct_subplot(ncols=sequence_count, **kwargs)
+
+    for i, ax in enumerate(axes):
+        descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
+            connectivity=Surface17Layer(),
+            gate_sequence=description.get_gate_sequence_at_index(i),
+            layout_spacing=1.0
+        )
+        kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
+        plot_layout_description(descriptor, **kwargs)
+    return fig, axes[0]
+
+
 if __name__ == '__main__':
     from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
     from qce_circuit.library.repetition_code_connectivity import Repetition9Code
@@ -257,11 +271,7 @@ if __name__ == '__main__':
     - Surface code -> sequence steps -> (list) simplest case.
     """
 
-    layout = Surface17Layer()
-    descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
-        connectivity=layout,
-        gate_sequence=Repetition9Code().get_gate_sequence_at_index(0),
-        layout_spacing=1.0
+    plot_gate_sequences(
+        description=Repetition9Code()
     )
-    plot_layout_description(descriptor)
     plt.show()
