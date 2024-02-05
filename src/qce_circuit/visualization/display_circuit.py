@@ -1,10 +1,10 @@
 # -------------------------------------------
 # Module containing visualization for ICircuitCompositeOperation.
 # -------------------------------------------
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from typing import List, Optional, TypeVar
+from typing import List, Optional, TypeVar, Dict
 from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
@@ -139,6 +139,7 @@ class VisualCircuitDescription:
     """Array of operations are duration component."""
     composite_operations: List[ICircuitCompositeOperation]
     """Array of composite operations."""
+    channel_label_map: Dict[int, str] = field(default_factory=dict)
 
     # region Class Properties
     @property
@@ -158,11 +159,16 @@ class VisualCircuitDescription:
     def get_channel_header(self, index: int) -> ChannelHeader:
         """:return: Channel header drawing components."""
         channel_index = self.channel_indices[index]
+        channel_name: str = f'# {channel_index}'
+        # Temporary way to specify channel index labels
+        if index in self.channel_label_map:
+            channel_name = f'{self.channel_label_map[index]}'
+
         channel_state = self.channel_states[index].value
         return ChannelHeader(
             pivot=Vec2D(x=0, y=-1 * index * self.channel_spacing),
             height=FixedLength(self.channel_height),
-            channel_name=f'# {channel_index}',
+            channel_name=channel_name,
             state_description=rf'$|{channel_state}\rangle$',
         )
 
@@ -244,12 +250,15 @@ def reorder_indices(original_order: List[T], specific_order: List[T]) -> List[T]
     return reordered_list
 
 
-def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None) -> VisualCircuitDescription:
+def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
     # Apply custom channel order
     if custom_channel_order is None:
         custom_channel_order = []
+    # Apply custom channel map
+    if custom_channel_map is None:
+        custom_channel_map = {}
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
     channel_states: List[InitialStateEnum] = [circuit.get_qubit_initial_state(channel_index=channel_index) for channel_index in channel_indices]
 
@@ -264,6 +273,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         channel_width=end_time + 1.0,
         channel_height=1.0,
         channel_indices=channel_indices,
+        channel_label_map=custom_channel_map,
         channel_states=channel_states,
         operations=operations,
         composite_operations=circuit.composite_operations,
@@ -482,9 +492,13 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, **kwargs) -> IFigureAxesPair:
     return plot_circuit_description(
-        description=construct_visual_description(circuit=circuit, custom_channel_order=channel_order),
+        description=construct_visual_description(
+            circuit=circuit,
+            custom_channel_order=channel_order,
+            custom_channel_map=channel_map,
+        ),
         **kwargs
     )
 
