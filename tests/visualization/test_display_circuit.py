@@ -59,6 +59,19 @@ class CustomChannelMapTestCase(unittest.TestCase):
         }
         plot_circuit(self.circuit, channel_map=channel_map)
         self.assertTrue(True)
+
+    def test_follows_channel_order(self):
+        """Tests default True."""
+        channel_order = [1, 0, 2, 3, 4]
+        channel_map: Dict[int, str] = {
+            0: 'A',
+            1: 'B',
+            2: 'C',
+            3: 'D',
+            4: 'E',
+        }
+        plot_circuit(self.circuit, channel_order=channel_order, channel_map=channel_map)
+        self.assertTrue(True)
     # endregion
 
     # region Teardown

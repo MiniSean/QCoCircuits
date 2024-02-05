@@ -4,7 +4,7 @@
 from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from typing import List, Optional, TypeVar, Dict
+from typing import List, Optional, TypeVar, Dict, Any
 from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
@@ -250,6 +250,25 @@ def reorder_indices(original_order: List[T], specific_order: List[T]) -> List[T]
     return reordered_list
 
 
+def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T, Any]:
+    """
+    Reorders map of indices (to any) based on a specified order.
+    :raises: (ValueError) If any index in specific_order is not in original_order.
+    :param original_order: (Dict of T as keys) The original order of indices.
+    :param specific_order: (list of T) The specific order to prioritize in the result.
+    :return: (Dict of T as keys) The reordered array of indices.
+    """
+    original_keys: List[T] = list(original_order.keys())
+    ordered_keys: List[T] = reorder_indices(
+        original_order=original_keys,
+        specific_order=specific_order,
+    )
+    result: Dict[T, Any] = {}
+    for original_key, ordered_key in zip(original_keys, ordered_keys):
+        result[ordered_key] = original_order[original_key]
+    return result
+
+
 def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
@@ -260,6 +279,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
     if custom_channel_map is None:
         custom_channel_map = {}
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
+    custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)
     channel_states: List[InitialStateEnum] = [circuit.get_qubit_initial_state(channel_index=channel_index) for channel_index in channel_indices]
 
     operations: List[ICircuitOperation] = circuit.operations
