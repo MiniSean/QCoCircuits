@@ -259,10 +259,10 @@ def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T
     :return: (Dict of T as keys) The reordered array of indices.
     """
     original_keys: List[T] = list(original_order.keys())
-    ordered_keys: List[T] = reorder_indices(
-        original_order=original_keys,
-        specific_order=specific_order,
-    )
+
+    # Create the reordered list
+    ordered_keys: List[T] = specific_order + [item for item in original_keys if item not in specific_order]
+
     result: Dict[T, Any] = {}
     for original_key, ordered_key in zip(original_keys, ordered_keys):
         result[ordered_key] = original_order[original_key]
