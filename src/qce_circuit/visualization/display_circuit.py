@@ -21,6 +21,7 @@ from qce_circuit.structure.circuit_operations import (
     Identity,
     Hadamard,
     Barrier,
+    VirtualPark,
 )
 from qce_circuit.visualization.annotation_components import (
     HorizontalVariableIndicator,
@@ -84,6 +85,7 @@ from qce_circuit.visualization.factory_draw_components import (
     FootprintFactory,
     HadamardFactory,
     BarrierFactory,
+    VirtualParkFactory,
 )
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.visualization.plotting_functionality import (
@@ -198,6 +200,7 @@ class VisualCircuitDescription:
                 Identity: IdentityFactory(),
                 Hadamard: HadamardFactory(),
                 Barrier: BarrierFactory(),
+                VirtualPark: VirtualParkFactory(),
             }
         )
         transform_constructor: TransformConstructor = self.get_transform_constructor()

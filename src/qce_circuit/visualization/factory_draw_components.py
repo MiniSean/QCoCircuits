@@ -25,6 +25,7 @@ from qce_circuit.structure.circuit_operations import (
     Identity,
     Hadamard,
     Barrier,
+    VirtualPark,
 )
 from qce_circuit.visualization.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.intrf_factory_draw_components import (
@@ -42,6 +43,7 @@ from qce_circuit.visualization.operation_components import (
     BlockMeasure,
     RotationAxis,
     RotationAngle,
+    SquareParkBlock,
 )
 from qce_circuit.visualization.multi_pivot_components import (
     BlockTwoQubitGate,
@@ -277,6 +279,24 @@ class HadamardFactory(IOperationDrawComponentFactory):
             height=transform.height,
             alignment=transform.parent_alignment,
             text_string=rf'$\mathtt{{H}}$',
+        )
+    # endregion
+
+
+class VirtualParkFactory(IOperationDrawComponentFactory):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualPark, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return SquareParkBlock(
+            pivot=transform.pivot,
+            height=transform.height,
+            width=transform.width,
+            alignment=transform.parent_alignment,
         )
     # endregion
 
