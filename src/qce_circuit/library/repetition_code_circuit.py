@@ -359,6 +359,41 @@ def construct_repetition_code_circuit(initial_state: InitialStateContainer, qec_
     return result
 
 
+def construct_repetition_code_circuit_simplified(initial_state: InitialStateContainer, qec_cycles: int) -> DeclarativeCircuit:
+    connectivity: Connectivity1D = get_repetition_code_connectivity(initial_state=initial_state)
+
+    result: DeclarativeCircuit = DeclarativeCircuit()
+    registry: AcquisitionRegistry = result.acquisition_registry
+    result.add(get_circuit_initialize(
+        connectivity=connectivity,
+        initial_state=initial_state,
+    ))
+    cycle_circuit: DeclarativeCircuit = DeclarativeCircuit(
+        repetition_strategy=FixedRepetitionStrategy(repetitions=qec_cycles)
+    )
+    cycle_circuit.add(get_circuit_qec_round_with_dynamical_decoupling(
+        connectivity=connectivity,
+        registry=registry
+    ))
+
+    result.add(cycle_circuit)
+    result.add(get_circuit_final_measurement(
+        connectivity=connectivity,
+        registry=registry,
+    ))
+    return result
+
+
+def get_circuit_initialize(connectivity: Connectivity1D, initial_state: InitialStateContainer) -> DeclarativeCircuit:
+    result: DeclarativeCircuit = DeclarativeCircuit()
+    qubit_indices: List[int] = connectivity.qubit_indices
+    result.add(Barrier(qubit_indices))
+    for operation in initial_state.get_operations(connectivity=connectivity):
+        result.add(operation)
+    result.add(Barrier(qubit_indices))
+    return result
+
+
 def get_circuit_initialize_with_heralded(connectivity: Connectivity1D, initial_state: InitialStateContainer, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     qubit_indices: List[int] = connectivity.qubit_indices
@@ -370,10 +405,10 @@ def get_circuit_initialize_with_heralded(connectivity: Connectivity1D, initial_s
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
             acquisition_tag='heralded',
         ))
-    result.add(Barrier(qubit_indices))
-    for operation in initial_state.get_operations(connectivity=connectivity):
-        result.add(operation)
-    result.add(Barrier(qubit_indices))
+    result.add(get_circuit_initialize(
+        connectivity=connectivity,
+        initial_state=initial_state,
+    ))
     return result
 
 
