@@ -33,6 +33,14 @@ from qce_circuit.visualization.plotting_functionality import (
 
 
 @dataclass(frozen=True)
+class SequenceFrame:
+    """
+    Data class, containing connectivity, gates and parking identifiers for a single sequence 'frame'.
+    """
+    pass
+
+
+@dataclass(frozen=True)
 class VisualConnectivityDescription:
     """
     Data class, containing all information required to draw circuit.
@@ -204,3 +212,26 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
     ax.set_xlim([-3, 3])
     ax.set_ylim([-3, 3])
     return fig, ax
+
+
+if __name__ == '__main__':
+    from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+    import matplotlib.pyplot as plt
+
+    """
+    Simplest case is provide:
+    - Device layout,
+    - (list) park qubit-ID's.
+    - (list) gate edge-ID's.
+    
+    More complex case, provide:
+    - Surface code -> sequence steps -> (list) simplest case.
+    """
+
+    layout = Surface17Layer()
+    descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
+        connectivity=layout,
+        layout_spacing=1.0
+    )
+    plot_layout_description(descriptor)
+    plt.show()
