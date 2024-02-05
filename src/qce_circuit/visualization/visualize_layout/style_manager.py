@@ -45,6 +45,27 @@ class LineSettings:
 
 
 @dataclass(frozen=True)
+class ParkOperationStyleSettings:
+    """
+    Data class, containing park operation style settings.
+    """
+    element_radius: float
+    line_color: str
+    line_width: float
+    line_style: str
+    zorder: int
+
+
+@dataclass(frozen=True)
+class GateOperationStyleSettings:
+    """
+    Data class, containing gate operation style settings.
+    """
+    line_settings: LineSettings
+    dot_settings: ElementStyleSettings
+
+
+@dataclass(frozen=True)
 class StyleSettings:
     """
     Data class, describing a variety of parameter settings for stylization.
@@ -56,14 +77,19 @@ class StyleSettings:
     color_outline: str = field(default='black')
     color_element: str = field(default='#b3c7e8')
     color_element_outline: str = field(default='#1c50a3')
+    color_park_operation: str = field(default='black')
+    color_gate_operation: str = field(default='black')
 
     # Widths
     width_line_small: float = field(default=2.0)
+    width_line_medium: float = field(default=4.0)
     width_line_large: float = field(default=8.0)
+    width_line_thick: float = field(default=12.0)
 
     # Radius
     radius_dot: float = field(default=0.2)
     radius_hexagon: float = field(default=0.3)
+    radius_dot_indicator: float = field(default=0.3)
 
     # Font sizes
     font_size: float = field(default=12.0)
@@ -72,6 +98,7 @@ class StyleSettings:
     zorder_plaquette: int = field(default=-1)
     zorder_element: int = field(default=3)
     zorder_line: int = field(default=1)
+    zorder_operation: int = field(default=2)
 
     # region Class Properties
     @property
@@ -117,6 +144,33 @@ class StyleSettings:
             line_width=self.width_line_large,
             line_style='-',
             zorder=self.zorder_line,
+        )
+
+    @property
+    def park_operation_style(self) -> ParkOperationStyleSettings:
+        return ParkOperationStyleSettings(
+            element_radius=self.radius_dot_indicator,
+            line_color=self.color_park_operation,
+            line_width=self.width_line_medium,
+            line_style='--',
+            zorder=self.zorder_operation,
+        )
+
+    @property
+    def gate_operation_style(self) -> GateOperationStyleSettings:
+        return GateOperationStyleSettings(
+            line_settings=LineSettings(
+                line_color=self.color_gate_operation,
+                line_width=self.width_line_thick,
+                line_style='-',
+                zorder=self.zorder_operation,
+            ),
+            dot_settings=ElementStyleSettings(
+                background_color=self.color_gate_operation,
+                line_color=self.color_gate_operation,
+                element_radius=self.radius_dot_indicator,
+                zorder=self.zorder_operation,
+            )
         )
     # endregion
 

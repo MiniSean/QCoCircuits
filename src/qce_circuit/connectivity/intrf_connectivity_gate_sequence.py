@@ -79,6 +79,16 @@ class GateSequenceLayer:
         """:return: Array-like of directional edge identifiers, specific for this flux dance."""
         gate_edges: List[IEdgeID] = [operation.identifier for operation in self._gate_operations]
         return unique_in_order(gate_edges)
+
+    @property
+    def park_operations(self) -> List[Operation[IQubitID]]:
+        """:return: Array-like of parking operations."""
+        return self._park_operations
+
+    @property
+    def gate_operations(self) -> List[Operation[IEdgeID]]:
+        """:return: Array-like of gate operations."""
+        return self._gate_operations
     # endregion
 
     # region Class Methods

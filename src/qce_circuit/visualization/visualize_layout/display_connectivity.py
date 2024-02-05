@@ -4,8 +4,15 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
 import numpy as np
-from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
+from qce_circuit.connectivity.intrf_connectivity import IConnectivityLayer
+from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
+from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
+    IGateSequenceLayer,
+    GateSequenceLayer,
+    OperationType,
+    Operation,
+)
 from qce_circuit.utilities.geometric_definitions import (
     TransformAlignment,
     Vec2D,
@@ -19,9 +26,11 @@ from qce_circuit.visualization.visualize_layout.plaquette_components import (
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
     HexagonComponent,
+    ParkingComponent,
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
+    GateOperationComponent,
 )
 from qce_circuit.visualization.display_circuit import CircuitAxesFormat
 from qce_circuit.visualization.plotting_functionality import (
@@ -47,6 +56,7 @@ class VisualConnectivityDescription:
     Implements basic visualization.
     """
     connectivity: ISurfaceCodeLayer
+    gate_sequence: GateSequenceLayer
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
     rotation: float = field(default=-45)
@@ -135,6 +145,24 @@ class VisualConnectivityDescription:
             )
         ]
 
+    def get_operation_components(self) -> List[IDrawComponent]:
+        park_components: List[IDrawComponent] = [
+            ParkingComponent(
+                pivot=self.identifier_to_pivot(identifier=operation.identifier),
+                alignment=TransformAlignment.MID_CENTER,
+            )
+            for operation in self.gate_sequence.park_operations
+        ]
+        gate_components: List[IDrawComponent] = [
+            GateOperationComponent(
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
+                alignment=TransformAlignment.MID_CENTER,
+            )
+            for operation in self.gate_sequence.gate_operations
+        ]
+        return park_components + gate_components
+
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
         """:return: Pivot based on qubit identifier."""
         # Surface-17 layout
@@ -205,7 +233,7 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
     for draw_component in description.get_element_components():
         draw_component.draw(axes=ax)
 
-    for draw_component in description.get_line_components():
+    for draw_component in description.get_operation_components():
         draw_component.draw(axes=ax)
 
     ax.set_aspect('equal')
@@ -216,6 +244,7 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
 
 if __name__ == '__main__':
     from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+    from qce_circuit.library.repetition_code_connectivity import Repetition9Code
     import matplotlib.pyplot as plt
 
     """
@@ -231,6 +260,7 @@ if __name__ == '__main__':
     layout = Surface17Layer()
     descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
         connectivity=layout,
+        gate_sequence=Repetition9Code().get_gate_sequence_at_index(0),
         layout_spacing=1.0
     )
     plot_layout_description(descriptor)
