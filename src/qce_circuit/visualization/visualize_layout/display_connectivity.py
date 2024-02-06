@@ -6,6 +6,7 @@ from typing import Dict, List
 import numpy as np
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
+from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     IGateSequenceLayer,
     GateSequenceLayer,
@@ -257,7 +258,6 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
 
 
 if __name__ == '__main__':
-    from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
     from qce_circuit.library.repetition_code_connectivity import Repetition9Code
     import matplotlib.pyplot as plt
 
