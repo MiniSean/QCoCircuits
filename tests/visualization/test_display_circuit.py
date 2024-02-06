@@ -6,6 +6,13 @@ from qce_circuit.library.repetition_code_circuit import (
     InitialStateContainer,
     InitialStateEnum,
 )
+from qce_circuit.language.declarative_circuit import DeclarativeCircuit
+from qce_circuit.structure.circuit_operations import (
+    CPhase,
+    VirtualPark,
+    Barrier,
+    Identity,
+)
 import matplotlib.pyplot as plt
 
 
@@ -71,6 +78,40 @@ class CustomChannelMapTestCase(unittest.TestCase):
             4: 'E',
         }
         plot_circuit(self.circuit, channel_order=channel_order, channel_map=channel_map)
+        self.assertTrue(True)
+    # endregion
+
+    # region Teardown
+    @classmethod
+    def tearDownClass(cls) -> None:
+        """Closes any left over processes after testing"""
+        plt.close('all')
+    # endregion
+
+
+class DrawOperationsTestCase(unittest.TestCase):
+
+    # region Setup
+    @classmethod
+    def setUpClass(cls) -> None:
+        """Set up for all test cases"""
+        pass
+
+    def setUp(self) -> None:
+        """Set up for every test case"""
+        pass
+    # endregion
+
+    # region Test Cases
+    def test_virtual_park(self):
+        """Tests default True."""
+        circuit = DeclarativeCircuit()
+        circuit.add(Barrier([0, 1, 2]))
+        circuit.add(CPhase(0, 2))
+        circuit.add(VirtualPark(1))
+        circuit.add(Barrier([0, 1, 2]))
+        plot_circuit(circuit)
+
         self.assertTrue(True)
     # endregion
 

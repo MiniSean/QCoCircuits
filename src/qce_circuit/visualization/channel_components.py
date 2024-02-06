@@ -203,7 +203,7 @@ class ChannelBar(IRectTransformComponent, IDrawComponent):
             linestyle='-',
             linewidth=self.style_settings.line_width,
             color=self.style_settings.line_color,
-            zorder=-2,
+            zorder=-20,
         )
         return axes
     # endregion
