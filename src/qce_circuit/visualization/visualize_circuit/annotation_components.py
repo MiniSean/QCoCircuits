@@ -3,7 +3,7 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from matplotlib import pyplot as plt, patches as patches
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     TransformAlignment,
@@ -14,7 +14,7 @@ from qce_circuit.utilities.geometric_definitions import (
     Vec2D,
     Line2D
 )
-from qce_circuit.visualization.style_manager import (
+from qce_circuit.visualization.visualize_circuit.style_manager import (
     StyleManager,
     IndicatorStyleSettings,
     HighlightStyleSettings,

@@ -16,7 +16,6 @@ from qce_circuit.connectivity import (
 )
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     Operation,
-    OperationType,
 )
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -585,7 +584,7 @@ def get_circuit_qec_with_detectors(connectivity: Connectivity1D, qec_cycles: int
 
 
 if __name__ == '__main__':
-    from qce_circuit.visualization.display_circuit import plot_circuit
+    from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
     import matplotlib.pyplot as plt
     from qce_circuit.addon_stim import to_stim
 

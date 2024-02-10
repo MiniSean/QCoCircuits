@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from matplotlib import pyplot as plt, patches as patches
 import numpy as np
 from typing import List
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     TransformAlignment,

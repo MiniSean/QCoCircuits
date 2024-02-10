@@ -2,13 +2,10 @@
 # Module containing rectilinear/draw components that represent polygons.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List, Optional
-from enum import unique, Enum, auto
-import numpy as np
+from typing import List
 from matplotlib import pyplot as plt, patches as patches
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
-    IRectTransformComponent,
     TransformAlignment,
     IRectTransform,
     RectTransform,

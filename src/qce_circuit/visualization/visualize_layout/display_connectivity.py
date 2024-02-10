@@ -8,7 +8,6 @@ from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDO
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
 from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
-    IGateSequenceLayer,
     GateSequenceLayer,
 )
 from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLayer
@@ -16,7 +15,7 @@ from qce_circuit.utilities.geometric_definitions import (
     TransformAlignment,
     Vec2D,
 )
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_layout.style_manager import StyleManager
 from qce_circuit.visualization.visualize_layout.plaquette_components import (
     RectanglePlaquette,
@@ -24,15 +23,14 @@ from qce_circuit.visualization.visualize_layout.plaquette_components import (
 )
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
-    HexagonComponent,
     ParkingComponent,
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
     GateOperationComponent,
 )
-from qce_circuit.visualization.display_circuit import CircuitAxesFormat
-from qce_circuit.visualization.plotting_functionality import (
+from qce_circuit.visualization.visualize_circuit.display_circuit import CircuitAxesFormat
+from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
     LabelFormat,

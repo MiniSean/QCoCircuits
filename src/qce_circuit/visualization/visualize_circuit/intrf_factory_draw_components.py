@@ -20,7 +20,7 @@ from qce_circuit.utilities.geometric_definitions import (
     FixedLength,
     FixedPivot,
 )
-from qce_circuit.visualization.intrf_draw_component import (
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import (
     IDrawComponent,
 )
 
