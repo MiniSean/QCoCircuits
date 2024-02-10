@@ -1,8 +1,10 @@
 # -------------------------------------------
 # Module containing circuit components for constructing full repetition-code circuit.
 # -------------------------------------------
+from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from typing import List, Tuple, Union, Optional
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit import (
     DeclarativeCircuit,
     Barrier,
@@ -32,6 +34,71 @@ from qce_circuit.connectivity import (
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+
+
+class IRepetitionCodeConnectivity(ABC):
+    """
+    Interface class, describing methods and properties for repetition-code circuit connectivity.
+    """
+
+    # region Interface Properties
+    @property
+    @abstractmethod
+    def qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) qubit-ID's in connectivity."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def data_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Data-qubit-ID's in connectivity."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Ancilla-qubit-ID's in connectivity."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def gate_sequence_layer(self) -> IFluxDanceLayer:
+        """:return: Component containing gate-sequences."""
+        raise InterfaceMethodException
+
+    @property
+    def qubit_indices(self) -> List[int]:
+        """:return: (All) qubit-indices."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.qubit_ids]
+
+    @property
+    def data_qubit_indices(self) -> List[int]:
+        """:return: (All) Data-qubit-indices."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.data_qubit_ids]
+
+    @property
+    def ancilla_qubit_indices(self) -> List[int]:
+        """:return: (All) Ancilla-qubit-indices."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.ancilla_qubit_ids]
+    # endregion
+
+    # region Interface Methods
+    @abstractmethod
+    def map_qubit_id_to_circuit_index(self, qubit_id: IQubitID) -> int:
+        """
+        :param qubit_id: Identifier that is mapped to circuit channel index.
+        :return: Circuit channel index corresponding to qubit-ID.
+        """
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def get_operations(self, initial_state: InitialStateContainer, **kwargs) -> List[ICircuitOperation]:
+        """
+        :param initial_state: Container with qubit-index to initial state enum mapping.
+        :return: Array-like of circuit operations, corresponding to initial state preparation.
+        """
+        raise InterfaceMethodException
+    # endregion
 
 
 @dataclass(frozen=True)
