@@ -115,6 +115,11 @@ class InitialStateContainer:
         return InitialStateContainer(
             initial_states={i: state for i, state in enumerate(initial_states)}
         )
+
+    @classmethod
+    def empty(cls) -> 'InitialStateContainer':
+        """:return: Class method constructor with no initial states defined."""
+        return InitialStateContainer(initial_states={})
     # endregion
 
 

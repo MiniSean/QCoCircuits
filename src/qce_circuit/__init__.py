@@ -35,12 +35,12 @@ from .structure.circuit_operations import (
     Hadamard,
     Barrier,
 )
-from qce_circuit.library.repetition_code.circuit_constructors import (
-    construct_repetition_code_circuit as circuit_repetition_code,
-)
 from .library.repetition_code.circuit_components import (
-    Connectivity1D as RepetitionCodeConnectivity,
-    get_repetition_code_connectivity as connectivity_repetition_code,
+    RepetitionCodeDescription,
+)
+from .library.repetition_code.circuit_constructors import (
+    construct_repetition_code_circuit,
+    construct_repetition_code_circuit_simplified,
 )
 from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 
@@ -68,9 +68,9 @@ __all__ = [
     "Identity",
     "Hadamard",
     "Barrier",
-    "connectivity_repetition_code",
-    "circuit_repetition_code",
+    "construct_repetition_code_circuit",
+    "construct_repetition_code_circuit_simplified",
     "InitialStateEnum",
-    "RepetitionCodeConnectivity",
+    "RepetitionCodeDescription",
     "plot_circuit",
 ]

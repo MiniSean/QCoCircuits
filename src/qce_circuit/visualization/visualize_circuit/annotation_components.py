@@ -172,7 +172,7 @@ class RoundedRectangleHighlight(IRectTransformComponent, IDrawComponent):
             boxstyle=box_style,
             linestyle='none',
             facecolor=self.style_settings.background_color,
-            zorder=-20,
+            zorder=-30,
         )
         rounded_rectangle_border = patches.FancyBboxPatch(
             xy=self.rectilinear_transform.origin_pivot.to_tuple(),
@@ -183,7 +183,7 @@ class RoundedRectangleHighlight(IRectTransformComponent, IDrawComponent):
             linewidth=self.style_settings.line_width,
             edgecolor=self.style_settings.line_color,
             facecolor='none',
-            zorder=-19,
+            zorder=-29,
         )
         axes.text(
             x=self.text_pivot.x,

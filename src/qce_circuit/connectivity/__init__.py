@@ -5,6 +5,8 @@ from .intrf_connectivity import (
 from .intrf_connectivity_gate_sequence import (
     IGateSequenceLayer,
     GateSequenceLayer,
+    OperationType,
+    Operation,
 )
 from .intrf_channel_identifier import (
     IQubitID,
@@ -17,6 +19,8 @@ __all__ = [
     "IConnectivityLayer",
     "IGateSequenceLayer",
     "GateSequenceLayer",
+    "OperationType",
+    "Operation",
     "IQubitID",
     "IEdgeID",
     "QubitIDObj",

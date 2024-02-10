@@ -3,44 +3,33 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import List, Tuple, Union, Optional
+from typing import List, Tuple, Optional, Dict
+import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit import (
     DeclarativeCircuit,
-    Barrier,
     AcquisitionRegistry,
-    Reset,
-    DispersiveMeasure,
     RegistryAcquisitionStrategy,
-    Rym90,
-    CPhase,
-    Ry90,
     FixedDurationStrategy,
-    Wait,
-    Rx180,
     FixedRepetitionStrategy,
 )
 from qce_circuit.language import InitialStateContainer
 from qce_circuit.addon_stim.circuit_operations import DetectorOperation, CoordinateShiftOperation
 from qce_circuit.connectivity import (
-    IConnectivityLayer,
-    IGateSequenceLayer,
     GateSequenceLayer,
+    Operation,
     IQubitID,
+    QubitIDObj,
     IEdgeID,
     EdgeIDObj,
 )
-from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
-    Operation,
-)
+from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLayer
+from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.circuit_operations import (
     Reset,
-    Identity,
     Rx180,
     Ry90,
     Rym90,
-    Rx90,
-    Rxm90,
     CPhase,
     Barrier,
     Wait,
@@ -48,12 +37,11 @@ from qce_circuit.structure.circuit_operations import (
 )
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
-from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
 
 
-class IRepetitionCodeConnectivity(ABC):
+class IRepetitionCodeDescription(ABC):
     """
-    Interface class, describing methods and properties for repetition-code circuit connectivity.
+    Interface class, describing methods and properties for repetition-code circuit construction.
     """
 
     # region Interface Properties
@@ -77,8 +65,8 @@ class IRepetitionCodeConnectivity(ABC):
 
     @property
     @abstractmethod
-    def gate_sequence_layer(self) -> IFluxDanceLayer:
-        """:return: Component containing gate-sequences."""
+    def gate_sequences(self) -> List[GateSequenceLayer]:
+        """:return: Array-like of gate sequences."""
         raise InterfaceMethodException
 
     @property
@@ -95,6 +83,19 @@ class IRepetitionCodeConnectivity(ABC):
     def ancilla_qubit_indices(self) -> List[int]:
         """:return: (All) Ancilla-qubit-indices."""
         return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def gate_sequence_count(self) -> int:
+        """:return: Number of gate sequence layers."""
+        return len(self.gate_sequences)
+
+    @property
+    def circuit_channel_map(self) -> Dict[int, str]:
+        """:return: Dictionary that maps circuit channel to string identifier."""
+        return {
+            self.map_qubit_id_to_circuit_index(qubit_id): qubit_id.id
+            for qubit_id in self.qubit_ids
+        }
     # endregion
 
     # region Interface Methods
@@ -113,178 +114,192 @@ class IRepetitionCodeConnectivity(ABC):
         :return: Array-like of circuit operations, corresponding to initial state preparation.
         """
         raise InterfaceMethodException
-    # endregion
 
+    def get_element(self, index: int) -> IQubitID:
+        """:return: Qubit-ID element corresponding to index."""
+        return self.qubit_ids[index]
 
-@dataclass(frozen=True)
-class Connectivity1D(IConnectivityLayer, IGateSequenceLayer):
-    """
-    Data class, describing (dynamic) 1D qubit chain connectivity.
-    """
-    _qubit_ids: List[IQubitID]
-
-    # region Interface Properties
-    @property
-    def qubit_ids(self) -> List[IQubitID]:
-        """:return: (All) qubit-ID's in device layer."""
-        return self._qubit_ids
-
-    @property
-    def edge_ids(self) -> List[IEdgeID]:
-        """:return: (All) edge-ID's in device layer."""
-        return [EdgeIDObj(qubit_id0, qubit_id1) for qubit_id0, qubit_id1 in zip(self.qubit_ids, self.qubit_ids[1:])]
-
-    @property
-    def flux_dances(self) -> List[GateSequenceLayer]:
-        """:return: Array-like of flux dances."""
-        edges: List[IEdgeID] = self.edge_ids
-        return [
-            GateSequenceLayer(
-                _park_operations=[],
-                _gate_operations=[Operation.type_gate(edge_id=edge) for edge in _edges]
-            )
-            for _edges in [edges[i::4] for i in range(4)] if len(_edges) > 0
-        ]
-
-    @property
-    def gate_sequence_count(self) -> int:
-        """:return: Number of gate-sequences in layer."""
-        return len(self.flux_dances)
-    # endregion
-
-    # region Class Properties
-    @property
-    def data_qubit_ids(self) -> List[IQubitID]:
-        """:return: Data-qubit IDs."""
-        return self.qubit_ids[::2]
-
-    @property
-    def ancilla_qubit_ids(self) -> List[IQubitID]:
-        """:return: Ancilla-qubit IDs."""
-        return self.qubit_ids[1::2]
-
-    @property
-    def qubit_indices(self) -> List[int]:
-        return [i for i, qubit_id in enumerate(self.qubit_ids)]
-
-    @property
-    def data_qubit_indices(self) -> List[int]:
-        data_qubit_ids: List[IQubitID] = self.data_qubit_ids
-        return [i for i, qubit_id in enumerate(self.qubit_ids) if qubit_id in data_qubit_ids]
-
-    @property
-    def ancilla_qubit_indices(self) -> List[int]:
-        ancilla_qubit_ids: List[IQubitID] = self.ancilla_qubit_ids
-        return [i for i, qubit_id in enumerate(self.qubit_ids) if qubit_id in ancilla_qubit_ids]
-
-    @property
-    def flux_dance_indices(self) -> List[List[Tuple[int, int]]]:
-        result = []
-        for flux_dance_index in range(self.gate_sequence_count):
-            group = []
-            for edge_id in self.get_gate_sequence_at_index(flux_dance_index).edge_ids:
-                pair: Tuple[int, int] = (self.get_index(edge_id.qubit_ids[0]), self.get_index(edge_id.qubit_ids[1]))
-                group.append(pair)
-            result.append(group)
-        return result
-
-    @property
-    def flux_dance_ancilla_indices(self) -> List[List[int]]:
-        result = []
-        group_a = []
-        group_b = []
-
-        for flux_dance_index in [0, 1]:
-            for qubit_id in self.get_gate_sequence_at_index(flux_dance_index).qubit_ids:
-                if qubit_id in self.ancilla_qubit_ids:
-                    group_a.append(self.get_index(qubit_id))
-        for flux_dance_index in [2, 3]:
-            for qubit_id in self.get_gate_sequence_at_index(flux_dance_index).qubit_ids:
-                if qubit_id in self.ancilla_qubit_ids:
-                    group_b.append(self.get_index(qubit_id))
-
-        result.append(list(set(group_a)))
-        result.append(list(set(group_b)))
-        return result
-    # endregion
-
-    # region Interface Methods
-    def get_neighbors(self, qubit: IQubitID, order: int = 1) -> List[IQubitID]:
-        """
-        Requires :param order: to be higher or equal to 1.
-        :return: qubit neighbors separated by order. (order=1, nearest neighbors).
-        """
-        if order > 1:
-            raise NotImplementedError("Apologies, so far there has not been a use for. But feel free to implement.")
-        edges: List[IEdgeID] = self.get_edges(qubit=qubit)
-        result: List[IQubitID] = []
-        for edge in edges:
-            result.append(edge.get_connected_qubit_id(element=qubit))
-        return result
+    def get_index(self, element: IQubitID) -> int:
+        """:return: Index corresponding to Qubit-ID element."""
+        return self.qubit_ids.index(element)
 
     def get_edges(self, qubit: IQubitID) -> List[IEdgeID]:
         """:return: All qubit-to-qubit edges from qubit-ID."""
         result: List[IEdgeID] = []
-        for edge in self.edge_ids:
+        edge_ids: List[IEdgeID] = unique_in_order([identifier for sequence in self.gate_sequences for identifier in sequence.edge_ids])
+        for edge in edge_ids:
             if edge.contains(element=qubit):
                 result.append(edge)
         return result
 
-    def contains(self, element: Union[IQubitID, IEdgeID]) -> bool:
-        """:return: Boolean, whether element is part of connectivity layer or not."""
-        if element in self.qubit_ids:
-            return True
-        if element in self.edge_ids:
-            return True
-        return False
+    def get_gate_sequence_indices(self, sequence_index: int) -> Optional[List[Tuple[int, int]]]:
+        """
+        :param sequence_index: Gate sequence index. If index is out of range, return None.
+        :return: (Optional) Array-like of two-integer Tuples.
+        """
+        # Guard clause, if index is out of range, return None.
+        if not 0 <= sequence_index < len(self.gate_sequences):
+            return None
 
-    def get_gate_sequence_at_index(self, index: int) -> GateSequenceLayer:
-        """:return: Gate-sequence object based on round index."""
-        flux_dances: List[GateSequenceLayer] = self.flux_dances
-        try:
-            flux_dance_layer: GateSequenceLayer = flux_dances[index]
-            return flux_dance_layer
-        except:
-            raise ElementNotIncludedException(f"Index: {index} is out of bounds for flux dance of length: {len(flux_dances)}.")
+        sequence: GateSequenceLayer = self.gate_sequences[sequence_index]
+        result: List[Tuple[int, int]] = []
+        for edge in sequence.edge_ids:
+            result.append((
+                self.map_qubit_id_to_circuit_index(edge.qubit_ids[0]),
+                self.map_qubit_id_to_circuit_index(edge.qubit_ids[1])
+            ))
+        return result
 
-    def get_gate_sequence_from_element(self, element: IEdgeID) -> GateSequenceLayer:
-        """:return: Gate-sequence layer of which edge element is part of."""
-        flux_dances: List[GateSequenceLayer] = self.flux_dances
-        # Assumes element is part of only a single flux-dance layer
-        for flux_dance_layer in flux_dances:
-            if flux_dance_layer.contains(element=element):
-                return flux_dance_layer
-        raise ElementNotIncludedException(f"Element: {element} is not included in any flux-dance layer.")
+    def get_active_ancilla_indices(self, sequence_index: int) -> Optional[List[int]]:
+        """
+        Determines which ancilla indices need to be 'active' for a given sequence index.
+        :param sequence_index: Gate sequence index. If index is out of range, return None.
+        :return: (Optional) Array-like of single-integer (corresponding to ancilla-index).
+        """
+        # Guard clause, if index is out of range, return None.
+        if not 0 <= sequence_index < len(self.gate_sequences):
+            return None
+
+        ancilla_ids: List[IQubitID] = self.ancilla_qubit_ids
+        sequence: GateSequenceLayer = self.gate_sequences[sequence_index]
+        result: List[int] = []
+        for edge in sequence.edge_ids:
+            for qubit_id in edge.qubit_ids:
+                if qubit_id in ancilla_ids:
+                    result.append(self.map_qubit_id_to_circuit_index(qubit_id))
+        return result
     # endregion
 
-    # region Class Methods
-    def get_element(self, index: int) -> IQubitID:
-        return self.qubit_ids[index]
 
-    def get_data_element(self, index: int) -> IQubitID:
-        return self.data_qubit_ids[index]
+@dataclass(frozen=True)
+class RepetitionCodeDescription(IRepetitionCodeDescription):
+    """
+    Data class, describing (dynamic) 1D qubit chain connectivity.
+    """
+    _data_qubit_ids: List[IQubitID]
+    _ancilla_qubit_ids: List[IQubitID]
+    _gate_sequences: List[GateSequenceLayer]
+    _qubit_index_map: Dict[IQubitID, int]
+    """Mapping from Qubit-ID to circuit channel index."""
 
-    def get_index(self, element: IQubitID) -> int:
-        return self.qubit_ids.index(element)
+    # region Interface Properties
+    @property
+    def qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) qubit-ID's in connectivity."""
+        # Example arrays
+        a = np.asarray(self.data_qubit_ids)
+        b = np.asarray(self.ancilla_qubit_ids)
 
-    def get_data_index(self, element: IQubitID) -> int:
-        return self.data_qubit_ids.index(element)
+        # Ensure a and b are of the same length or handle cases where they are not
+        length = min(len(a), len(b))
+        result = np.empty((length * 2,), dtype=a.dtype)
+
+        # Fill in c by alternating elements from a and b
+        result[0::2], result[1::2] = a[:length], b[:length]
+
+        # If a and b were of different lengths, append the remaining elements
+        if len(a) > length:
+            result = np.append(result, a[length:])
+        elif len(b) > length:
+            result = np.append(result, b[length:])
+        return list(result)
+
+    @property
+    def data_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Data-qubit-ID's in connectivity."""
+        return self._data_qubit_ids
+
+    @property
+    def ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Ancilla-qubit-ID's in connectivity."""
+        return self._ancilla_qubit_ids
+
+    @property
+    def gate_sequences(self) -> List[GateSequenceLayer]:
+        """:return: Array-like of gate sequences."""
+        return self._gate_sequences
+    # endregion
+
+    # region Interface Methods
+    def map_qubit_id_to_circuit_index(self, qubit_id: IQubitID) -> int:
+        """
+        :param qubit_id: Identifier that is mapped to circuit channel index.
+        :return: Circuit channel index corresponding to qubit-ID.
+        """
+        return self._qubit_index_map[qubit_id]
 
     def get_operations(self, initial_state: InitialStateContainer, **kwargs) -> List[ICircuitOperation]:
+        """
+        :param initial_state: Container with qubit-index to initial state enum mapping.
+        :return: Array-like of circuit operations, corresponding to initial state preparation.
+        """
         return [
             initial_state.get_operation(
-                qubit_index=self.get_data_index(self.get_data_element(initial_state_index)),
+                qubit_index=self.map_qubit_id_to_circuit_index(
+                    qubit_id=self.data_qubit_ids[initial_state_index],
+                ),
                 initial_state_index=initial_state_index,
                 **kwargs,
             )
             for initial_state_index in initial_state.initial_states.keys()
         ]
+    # endregion
+
+    # region Class Methods
+    @classmethod
+    def from_chain(cls, length: int) -> 'RepetitionCodeDescription':
+        """:return: Class method constructor based on chain length."""
+        qubit_ids: List[IQubitID] = [QubitIDObj(f'D{i}') for i in range(length)]
+        data_qubit_ids: List[IQubitID] = qubit_ids[::2]
+        ancilla_qubit_ids: List[IQubitID] = qubit_ids[1::2]
+        edge_ids: List[IEdgeID] = [EdgeIDObj(qubit_id0, qubit_id1) for qubit_id0, qubit_id1 in zip(qubit_ids, qubit_ids[1:])]
+        gate_sequences: List[GateSequenceLayer] = [
+            GateSequenceLayer(
+                _park_operations=[],
+                _gate_operations=[Operation.type_gate(edge_id=edge) for edge in _edges]
+            )
+            for _edges in [edge_ids[i::2] for i in range(2)] if len(_edges) > 0
+        ]
+        qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(qubit_ids)}
+        return RepetitionCodeDescription(
+            _data_qubit_ids=data_qubit_ids,
+            _ancilla_qubit_ids=ancilla_qubit_ids,
+            _gate_sequences=gate_sequences,
+            _qubit_index_map=qubit_index_map,
+        )
 
     @classmethod
-    def from_chain(cls, length: int) -> 'Connectivity1D':
-        """:return: Class method constructor based on chain length."""
-        return Connectivity1D(
-            _qubit_ids=[QubitIDObj(f'D{i}') for i in range(length)]
+    def from_initial_state(cls, initial_state: InitialStateContainer) -> 'RepetitionCodeDescription':
+        """:return: Class method constructor based on initial data-qubit state."""
+        code_distance: int = initial_state.distance
+        chain_distance: int = 2 * code_distance - 1
+        return RepetitionCodeDescription.from_chain(length=chain_distance)
+
+    @classmethod
+    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer) -> 'RepetitionCodeDescription':
+        """:return: Class method constructor based on pre-defined connectivity and involved qubit-ID's."""
+        data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.data_qubit_ids]
+        ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
+        # Populate gate sequence part of involved qubit-ID's
+        gate_sequences: List[GateSequenceLayer] = []
+        for i in range(connectivity.gate_sequence_count):
+            entire_gate_sequence: GateSequenceLayer = connectivity.get_gate_sequence_at_index(index=i)
+            # Only include park- and gate-operations for which all identifiers are part of involved qubit-ID's
+            subset_gate_sequence: GateSequenceLayer = GateSequenceLayer(
+                _park_operations=[element for element in entire_gate_sequence.park_operations if element.identifier in involved_qubit_ids],
+                _gate_operations=[element for element in entire_gate_sequence.gate_operations if all([qubit_id in involved_qubit_ids for qubit_id in element.identifier.qubit_ids])]
+            )
+            non_empty_sequence: bool = len(subset_gate_sequence.park_operations) > 0 or len(subset_gate_sequence.gate_operations) > 0
+            if non_empty_sequence:
+                gate_sequences.append(subset_gate_sequence)
+        # Setup default qubit index map
+        qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(involved_qubit_ids)}
+        # Return constructed connectivity
+        return RepetitionCodeDescription(
+            _data_qubit_ids=data_qubit_ids,
+            _ancilla_qubit_ids=ancilla_qubit_ids,
+            _gate_sequences=gate_sequences,
+            _qubit_index_map=qubit_index_map,
         )
     # endregion
 
@@ -302,14 +317,11 @@ def get_last_acquisition_operation(_circuit: DeclarativeCircuit, qubit_index: Op
     return None
 
 
-def get_repetition_code_connectivity(initial_state: InitialStateContainer) -> Connectivity1D:
-    code_distance: int = initial_state.distance
-    chain_distance: int = 2 * code_distance - 1
-    connectivity: Connectivity1D = Connectivity1D.from_chain(length=chain_distance)
-    return connectivity
+def get_repetition_code_connectivity(initial_state: InitialStateContainer) -> RepetitionCodeDescription:
+    return RepetitionCodeDescription.from_initial_state(initial_state=initial_state)
 
 
-def get_circuit_initialize(connectivity: Connectivity1D, initial_state: InitialStateContainer) -> DeclarativeCircuit:
+def get_circuit_initialize(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     qubit_indices: List[int] = connectivity.qubit_indices
     result.add(Barrier(qubit_indices))
@@ -319,7 +331,7 @@ def get_circuit_initialize(connectivity: Connectivity1D, initial_state: InitialS
     return result
 
 
-def get_circuit_initialize_with_heralded(connectivity: Connectivity1D, initial_state: InitialStateContainer, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+def get_circuit_initialize_with_heralded(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     qubit_indices: List[int] = connectivity.qubit_indices
     for qubit_index in qubit_indices:
@@ -337,7 +349,7 @@ def get_circuit_initialize_with_heralded(connectivity: Connectivity1D, initial_s
     return result
 
 
-def get_circuit_final_measurement(connectivity: Connectivity1D, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+def get_circuit_final_measurement(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     for data_index in connectivity.data_qubit_indices:
         result.add(DispersiveMeasure(
@@ -348,30 +360,40 @@ def get_circuit_final_measurement(connectivity: Connectivity1D, registry: Acquis
     return result
 
 
-def get_circuit_qec_round(connectivity: Connectivity1D, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
 
-    groups = connectivity.flux_dance_indices
-    ancilla_groups = connectivity.flux_dance_ancilla_indices
     ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
     all_indices: List[int] = connectivity.qubit_indices
+    current_active_ancilla_indices: List[int] = []
 
-    # First part
-    for qubit_index in ancilla_groups[0]: result.add(Rym90(qubit_index))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[0]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[1]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for qubit_index in ancilla_groups[0]: result.add(Ry90(qubit_index))
-    # Second part
-    for qubit_index in ancilla_groups[1]: result.add(Rym90(qubit_index))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[2]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[3]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for qubit_index in ancilla_groups[1]: result.add(Ry90(qubit_index))
+    for sequence_index in range(connectivity.gate_sequence_count):
+        # Check if ancilla's need to be 'activated'
+        sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
+        next_sequence_active_ancilla_indices: Optional[List[int]] = connectivity.get_active_ancilla_indices(sequence_index + 1)
+        sequence_active_gate_indices: List[Tuple[int, int]] = connectivity.get_gate_sequence_indices(sequence_index)
+
+        require_activation: List[int] = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in current_active_ancilla_indices]
+        require_closure: List[int] = sequence_active_ancilla_indices
+        if next_sequence_active_ancilla_indices is not None:
+            require_closure = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in next_sequence_active_ancilla_indices]
+        # Update current active ancilla indices
+        current_active_ancilla_indices = sequence_active_ancilla_indices
+
+        # Schedule Ancilla basis rotation for 'activation'
+        for qubit_index in require_activation:
+            result.add(Rym90(qubit_index))
+        if len(require_activation) > 0:
+            result.add(Barrier(all_indices))
+        # Schedule two-qubit gate
+        for index0, index1 in sequence_active_gate_indices:
+            result.add(CPhase(index0, index1))
+        if len(sequence_active_gate_indices) > 0:
+            result.add(Barrier(all_indices))
+        # Schedule Ancilla basis rotation for 'closure'
+        for qubit_index in require_closure:
+            result.add(Ry90(qubit_index))
+
     # Ancilla measurement
     result.add(Barrier(all_indices))
     for ancilla_index in ancilla_indices:
@@ -383,31 +405,41 @@ def get_circuit_qec_round(connectivity: Connectivity1D, registry: AcquisitionReg
     return result
 
 
-def get_circuit_qec_round_with_dynamical_decoupling(connectivity: Connectivity1D, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
 
-    groups = connectivity.flux_dance_indices
-    ancilla_groups = connectivity.flux_dance_ancilla_indices
     data_indices: List[int] = connectivity.data_qubit_indices
     ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
     all_indices: List[int] = connectivity.qubit_indices
+    current_active_ancilla_indices: List[int] = []
 
-    # First part
-    for qubit_index in ancilla_groups[0]: result.add(Rym90(qubit_index))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[0]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[1]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for qubit_index in ancilla_groups[0]: result.add(Ry90(qubit_index))
-    # Second part
-    for qubit_index in ancilla_groups[1]: result.add(Rym90(qubit_index))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[2]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for ancilla, data in groups[3]: result.add(CPhase(ancilla, data))
-    result.add(Barrier(all_indices))
-    for qubit_index in ancilla_groups[1]: result.add(Ry90(qubit_index))
+    for sequence_index in range(connectivity.gate_sequence_count):
+        # Check if ancilla's need to be 'activated'
+        sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
+        next_sequence_active_ancilla_indices: Optional[List[int]] = connectivity.get_active_ancilla_indices(sequence_index + 1)
+        sequence_active_gate_indices: List[Tuple[int, int]] = connectivity.get_gate_sequence_indices(sequence_index)
+
+        require_activation: List[int] = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in current_active_ancilla_indices]
+        require_closure: List[int] = sequence_active_ancilla_indices
+        if next_sequence_active_ancilla_indices is not None:
+            require_closure = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in next_sequence_active_ancilla_indices]
+        # Update current active ancilla indices
+        current_active_ancilla_indices = sequence_active_ancilla_indices
+
+        # Schedule Ancilla basis rotation for 'activation'
+        for qubit_index in require_activation:
+            result.add(Rym90(qubit_index))
+        if len(require_activation) > 0:
+            result.add(Barrier(all_indices))
+        # Schedule two-qubit gate
+        for index0, index1 in sequence_active_gate_indices:
+            result.add(CPhase(index0, index1))
+        if len(sequence_active_gate_indices) > 0:
+            result.add(Barrier(all_indices))
+        # Schedule Ancilla basis rotation for 'closure'
+        for qubit_index in require_closure:
+            result.add(Ry90(qubit_index))
+
     # Ancilla measurement
     result.add(Barrier(all_indices))
     for ancilla_index in ancilla_indices:
@@ -424,7 +456,7 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: Connectivity1D
     return result
 
 
-def get_circuit_qec_with_detectors(connectivity: Connectivity1D, qec_cycles: int, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+def get_circuit_qec_with_detectors(connectivity: IRepetitionCodeDescription, qec_cycles: int, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     # Guard clause, if qec-cycles is 0, return empty circuit
     if qec_cycles == 0:
