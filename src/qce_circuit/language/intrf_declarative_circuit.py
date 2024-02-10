@@ -3,8 +3,9 @@
 # This code exposes intuitive methods to construct a declarative (circuit) structure.
 # -------------------------------------------
 from abc import ABC, abstractmethod, ABCMeta
+from dataclasses import dataclass
 from multipledispatch import dispatch
-from typing import List, Union
+from typing import List, Union, Dict
 from enum import Enum, unique
 import numpy as np
 from numpy.typing import NDArray
@@ -19,6 +20,14 @@ from qce_circuit.structure.intrf_circuit_operation_composite import (
 )
 from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
+)
+from qce_circuit.structure.circuit_operations import (
+    Identity,
+    Rx180,
+    Rx90,
+    Rxm90,
+    Ry90,
+    Rym90,
 )
 from qce_circuit.structure.registry_acquisition import (
     AcquisitionRegistry,
@@ -35,6 +44,83 @@ class InitialStateEnum(Enum):
     MINUS = '-'
     PLUS_I = '+i'
     MINUS_I = '-i'
+
+
+@dataclass(frozen=True)
+class InitialStateContainer:
+    """
+    Data class, holding reference to qubits and their initial state.
+    """
+    initial_states: Dict[int, InitialStateEnum]
+    """Index pointers to data qubits only."""
+
+    # region Class Properties
+    @property
+    def distance(self) -> int:
+        return len(self.initial_states)
+
+    @property
+    def as_array(self) -> np.ndarray:
+        sorted_indices: List[int] = list(sorted(self.initial_states.keys()))
+        # Maps initial state to binary
+        to_bit_conversion: Dict[InitialStateEnum, int] = {
+            InitialStateEnum.ZERO: 0,
+            InitialStateEnum.MINUS: 0,
+            InitialStateEnum.MINUS_I: 0,
+            InitialStateEnum.ONE: 1,
+            InitialStateEnum.PLUS: 1,
+            InitialStateEnum.PLUS_I: 1,
+        }
+        return np.asarray([to_bit_conversion[self.initial_states[index]] for index in sorted_indices])
+    # endregion
+
+    # region Class Methods
+    def get_initial_state(self, qubit_index: int) -> InitialStateEnum:
+        return self.initial_states[qubit_index]
+
+    def get_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
+        """
+        :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
+        :param initial_state_index: Index corresponding to qubit-ID in initial state container.
+            Will be used to fetch corresponding initial state.
+        :return: Circuit operation corresponding to initial state preparation.
+        """
+        # Data allocation
+        state: InitialStateEnum = InitialStateEnum.ZERO
+
+        if initial_state_index in self.initial_states:
+            state = self.get_initial_state(qubit_index=initial_state_index)
+
+        if state == InitialStateEnum.ZERO:
+            return Identity(qubit_index, **kwargs)
+        if state == InitialStateEnum.ONE:
+            return Rx180(qubit_index, **kwargs)
+        if state == InitialStateEnum.PLUS:
+            return Ry90(qubit_index, **kwargs)
+        if state == InitialStateEnum.MINUS:
+            return Rym90(qubit_index, **kwargs)
+        if state == InitialStateEnum.PLUS_I:
+            return Rxm90(qubit_index, **kwargs)
+        if state == InitialStateEnum.MINUS_I:
+            return Rx90(qubit_index, **kwargs)
+
+        raise NotImplementedError(f"Initial state {state} is not supported.")
+
+    @classmethod
+    def from_ordered_list(cls, initial_states: List[InitialStateEnum]) -> 'InitialStateContainer':
+        """
+        :return: Class method constructor based on ordered array of initial state.
+        Where each element index corresponds to qubit index.
+        """
+        return InitialStateContainer(
+            initial_states={i: state for i, state in enumerate(initial_states)}
+        )
+
+    @classmethod
+    def empty(cls) -> 'InitialStateContainer':
+        """:return: Class method constructor with no initial states defined."""
+        return InitialStateContainer(initial_states={})
+    # endregion
 
 
 class IIndexKernelComponent(ABC):

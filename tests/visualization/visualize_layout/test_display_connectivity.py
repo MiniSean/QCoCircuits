@@ -9,7 +9,7 @@ from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import GateSequenceLayer
 from qce_circuit.visualization.visualize_layout.element_components import TextComponent
 from qce_circuit.utilities.geometric_definitions.intrf_rectilinear_transform import TransformAlignment
-from qce_circuit.library.repetition_code_connectivity import Repetition9Code
+from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
 import matplotlib.pyplot as plt
 
 

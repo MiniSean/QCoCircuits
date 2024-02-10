@@ -2,7 +2,7 @@
 from .language.declarative_circuit import DeclarativeCircuit
 from .language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
-    InitialStateEnum,
+    InitialStateEnum, InitialStateContainer,
 )
 from .structure.intrf_circuit_operation import (
     RelationLink,
@@ -35,11 +35,12 @@ from .structure.circuit_operations import (
     Hadamard,
     Barrier,
 )
-from .library.repetition_code_circuit import (
-    get_repetition_code_connectivity as connectivity_repetition_code,
-    construct_repetition_code_circuit as circuit_repetition_code,
-    InitialStateContainer,
-    Connectivity1D as RepetitionCodeConnectivity,
+from .library.repetition_code.circuit_components import (
+    RepetitionCodeDescription,
+)
+from .library.repetition_code.circuit_constructors import (
+    construct_repetition_code_circuit,
+    construct_repetition_code_circuit_simplified,
 )
 from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 
@@ -67,10 +68,9 @@ __all__ = [
     "Identity",
     "Hadamard",
     "Barrier",
-    "connectivity_repetition_code",
-    "circuit_repetition_code",
-    "InitialStateContainer",
+    "construct_repetition_code_circuit",
+    "construct_repetition_code_circuit_simplified",
     "InitialStateEnum",
-    "RepetitionCodeConnectivity",
+    "RepetitionCodeDescription",
     "plot_circuit",
 ]

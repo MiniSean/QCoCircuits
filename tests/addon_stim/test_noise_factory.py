@@ -4,10 +4,10 @@ from qce_circuit.language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )
-from qce_circuit.library.repetition_code_circuit import (
+from qce_circuit.library.repetition_code.circuit_constructors import (
     construct_repetition_code_circuit,
-    InitialStateContainer,
 )
+from qce_circuit import InitialStateContainer
 from qce_circuit.addon_stim import to_stim
 from qce_circuit.addon_stim.noise_factory_manager import apply_noise
 from qce_circuit.addon_stim.noise_settings_manager import (
