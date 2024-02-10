@@ -36,9 +36,11 @@ from .structure.circuit_operations import (
     Barrier,
 )
 from qce_circuit.library.repetition_code.repetition_code_circuit import (
-    get_repetition_code_connectivity as connectivity_repetition_code,
     construct_repetition_code_circuit as circuit_repetition_code,
+)
+from .library.repetition_code.circuit_components import (
     Connectivity1D as RepetitionCodeConnectivity,
+    get_repetition_code_connectivity as connectivity_repetition_code,
 )
 from .visualization.display_circuit import plot_circuit
 
