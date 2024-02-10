@@ -1,7 +1,7 @@
 # -------------------------------------------
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
-from typing import Optional
+from typing import Optional, List
 from qce_circuit.library.repetition_code.circuit_components import (
     IRepetitionCodeDescription,
     RepetitionCodeDescription,
