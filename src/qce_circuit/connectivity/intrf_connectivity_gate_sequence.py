@@ -99,6 +99,16 @@ class GateSequenceLayer:
         if element in self.edge_ids:
             return True
         return False
+
+    @classmethod
+    def empty(cls) -> 'GateSequenceLayer':
+        """
+        :return: Class method constructor for 'empty' gate-sequence.
+        """
+        return GateSequenceLayer(
+            _park_operations=[],
+            _gate_operations=[],
+        )
     # endregion
 
 

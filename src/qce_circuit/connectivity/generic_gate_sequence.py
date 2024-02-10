@@ -2,7 +2,6 @@
 # Module containing interface and implementation of generic (Surface17) gate sequences.
 # -------------------------------------------
 from abc import ABCMeta
-from dataclasses import dataclass
 from typing import List, Union
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
 from qce_circuit.connectivity.intrf_channel_identifier import (

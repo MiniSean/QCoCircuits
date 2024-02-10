@@ -53,7 +53,7 @@ class VisualConnectivityDescription:
     Implements basic visualization.
     """
     connectivity: ISurfaceCodeLayer
-    gate_sequence: GateSequenceLayer
+    gate_sequence: GateSequenceLayer = field(default_factory=GateSequenceLayer.empty)
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
     rotation: float = field(default=-45)
@@ -253,55 +253,3 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         plot_layout_description(descriptor, **kwargs)
     return fig, axes[0]
-
-
-if __name__ == '__main__':
-    from qce_circuit.library.repetition_code_connectivity import Repetition9Code
-    from qce_circuit.visualization.visualize_layout.element_components import TextComponent
-    import matplotlib.pyplot as plt
-
-    """
-    Simplest case is provide:
-    - Device layout,
-    - (list) park qubit-ID's.
-    - (list) gate edge-ID's.
-    
-    More complex case, provide:
-    - Surface code -> sequence steps -> (list) simplest case.
-    """
-
-    descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
-        connectivity=Surface17Layer(),
-        gate_sequence=Repetition9Code().get_gate_sequence_at_index(0),
-        layout_spacing=1.0
-    )
-    fig, ax = plot_layout_description(
-        description=descriptor,
-    )
-    # Draw text component
-    component: TextComponent = TextComponent(
-        pivot=descriptor.identifier_to_pivot(QubitIDObj('D6')),
-        text='D6',
-        alignment=TransformAlignment.MID_CENTER,
-    )
-    component.draw(axes=ax)
-
-    component: TextComponent = TextComponent(
-        pivot=descriptor.identifier_to_pivot(QubitIDObj('D5')),
-        text='A',
-        color='r',
-        alignment=TransformAlignment.MID_CENTER,
-    )
-    component.draw(axes=ax)
-
-    component: TextComponent = TextComponent(
-        pivot=descriptor.identifier_to_pivot(QubitIDObj('D4')),
-        text=r'$| \Psi \rangle$',
-        alignment=TransformAlignment.MID_CENTER,
-    )
-    component.draw(axes=ax)
-
-    # plot_gate_sequences(
-    #     description=Repetition9Code()
-    # )
-    plt.show()
