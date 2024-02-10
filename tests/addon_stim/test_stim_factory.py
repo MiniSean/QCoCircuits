@@ -1,10 +1,15 @@
 import unittest
 import stim
+from qce_circuit.connectivity.intrf_channel_identifier import QubitIDObj
+from qce_circuit.library.repetition_code.circuit_components import RepetitionCodeDescription
 from qce_circuit.library.repetition_code.circuit_constructors import (
-    InitialStateEnum,
     construct_repetition_code_circuit,
 )
-from qce_circuit import InitialStateContainer
+from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
+from qce_circuit.language import (
+    InitialStateContainer,
+    InitialStateEnum,
+)
 from qce_circuit.addon_stim import to_stim
 
 
@@ -14,13 +19,14 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
     @classmethod
     def setUpClass(cls) -> None:
         """Set up for all test cases"""
-        initial_state: InitialStateContainer = InitialStateContainer.from_ordered_list([
+        cls.initial_state: InitialStateContainer = InitialStateContainer.from_ordered_list([
             InitialStateEnum.ZERO,
             InitialStateEnum.ONE,
             InitialStateEnum.ZERO,
         ])
         cls.circuit = construct_repetition_code_circuit(
-            initial_state=initial_state,
+            description=RepetitionCodeDescription.from_initial_state(cls.initial_state),
+            initial_state=cls.initial_state,
             qec_cycles=1,
         )
         cls.stim_circuit = to_stim(circuit=cls.circuit)
@@ -31,8 +37,26 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
     # endregion
 
     # region Test Cases
-    def test_construction_representation(self):
+    def test_construction_specific_representation(self):
         """Tests circuit representation to expected value."""
+        # Create specific repetition circuit based on Surface-17 layout
+        circuit_description: RepetitionCodeDescription = RepetitionCodeDescription.from_connectivity(
+            involved_qubit_ids=[
+                QubitIDObj('D4'),
+                QubitIDObj('Z1'),
+                QubitIDObj('D5'),
+                QubitIDObj('Z4'),
+                QubitIDObj('D6'),
+            ],
+            connectivity=Repetition9Code(),
+        )
+        circuit = construct_repetition_code_circuit(
+            description=circuit_description,
+            initial_state=self.initial_state,
+            qec_cycles=1,
+        )
+        stim_circuit = to_stim(circuit=circuit)
+
         expected_repr: str = '''
             R 0 1 2 3 4
             M 0 1 2 3 4
@@ -43,13 +67,13 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
             TICK
             H 1
             TICK
-            CZ 0 1
+            CZ 1 0
             TICK
             CZ 1 2
             TICK
             H 1 3
             TICK
-            CZ 2 3
+            CZ 3 2
             TICK
             CZ 3 4
             TICK
@@ -68,10 +92,45 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
         '''
         self.assertEqual(
             stim.Circuit(expected_repr),
-            self.stim_circuit,
+            stim_circuit,
             msg="Expected circuit result"
         )
 
+    def test_construction_arbitrary_length_representation(self):
+        """Tests circuit representation to expected value."""
+
+        expected_repr: str = '''
+            R 0 1 2 3 4
+            M 0 1 2 3 4
+            TICK
+            I 0
+            X 2
+            I 4
+            TICK
+            H 1 3
+            TICK
+            CZ 0 1 2 3
+            TICK
+            CZ 1 2 3 4
+            TICK
+            H 1 3
+            TICK
+            M 1 3
+            DETECTOR(1, 0) rec[-2]
+            DETECTOR(3, 0) rec[-1]
+            SHIFT_COORDS(0, 1)
+            M 0 2 4
+            DETECTOR(1, 0) rec[-3] rec[-2] rec[-5]
+            DETECTOR(3, 0) rec[-2] rec[-1] rec[-4]
+            OBSERVABLE_INCLUDE(0) rec[-3]
+            OBSERVABLE_INCLUDE(0) rec[-2]
+            OBSERVABLE_INCLUDE(0) rec[-1]
+        '''
+        self.assertEqual(
+            stim.Circuit(expected_repr),
+            self.stim_circuit,
+            msg="Expected circuit result"
+        )
     # endregion
 
     # region Teardown
