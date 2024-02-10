@@ -84,7 +84,7 @@ if __name__ == '__main__':
         DeclarativeCircuit,
         plot_circuit, InitialStateContainer,
 )
-    from qce_circuit.library.repetition_code.repetition_code_circuit import (
+    from qce_circuit.library.repetition_code.circuit_constructors import (
         construct_repetition_code_circuit,
         InitialStateEnum,
     )

@@ -1,7 +1,7 @@
 import unittest
 from typing import Dict
 from qce_circuit.visualization.display_circuit import plot_circuit
-from qce_circuit.library.repetition_code.repetition_code_circuit import (
+from qce_circuit.library.repetition_code.circuit_constructors import (
     construct_repetition_code_circuit_simplified,
     InitialStateEnum,
 )
