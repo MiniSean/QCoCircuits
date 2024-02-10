@@ -34,6 +34,17 @@ class ElementStyleSettings:
 
 
 @dataclass(frozen=True)
+class ElementTextStyleSettings:
+    """
+    Data class, containing (element) text style settings.
+    """
+    element_radius: float
+    font_size: float
+    font_color: str
+    zorder: int
+
+
+@dataclass(frozen=True)
 class LineSettings:
     """
     Data class, containing line style settings.
@@ -92,13 +103,14 @@ class StyleSettings:
     radius_dot_indicator: float = field(default=0.3)
 
     # Font sizes
-    font_size: float = field(default=12.0)
+    font_size: float = field(default=16.0)
 
     # Draw order
     zorder_plaquette: int = field(default=-1)
     zorder_element: int = field(default=3)
     zorder_line: int = field(default=1)
     zorder_operation: int = field(default=2)
+    zorder_text: int = field(default=5)
 
     # region Class Properties
     @property
@@ -171,6 +183,15 @@ class StyleSettings:
                 element_radius=self.radius_dot_indicator,
                 zorder=self.zorder_operation,
             )
+        )
+
+    @property
+    def element_text_style(self) -> ElementTextStyleSettings:
+        return ElementTextStyleSettings(
+            element_radius=self.radius_dot,
+            font_size=self.font_size,
+            font_color=self.color_text,
+            zorder=self.zorder_text,
         )
     # endregion
 

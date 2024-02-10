@@ -259,6 +259,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
 
 if __name__ == '__main__':
     from qce_circuit.library.repetition_code_connectivity import Repetition9Code
+    from qce_circuit.visualization.visualize_layout.element_components import TextComponent
     import matplotlib.pyplot as plt
 
     """
@@ -271,7 +272,38 @@ if __name__ == '__main__':
     - Surface code -> sequence steps -> (list) simplest case.
     """
 
-    plot_gate_sequences(
-        description=Repetition9Code()
+    descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
+        connectivity=Surface17Layer(),
+        gate_sequence=Repetition9Code().get_gate_sequence_at_index(0),
+        layout_spacing=1.0
     )
+    fig, ax = plot_layout_description(
+        description=descriptor,
+    )
+    # Draw text component
+    component: TextComponent = TextComponent(
+        pivot=descriptor.identifier_to_pivot(QubitIDObj('D6')),
+        text='D6',
+        alignment=TransformAlignment.MID_CENTER,
+    )
+    component.draw(axes=ax)
+
+    component: TextComponent = TextComponent(
+        pivot=descriptor.identifier_to_pivot(QubitIDObj('D5')),
+        text='A',
+        color='r',
+        alignment=TransformAlignment.MID_CENTER,
+    )
+    component.draw(axes=ax)
+
+    component: TextComponent = TextComponent(
+        pivot=descriptor.identifier_to_pivot(QubitIDObj('D4')),
+        text=r'$| \Psi \rangle$',
+        alignment=TransformAlignment.MID_CENTER,
+    )
+    component.draw(axes=ax)
+
+    # plot_gate_sequences(
+    #     description=Repetition9Code()
+    # )
     plt.show()
