@@ -82,12 +82,11 @@ def to_stim(circuit: IDeclarativeCircuit, factory: IStimCircuitFactory = StimFac
 if __name__ == '__main__':
     from qce_circuit import (
         DeclarativeCircuit,
-        plot_circuit,
-    )
+        plot_circuit, InitialStateContainer,
+)
     from qce_circuit.library.repetition_code.repetition_code_circuit import (
         construct_repetition_code_circuit,
         InitialStateEnum,
-        InitialStateContainer,
     )
     import matplotlib.pylab as plt
 

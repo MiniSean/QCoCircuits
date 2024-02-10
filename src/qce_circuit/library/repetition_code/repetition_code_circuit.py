@@ -2,8 +2,7 @@
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
 from dataclasses import dataclass
-from typing import List, Union, Dict, Tuple, Optional
-import numpy as np
+from typing import List, Union, Tuple, Optional
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
 from qce_circuit.connectivity import (
     IConnectivityLayer,
@@ -38,6 +37,7 @@ from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperat
 from qce_circuit.language import (
     DeclarativeCircuit,
     InitialStateEnum,
+    InitialStateContainer
 )
 
 from qce_circuit.addon_stim.circuit_operations import (
@@ -200,89 +200,21 @@ class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
     def get_data_index(self, element: IQubitID) -> int:
         return self.data_qubit_ids.index(element)
 
+    def get_operations(self, initial_state: InitialStateContainer, **kwargs) -> List[ICircuitOperation]:
+        return [
+            initial_state.get_operation(
+                qubit_index=self.get_data_index(self.get_data_element(initial_state_index)),
+                initial_state_index=initial_state_index,
+                **kwargs,
+            )
+            for initial_state_index in initial_state.initial_states.keys()
+        ]
+
     @classmethod
     def from_chain(cls, length: int) -> 'Connectivity1D':
         """:return: Class method constructor based on chain length."""
         return Connectivity1D(
             _qubit_ids=[QubitIDObj(f'D{i}') for i in range(length)]
-        )
-    # endregion
-
-
-@dataclass(frozen=True)
-class InitialStateContainer:
-    """
-    Data class, holding reference to qubits and their initial state.
-    """
-    initial_states: Dict[int, InitialStateEnum]
-    """Index pointers to data qubits only."""
-
-    # region Class Properties
-    @property
-    def distance(self) -> int:
-        return len(self.initial_states)
-
-    @property
-    def as_array(self) -> np.ndarray:
-        sorted_indices: List[int] = list(sorted(self.initial_states.keys()))
-        # Maps initial state to binary
-        to_bit_conversion: Dict[InitialStateEnum, int] = {
-            InitialStateEnum.ZERO: 0,
-            InitialStateEnum.MINUS: 0,
-            InitialStateEnum.MINUS_I: 0,
-            InitialStateEnum.ONE: 1,
-            InitialStateEnum.PLUS: 1,
-            InitialStateEnum.PLUS_I: 1,
-        }
-        return np.asarray([to_bit_conversion[self.initial_states[index]] for index in sorted_indices])
-    # endregion
-
-    # region Class Methods
-    def get_initial_state(self, qubit_index: int) -> InitialStateEnum:
-        return self.initial_states[qubit_index]
-
-    def get_operation(self, qubit_id: IQubitID, connectivity: Connectivity1D, **kwargs) -> ICircuitOperation:
-        # Data allocation
-        initial_state: InitialStateEnum = InitialStateEnum.ZERO
-        initial_state_index: int = connectivity.get_data_index(qubit_id)
-        qubit_index: int = connectivity.get_index(qubit_id)
-
-        if initial_state_index in self.initial_states:
-            initial_state = self.initial_states[initial_state_index]
-
-        if initial_state == InitialStateEnum.ZERO:
-            return Identity(qubit_index, **kwargs)
-        if initial_state == InitialStateEnum.ONE:
-            return Rx180(qubit_index, **kwargs)
-        if initial_state == InitialStateEnum.PLUS:
-            return Ry90(qubit_index, **kwargs)
-        if initial_state == InitialStateEnum.MINUS:
-            return Rym90(qubit_index, **kwargs)
-        if initial_state == InitialStateEnum.PLUS_I:
-            return Rxm90(qubit_index, **kwargs)
-        if initial_state == InitialStateEnum.MINUS_I:
-            return Rx90(qubit_index, **kwargs)
-
-        raise NotImplementedError(f"Initial state {initial_state} is not supported.")
-
-    def get_operations(self, connectivity: Connectivity1D, **kwargs) -> List[ICircuitOperation]:
-        return [
-            self.get_operation(
-                qubit_id=connectivity.get_data_element(qubit_index),
-                connectivity=connectivity,
-                **kwargs,
-            )
-            for qubit_index in self.initial_states.keys()
-        ]
-
-    @classmethod
-    def from_ordered_list(cls, initial_states: List[InitialStateEnum]) -> 'InitialStateContainer':
-        """
-        :return: Class method constructor based on ordered array of initial state.
-        Where each element index corresponds to qubit index.
-        """
-        return InitialStateContainer(
-            initial_states={i: state for i, state in enumerate(initial_states)}
         )
     # endregion
 
@@ -388,7 +320,7 @@ def get_circuit_initialize(connectivity: Connectivity1D, initial_state: InitialS
     result: DeclarativeCircuit = DeclarativeCircuit()
     qubit_indices: List[int] = connectivity.qubit_indices
     result.add(Barrier(qubit_indices))
-    for operation in initial_state.get_operations(connectivity=connectivity):
+    for operation in connectivity.get_operations(initial_state=initial_state):
         result.add(operation)
     result.add(Barrier(qubit_indices))
     return result

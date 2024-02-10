@@ -3,9 +3,9 @@ from typing import Dict
 from qce_circuit.visualization.display_circuit import plot_circuit
 from qce_circuit.library.repetition_code.repetition_code_circuit import (
     construct_repetition_code_circuit_simplified,
-    InitialStateContainer,
     InitialStateEnum,
 )
+from qce_circuit import InitialStateContainer
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
 from qce_circuit.structure.circuit_operations import (
     CPhase,
