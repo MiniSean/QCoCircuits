@@ -2,10 +2,15 @@
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
 from typing import List
-
-from qce_circuit.library.repetition_code.circuit_components import Connectivity1D, get_last_acquisition_operation, \
-    get_repetition_code_connectivity, get_circuit_initialize, get_circuit_initialize_with_heralded, \
-    get_circuit_final_measurement, get_circuit_qec_round_with_dynamical_decoupling, get_circuit_qec_with_detectors
+from qce_circuit.library.repetition_code.circuit_components import (
+    Connectivity1D,
+    get_last_acquisition_operation,
+    get_repetition_code_connectivity,
+    get_circuit_initialize, get_circuit_initialize_with_heralded,
+    get_circuit_final_measurement,
+    get_circuit_qec_round_with_dynamical_decoupling,
+    get_circuit_qec_with_detectors,
+)
 from qce_circuit.connectivity import (
     IQubitID,
     IEdgeID,

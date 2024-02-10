@@ -3,13 +3,32 @@
 # -------------------------------------------
 from dataclasses import dataclass
 from typing import List, Tuple, Union, Optional
-
-from qce_circuit import InitialStateContainer, DeclarativeCircuit, Barrier, AcquisitionRegistry, Reset, \
-    DispersiveMeasure, RegistryAcquisitionStrategy, Rym90, CPhase, Ry90, FixedDurationStrategy, Wait, Rx180, \
-    FixedRepetitionStrategy
+from qce_circuit import (
+    DeclarativeCircuit,
+    Barrier,
+    AcquisitionRegistry,
+    Reset,
+    DispersiveMeasure,
+    RegistryAcquisitionStrategy,
+    Rym90,
+    CPhase,
+    Ry90,
+    FixedDurationStrategy,
+    Wait,
+    Rx180,
+    FixedRepetitionStrategy,
+)
+from qce_circuit.language import InitialStateContainer
 from qce_circuit.addon_stim.circuit_operations import DetectorOperation, CoordinateShiftOperation
-from qce_circuit.connectivity import IConnectivityLayer, IFluxDanceLayer, IQubitID, IEdgeID, EdgeIDObj, FluxDanceLayer, \
-    QubitIDObj
+from qce_circuit.connectivity import (
+    IConnectivityLayer,
+    IFluxDanceLayer,
+    IQubitID,
+    IEdgeID,
+    EdgeIDObj,
+    FluxDanceLayer,
+    QubitIDObj,
+)
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
