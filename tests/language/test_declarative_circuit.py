@@ -2,7 +2,7 @@ import unittest
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
 from qce_circuit.structure.intrf_circuit_operation import RelationType
 from qce_circuit.structure.registry_repetition import FixedRepetitionStrategy
-from qce_circuit.visualization.display_circuit import plot_circuit
+from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 from qce_circuit.structure.circuit_operations import *
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     OperationGraphNode,

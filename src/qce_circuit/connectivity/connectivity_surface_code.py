@@ -82,60 +82,6 @@ class ParityGroup(IParityGroup):
     # endregion
 
 
-@dataclass(frozen=True)
-class GateGroup(IGateGroup):
-    """
-    Data class, implementing IGateGroup interface.
-    """
-    _gate_edge: IEdgeID
-    """Edge that determines two-qubit gate."""
-
-    # region Interface Properties
-    @property
-    def gate_id(self) -> IEdgeID:
-        """:return: Edge involved in the 2-qubit gate."""
-        return self._gate_edge
-
-    @property
-    def involved_ids(self) -> List[IQubitID]:
-        """:return: (All) qubit-ID's (directly) involved with 2-qubit gate."""
-        return self.gate_id.qubit_ids
-
-    @property
-    def spectator_ids(self) -> List[IQubitID]:
-        """:return: (All) qubit-ID's (indirectly) involved with 2-qubit gate."""
-        involved_qubit_ids: List[IQubitID] = self.involved_ids
-        neighbor_qubit_ids: List[IQubitID] = Surface17Layer().get_neighbors(qubit=involved_qubit_ids[0], order=1) \
-                                             + Surface17Layer().get_neighbors(qubit=involved_qubit_ids[1], order=1)
-        return [element for element in set(neighbor_qubit_ids) if element not in involved_qubit_ids]
-    # endregion
-
-    # region Interface Methods
-    def contains(self, element: Union[IQubitID, IEdgeID]) -> bool:
-        """:return: Boolean, whether element is part of gate group or not."""
-        if element in self.spectator_ids + self.gate_id.qubit_ids:
-            return True
-        if element in [self.gate_id]:
-            return True
-        return False
-
-    def get_spectator_edge(self, spectator: IQubitID) -> IEdgeID:
-        """
-        Checks if spectator is part of group-spectators, if not raise ElementNotIncludedException.
-        :return: Edge that links spectator to one of the involved qubits.
-        """
-        # Guard clause, raise exception if spectator not part of group-spectator
-        if spectator not in self.spectator_ids:
-            raise ElementNotIncludedException(f"Element: {spectator} not part of {self.spectator_ids}.")
-
-        # Guaranteed that one of the potential edges are correct
-        involved_qubit_ids: List[IQubitID] = self.involved_ids
-        for potential_edge in Surface17Layer().get_edges(qubit=spectator):
-            if potential_edge.get_connected_qubit_id(element=spectator) in involved_qubit_ids:
-                return potential_edge
-    # endregion
-
-
 class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     """
     Singleton class, implementing ISurfaceCodeLayer interface to describe a surface-17 layout.

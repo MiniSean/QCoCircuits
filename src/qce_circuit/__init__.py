@@ -42,7 +42,7 @@ from .library.repetition_code.circuit_components import (
     Connectivity1D as RepetitionCodeConnectivity,
     get_repetition_code_connectivity as connectivity_repetition_code,
 )
-from .visualization.display_circuit import plot_circuit
+from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 
 __all__ = [
     "DeclarativeCircuit",
