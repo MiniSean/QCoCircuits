@@ -4,13 +4,18 @@
 from dataclasses import dataclass, field
 from typing import Dict, List
 import numpy as np
-from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
+from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
+from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
+    GateSequenceLayer,
+)
+from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLayer
 from qce_circuit.utilities.geometric_definitions import (
     TransformAlignment,
     Vec2D,
 )
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_layout.style_manager import StyleManager
 from qce_circuit.visualization.visualize_layout.plaquette_components import (
     RectanglePlaquette,
@@ -18,18 +23,27 @@ from qce_circuit.visualization.visualize_layout.plaquette_components import (
 )
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
-    HexagonComponent,
+    ParkingComponent,
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
+    GateOperationComponent,
 )
-from qce_circuit.visualization.display_circuit import CircuitAxesFormat
-from qce_circuit.visualization.plotting_functionality import (
+from qce_circuit.visualization.visualize_circuit.display_circuit import CircuitAxesFormat
+from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
     LabelFormat,
     IFigureAxesPair,
 )
+
+
+@dataclass(frozen=True)
+class SequenceFrame:
+    """
+    Data class, containing connectivity, gates and parking identifiers for a single sequence 'frame'.
+    """
+    pass
 
 
 @dataclass(frozen=True)
@@ -39,6 +53,7 @@ class VisualConnectivityDescription:
     Implements basic visualization.
     """
     connectivity: ISurfaceCodeLayer
+    gate_sequence: GateSequenceLayer = field(default_factory=GateSequenceLayer.empty)
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
     rotation: float = field(default=-45)
@@ -127,6 +142,24 @@ class VisualConnectivityDescription:
             )
         ]
 
+    def get_operation_components(self) -> List[IDrawComponent]:
+        park_components: List[IDrawComponent] = [
+            ParkingComponent(
+                pivot=self.identifier_to_pivot(identifier=operation.identifier),
+                alignment=TransformAlignment.MID_CENTER,
+            )
+            for operation in self.gate_sequence.park_operations
+        ]
+        gate_components: List[IDrawComponent] = [
+            GateOperationComponent(
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
+                alignment=TransformAlignment.MID_CENTER,
+            )
+            for operation in self.gate_sequence.gate_operations
+        ]
+        return park_components + gate_components
+
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
         """:return: Pivot based on qubit identifier."""
         # Surface-17 layout
@@ -186,8 +219,8 @@ class VisualConnectivityDescription:
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
-    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5, 5)
-    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, (5, 5))
+    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(SubplotKeywordEnum.AXES_FORMAT.value, CircuitAxesFormat())
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
 
@@ -197,10 +230,26 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
     for draw_component in description.get_element_components():
         draw_component.draw(axes=ax)
 
-    for draw_component in description.get_line_components():
+    for draw_component in description.get_operation_components():
         draw_component.draw(axes=ax)
 
     ax.set_aspect('equal')
     ax.set_xlim([-3, 3])
     ax.set_ylim([-3, 3])
     return fig, ax
+
+
+def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFigureAxesPair:
+    sequence_count: int = description.gate_sequence_count
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
+    fig, axes = construct_subplot(ncols=sequence_count, **kwargs)
+
+    for i, ax in enumerate(axes):
+        descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
+            connectivity=Surface17Layer(),
+            gate_sequence=description.get_gate_sequence_at_index(i),
+            layout_spacing=1.0
+        )
+        kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
+        plot_layout_description(descriptor, **kwargs)
+    return fig, axes[0]

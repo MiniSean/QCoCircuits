@@ -7,12 +7,15 @@ import numpy as np
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
 from qce_circuit.connectivity import (
     IConnectivityLayer,
-    IFluxDanceLayer,
-    FluxDanceLayer,
+    IGateSequenceLayer,
+    GateSequenceLayer,
     IQubitID,
     IEdgeID,
     QubitIDObj,
     EdgeIDObj,
+)
+from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
+    Operation,
 )
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -48,7 +51,7 @@ from qce_circuit.addon_stim.circuit_operations import (
 
 
 @dataclass(frozen=True)
-class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
+class Connectivity1D(IConnectivityLayer, IGateSequenceLayer):
     """
     Data class, describing (dynamic) 1D qubit chain connectivity.
     """
@@ -66,19 +69,20 @@ class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
         return [EdgeIDObj(qubit_id0, qubit_id1) for qubit_id0, qubit_id1 in zip(self.qubit_ids, self.qubit_ids[1:])]
 
     @property
-    def flux_dances(self) -> List[FluxDanceLayer]:
+    def flux_dances(self) -> List[GateSequenceLayer]:
         """:return: Array-like of flux dances."""
         edges: List[IEdgeID] = self.edge_ids
         return [
-            FluxDanceLayer(
-                _edge_ids=_edges
+            GateSequenceLayer(
+                _park_operations=[],
+                _gate_operations=[Operation.type_gate(edge_id=edge) for edge in _edges]
             )
             for _edges in [edges[i::4] for i in range(4)] if len(_edges) > 0
         ]
 
     @property
-    def flux_dance_count(self) -> int:
-        """:return: Number of flux-dances in layer."""
+    def gate_sequence_count(self) -> int:
+        """:return: Number of gate-sequences in layer."""
         return len(self.flux_dances)
     # endregion
 
@@ -110,9 +114,9 @@ class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
     @property
     def flux_dance_indices(self) -> List[List[Tuple[int, int]]]:
         result = []
-        for flux_dance_index in range(self.flux_dance_count):
+        for flux_dance_index in range(self.gate_sequence_count):
             group = []
-            for edge_id in self.get_flux_dance_at_index(flux_dance_index).edge_ids:
+            for edge_id in self.get_gate_sequence_at_index(flux_dance_index).edge_ids:
                 pair: Tuple[int, int] = (self.get_index(edge_id.qubit_ids[0]), self.get_index(edge_id.qubit_ids[1]))
                 group.append(pair)
             result.append(group)
@@ -125,11 +129,11 @@ class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
         group_b = []
 
         for flux_dance_index in [0, 1]:
-            for qubit_id in self.get_flux_dance_at_index(flux_dance_index).qubit_ids:
+            for qubit_id in self.get_gate_sequence_at_index(flux_dance_index).qubit_ids:
                 if qubit_id in self.ancilla_qubit_ids:
                     group_a.append(self.get_index(qubit_id))
         for flux_dance_index in [2, 3]:
-            for qubit_id in self.get_flux_dance_at_index(flux_dance_index).qubit_ids:
+            for qubit_id in self.get_gate_sequence_at_index(flux_dance_index).qubit_ids:
                 if qubit_id in self.ancilla_qubit_ids:
                     group_b.append(self.get_index(qubit_id))
 
@@ -168,18 +172,18 @@ class Connectivity1D(IConnectivityLayer, IFluxDanceLayer):
             return True
         return False
 
-    def get_flux_dance_at_index(self, index: int) -> FluxDanceLayer:
-        """:return: Flux-dance object based on round index."""
-        flux_dances: List[FluxDanceLayer] = self.flux_dances
+    def get_gate_sequence_at_index(self, index: int) -> GateSequenceLayer:
+        """:return: Gate-sequence object based on round index."""
+        flux_dances: List[GateSequenceLayer] = self.flux_dances
         try:
-            flux_dance_layer: FluxDanceLayer = flux_dances[index]
+            flux_dance_layer: GateSequenceLayer = flux_dances[index]
             return flux_dance_layer
         except:
             raise ElementNotIncludedException(f"Index: {index} is out of bounds for flux dance of length: {len(flux_dances)}.")
 
-    def get_flux_dance_from_element(self, element: IEdgeID) -> FluxDanceLayer:
-        """:return: Flux-dance layer of which edge element is part of."""
-        flux_dances: List[FluxDanceLayer] = self.flux_dances
+    def get_gate_sequence_from_element(self, element: IEdgeID) -> GateSequenceLayer:
+        """:return: Gate-sequence layer of which edge element is part of."""
+        flux_dances: List[GateSequenceLayer] = self.flux_dances
         # Assumes element is part of only a single flux-dance layer
         for flux_dance_layer in flux_dances:
             if flux_dance_layer.contains(element=element):
@@ -580,7 +584,7 @@ def get_circuit_qec_with_detectors(connectivity: Connectivity1D, qec_cycles: int
 
 
 if __name__ == '__main__':
-    from qce_circuit.visualization.display_circuit import plot_circuit
+    from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
     import matplotlib.pyplot as plt
     from qce_circuit.addon_stim import to_stim
 

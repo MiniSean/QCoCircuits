@@ -23,14 +23,14 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     VirtualPark,
 )
-from qce_circuit.visualization.annotation_components import (
+from qce_circuit.visualization.visualize_circuit.annotation_components import (
     HorizontalVariableIndicator,
 )
-from qce_circuit.visualization.channel_components import (
+from qce_circuit.visualization.visualize_circuit.channel_components import (
     ChannelHeader,
     ChannelBar,
 )
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     IRectTransform,
@@ -40,7 +40,7 @@ from qce_circuit.utilities.geometric_definitions import (
     FixedPivot,
     Vec2D,
 )
-from qce_circuit.visualization.operation_components import (
+from qce_circuit.visualization.visualize_circuit.operation_components import (
     RotationAxis,
     RotationAngle,
     GateType,
@@ -48,7 +48,7 @@ from qce_circuit.visualization.operation_components import (
     BlockRotation,
     BlockGate,
 )
-from qce_circuit.visualization.multi_pivot_components import (
+from qce_circuit.visualization.visualize_circuit.multi_pivot_components import (
     BlockTwoQubitGate,
 )
 from qce_circuit.language.declarative_circuit import (
@@ -63,11 +63,11 @@ from qce_circuit.structure.intrf_circuit_operation import (
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
-from qce_circuit.visualization.intrf_factory_draw_components import (
+from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
 )
-from qce_circuit.visualization.factory_draw_components import (
+from qce_circuit.visualization.visualize_circuit.factory_draw_components import (
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
@@ -88,7 +88,7 @@ from qce_circuit.visualization.factory_draw_components import (
     VirtualParkFactory,
 )
 from qce_circuit.utilities.array_manipulation import unique_in_order
-from qce_circuit.visualization.plotting_functionality import (
+from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     construct_subplot,
     SubplotKeywordEnum,
     IAxesFormat,

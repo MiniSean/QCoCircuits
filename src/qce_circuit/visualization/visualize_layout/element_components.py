@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from matplotlib import pyplot as plt, patches as patches
 import numpy as np
 from typing import List
-from qce_circuit.visualization.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     TransformAlignment,
@@ -18,6 +18,8 @@ from qce_circuit.utilities.geometric_definitions import (
 from qce_circuit.visualization.visualize_layout.style_manager import (
     StyleManager,
     ElementStyleSettings,
+    ElementTextStyleSettings,
+    ParkOperationStyleSettings,
 )
 
 
@@ -111,5 +113,85 @@ class HexagonComponent(IRectTransformComponent, IDrawComponent):
         # Apply patches
         axes.add_patch(hexagon)
         dot.draw(axes=axes)
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class ParkingComponent(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing circle.
+    """
+    pivot: Vec2D
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: ParkOperationStyleSettings = field(default=StyleManager.read_config().park_operation_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.style_settings.element_radius),
+            _height_strategy=FixedLength(self.style_settings.element_radius),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        dot = patches.Circle(
+            xy=self.rectilinear_transform.center_pivot.to_tuple(),
+            radius=self.style_settings.element_radius,
+            edgecolor=self.style_settings.line_color,
+            linewidth=self.style_settings.line_width,
+            linestyle=self.style_settings.line_style,
+            fill=False,
+            zorder=self.style_settings.zorder,
+        )
+        # Apply patches
+        axes.add_patch(dot)
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class TextComponent(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing data for centralised-text.
+    """
+    pivot: Vec2D
+    text: str
+    color: str = field(default=StyleManager.read_config().element_text_style.font_color)
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: ElementTextStyleSettings = field(default=StyleManager.read_config().element_text_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.style_settings.element_radius),
+            _height_strategy=FixedLength(self.style_settings.element_radius),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        transform: IRectTransform = self.rectilinear_transform
+        axes.text(
+            x=transform.pivot.x,
+            y=transform.pivot.y,
+            s=self.text,
+            color=self.color,
+            fontsize=self.style_settings.font_size,
+            ha='center',
+            va='center',
+            zorder=self.style_settings.zorder,
+        )
         return axes
     # endregion

@@ -2,9 +2,9 @@
 from .intrf_connectivity import (
     IConnectivityLayer,
 )
-from .intrf_connectivity_dance import (
-    IFluxDanceLayer,
-    FluxDanceLayer,
+from .intrf_connectivity_gate_sequence import (
+    IGateSequenceLayer,
+    GateSequenceLayer,
 )
 from .intrf_channel_identifier import (
     IQubitID,
@@ -15,8 +15,8 @@ from .intrf_channel_identifier import (
 
 __all__ = [
     "IConnectivityLayer",
-    "IFluxDanceLayer",
-    "FluxDanceLayer",
+    "IGateSequenceLayer",
+    "GateSequenceLayer",
     "IQubitID",
     "IEdgeID",
     "QubitIDObj",

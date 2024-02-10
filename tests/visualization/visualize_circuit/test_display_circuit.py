@@ -1,6 +1,6 @@
 import unittest
 from typing import Dict
-from qce_circuit.visualization.display_circuit import plot_circuit
+from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 from qce_circuit.library.repetition_code_circuit import (
     construct_repetition_code_circuit_simplified,
     InitialStateContainer,
@@ -11,7 +11,6 @@ from qce_circuit.structure.circuit_operations import (
     CPhase,
     VirtualPark,
     Barrier,
-    Identity,
 )
 import matplotlib.pyplot as plt
 
