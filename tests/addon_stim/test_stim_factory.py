@@ -1,6 +1,6 @@
 import unittest
 import stim
-from qce_circuit.library.repetition_code_circuit import (
+from qce_circuit.library.repetition_code.repetition_code_circuit import (
     InitialStateContainer,
     InitialStateEnum,
     construct_repetition_code_circuit,

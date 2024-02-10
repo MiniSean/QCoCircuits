@@ -35,7 +35,7 @@ from .structure.circuit_operations import (
     Hadamard,
     Barrier,
 )
-from .library.repetition_code_circuit import (
+from qce_circuit.library.repetition_code.repetition_code_circuit import (
     get_repetition_code_connectivity as connectivity_repetition_code,
     construct_repetition_code_circuit as circuit_repetition_code,
     InitialStateContainer,

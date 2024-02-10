@@ -4,7 +4,7 @@ from qce_circuit.language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )
-from qce_circuit.library.repetition_code_circuit import (
+from qce_circuit.library.repetition_code.repetition_code_circuit import (
     construct_repetition_code_circuit,
     InitialStateContainer,
 )
