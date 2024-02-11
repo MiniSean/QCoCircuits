@@ -90,10 +90,10 @@ class IRepetitionCodeDescription(ABC):
         return len(self.gate_sequences)
 
     @property
-    def circuit_channel_map(self) -> Dict[int, str]:
-        """:return: Dictionary that maps circuit channel to string identifier."""
+    def circuit_channel_map(self) -> Dict[int, IQubitID]:
+        """:return: Dictionary that maps circuit channel index to identifier."""
         return {
-            self.map_qubit_id_to_circuit_index(qubit_id): qubit_id.id
+            self.map_qubit_id_to_circuit_index(qubit_id): qubit_id
             for qubit_id in self.qubit_ids
         }
     # endregion
