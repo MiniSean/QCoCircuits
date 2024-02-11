@@ -6,7 +6,10 @@ from typing import List, Dict, Optional
 import stim
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
-from qce_circuit.addon_stim.noise_settings_manager import NoiseSettingManager
+from qce_circuit.addon_stim.noise_settings_manager import (
+    NoiseSettingManager,
+    NoiseSettings,
+)
 from qce_circuit.addon_stim.intrf_noise_factory import (
     IStimNoiseDresserFactory,
     StimNoiseDresserFactoryManager
@@ -47,18 +50,19 @@ class NoiseFactoryManager(IStimNoiseDresserFactory, metaclass=SingletonABCMeta):
     # endregion
 
 
-def apply_noise(circuit: stim.Circuit, qubit_index_map: Optional[Dict[int, IQubitID]] = None, factory: IStimNoiseDresserFactory = NoiseFactoryManager()) -> stim.Circuit:
+def apply_noise(circuit: stim.Circuit, qubit_index_map: Optional[Dict[int, IQubitID]] = None, factory: IStimNoiseDresserFactory = NoiseFactoryManager(), noise_settings: NoiseSettings = NoiseSettingManager.read_config()) -> stim.Circuit:
     """
     :param circuit: Circuit to be dressed with noise.
     :param qubit_index_map: (Optional) Dictionary mapping from (circuit) qubit index to qubit-ID (used for retrieving noise parameters).
     :param factory: (Optional) IStimNoiseDresserFactory for specialized noise application.
+    :param noise_settings: (Optional) NoiseSettings instance describing the noise settings used for applying noise.
     :return: New stim circuit, dressed with noisy operations based on noise-dresser factory.
     """
     if qubit_index_map is None:
         qubit_index_map = {}
 
     index_noise_settings: IndexedNoiseSettings = IndexedNoiseSettings(
-        noise_settings=NoiseSettingManager.read_config(),
+        noise_settings=noise_settings,
         qubit_index_lookup=qubit_index_map,
     )
     return factory.construct(circuit=circuit, settings=index_noise_settings)
