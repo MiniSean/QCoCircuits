@@ -23,7 +23,11 @@ from qce_circuit.connectivity import (
     IEdgeID,
     EdgeIDObj,
 )
-from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLayer
+from qce_circuit.connectivity.generic_gate_sequence import (
+    IGenericSurfaceCodeLayer,
+    GenericSurfaceCode,
+)
+from qce_circuit.connectivity.connectivity_surface_code import get_requires_parking
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -37,6 +41,7 @@ from qce_circuit.structure.circuit_operations import (
 )
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
 
 
 class IRepetitionCodeDescription(ABC):
@@ -168,6 +173,15 @@ class IRepetitionCodeDescription(ABC):
                 if qubit_id in ancilla_ids:
                     result.append(self.map_qubit_id_to_circuit_index(qubit_id))
         return result
+
+    def to_sequence(self) -> IGenericSurfaceCodeLayer:
+        """:return: Trivial conversion from circuit description to gate sequence (layout)."""
+
+        return GenericSurfaceCode(
+            gate_sequences=self.gate_sequences,
+            parity_group_x=Repetition9Code().parity_group_x,
+            parity_group_z=Repetition9Code().parity_group_z,
+        )
     # endregion
 
 
@@ -284,10 +298,15 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         gate_sequences: List[GateSequenceLayer] = []
         for i in range(connectivity.gate_sequence_count):
             entire_gate_sequence: GateSequenceLayer = connectivity.get_gate_sequence_at_index(index=i)
+            # Mandatory gate operations
+            gate_operations: List[Operation[IEdgeID]] = [element for element in entire_gate_sequence.gate_operations if all([qubit_id in involved_qubit_ids for qubit_id in element.identifier.qubit_ids])]
+            # Dynamic park operations
+            edge_identifiers: List[IEdgeID] = [element.identifier for element in gate_operations]
+            park_operations: List[Operation[IQubitID]] = [Operation.type_park(element) for element in connectivity.qubit_ids if get_requires_parking(element=element, edge_ids=edge_identifiers, connectivity=connectivity)]
             # Only include park- and gate-operations for which all identifiers are part of involved qubit-ID's
             subset_gate_sequence: GateSequenceLayer = GateSequenceLayer(
-                _park_operations=[element for element in entire_gate_sequence.park_operations if element.identifier in involved_qubit_ids],
-                _gate_operations=[element for element in entire_gate_sequence.gate_operations if all([qubit_id in involved_qubit_ids for qubit_id in element.identifier.qubit_ids])]
+                _park_operations=park_operations,
+                _gate_operations=gate_operations,
             )
             non_empty_sequence: bool = len(subset_gate_sequence.park_operations) > 0 or len(subset_gate_sequence.gate_operations) > 0
             if non_empty_sequence:

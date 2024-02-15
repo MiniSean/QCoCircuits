@@ -3,8 +3,10 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from typing import List, Union, Dict
+import numpy as np
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.connectivity.intrf_channel_identifier import (
     IFeedlineID,
     IQubitID,
@@ -13,6 +15,7 @@ from qce_circuit.connectivity.intrf_channel_identifier import (
     QubitIDObj,
     EdgeIDObj,
 )
+from qce_circuit.connectivity.intrf_connectivity import IConnectivityLayer
 from qce_circuit.connectivity.intrf_connectivity_surface_code import (
     ISurfaceCodeLayer,
     IParityGroup,
@@ -282,3 +285,57 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
             return True
         return False
     # endregion
+
+
+def get_neighbors(element: Union[IQubitID, IEdgeID], connectivity: IConnectivityLayer, order: int = 1) -> List[IQubitID]:
+    """
+    Functionality for both qubit-ID and edge-ID.
+    Requires :param order: to be higher or equal to 1.
+    :return: qubit neighbors separated by order. (order=1, nearest neighbors).
+    """
+    if isinstance(element, IQubitID):
+        return connectivity.get_neighbors(element, order=order)
+    elif isinstance(element, IEdgeID):
+        combined_neighbors: List[IQubitID] = []
+        for qubit_id in element.qubit_ids:
+            combined_neighbors.extend(connectivity.get_neighbors(qubit_id, order=order))
+        return unique_in_order(combined_neighbors)
+    raise NotImplemented(f"Finding the neighbor qubits of element with type {type(element)} is not supported. Try {type(IQubitID)} or {type(IEdgeID)}.")
+
+
+def on_moving_side(qubit_id: IQubitID, edge_id: IEdgeID, connectivity: ISurfaceCodeLayer) -> bool:
+    """:return: True if qubit is the higher-frequency qubit of the edge, otherwise False."""
+    if not edge_id.contains(qubit_id):
+        return False
+    qubit_frequency_identifier = connectivity.get_frequency_group_identifier(qubit_id)
+    other_frequency_identifier = connectivity.get_frequency_group_identifier(edge_id.get_connected_qubit_id(qubit_id))
+    return qubit_frequency_identifier.is_higher_than(other_frequency_identifier)
+
+
+def get_requires_parking(element: IQubitID, edge_ids: List[IEdgeID], connectivity: ISurfaceCodeLayer) -> bool:
+    """
+    Determines whether qubit-ID is required to park based on participation in flux dance and frequency group.
+    :return: Boolean, whether qubit-ID requires some form of parking.
+    """
+    spectator: bool = np.any([element in get_neighbors(edge_id, connectivity) for edge_id in edge_ids])
+    # Guard clause, if qubit-ID does not spectate the flux-dance, no hard requirement for parking
+    if not spectator:
+        return False
+    # Guard clause, if qubit-ID is part of edge-ID's, no hard requirement for parking
+    edge_included: bool = np.any([edge_id.contains(element) for edge_id in edge_ids])
+    if edge_included:
+        return False
+
+    # Check if qubit-ID requires parking based on its frequency group ID and active two-qubit gates.
+    frequency_group: FrequencyGroupIdentifier = connectivity.get_frequency_group_identifier(element=element)
+    # Parking is required if any neighboring qubit from a higher frequency group is part of an edge.
+    neighboring_qubit_ids: List[IQubitID] = connectivity.get_neighbors(qubit=element, order=1)
+    involved_qubits: List[IQubitID] = [qubit_id for edge_id in edge_ids for qubit_id in edge_id.qubit_ids]
+    involved_edges: List[IEdgeID] = [edge_id for edge_id in edge_ids for _ in edge_id.qubit_ids]
+    involved_neighbors: List[IQubitID] = [qubit_id for qubit_id in neighboring_qubit_ids if qubit_id in involved_qubits]
+    involved_neighbor_edges: List[IEdgeID] = [involved_edges[involved_qubits.index(qubit_id)] for qubit_id in neighboring_qubit_ids if qubit_id in involved_qubits]
+    involved_frequency_groups: List[FrequencyGroupIdentifier] = [connectivity.get_frequency_group_identifier(element=qubit_id) for qubit_id in involved_neighbors]
+    return any([
+        neighbor_frequency_group.is_higher_than(frequency_group) and on_moving_side(neighbor_qubit_id, neighbor_edge_id, connectivity)
+        for neighbor_qubit_id, neighbor_frequency_group, neighbor_edge_id in zip(involved_neighbors, involved_frequency_groups, involved_neighbor_edges)
+    ])
