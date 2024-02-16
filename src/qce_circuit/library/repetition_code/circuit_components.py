@@ -39,6 +39,10 @@ from qce_circuit.structure.circuit_operations import (
     Wait,
     DispersiveMeasure,
 )
+from qce_circuit.structure.intrf_circuit_operation import (
+    RelationLink,
+    RelationType,
+)
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
 from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
@@ -349,6 +353,12 @@ def get_circuit_initialize(connectivity: IRepetitionCodeDescription, initial_sta
     result.add(Barrier(qubit_indices))
     return result
 
+def get_circuit_initialize_simplified(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer) -> DeclarativeCircuit:
+    result: DeclarativeCircuit = DeclarativeCircuit()
+    for operation in connectivity.get_operations(initial_state=initial_state):
+        result.add(operation)
+    return result
+
 
 def get_circuit_initialize_with_heralded(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
@@ -470,6 +480,62 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
     dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
     for data_index in data_indices:
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+        result.add(Rx180(data_index))
+        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    return result
+
+
+def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
+    """
+    :return: DeclarativeCircuit containing (repetition-code) QEC-cycle with dynamical decoupling.
+    Prioritizes (simplified) readability over operation accuracy. (Neglecting exact circuit implementation)
+    """
+    result: DeclarativeCircuit = DeclarativeCircuit()
+
+    data_indices: List[int] = connectivity.data_qubit_indices
+    ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
+    all_indices: List[int] = connectivity.qubit_indices
+    current_active_ancilla_indices: List[int] = []
+
+    relation_activation = RelationLink.no_relation()
+    for sequence_index in range(connectivity.gate_sequence_count):
+        # Check if ancilla's need to be 'activated'
+        sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
+        next_sequence_active_ancilla_indices: Optional[List[int]] = connectivity.get_active_ancilla_indices(sequence_index + 1)
+        sequence_active_gate_indices: List[Tuple[int, int]] = connectivity.get_gate_sequence_indices(sequence_index)
+
+        require_activation: List[int] = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in current_active_ancilla_indices]
+        require_closure: List[int] = sequence_active_ancilla_indices
+        if next_sequence_active_ancilla_indices is not None:
+            require_closure = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in next_sequence_active_ancilla_indices]
+        # Update current active ancilla indices
+        current_active_ancilla_indices = sequence_active_ancilla_indices
+
+        # Schedule Ancilla basis rotation for 'activation'
+        for qubit_index in require_activation:
+            result.add(Rym90(qubit_index, relation=relation_activation))
+        # Schedule two-qubit gate
+        for index0, index1 in sequence_active_gate_indices:
+            relation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(CPhase(index0, index1, relation=relation))
+        # Schedule Ancilla basis rotation for 'closure'
+        relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+        for qubit_index in require_closure:
+            result.add(Ry90(qubit_index, relation=relation_activation))
+
+    # Ancilla measurement
+    # result.add(Barrier(all_indices))
+    relation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+    for ancilla_index in ancilla_indices:
+        result.add(DispersiveMeasure(
+            ancilla_index,
+            acquisition_strategy=RegistryAcquisitionStrategy(registry),
+            acquisition_tag='parity',
+            relation=relation,
+        ))
+    dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
+    for data_index in data_indices:
+        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
         result.add(Rx180(data_index))
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
     return result
