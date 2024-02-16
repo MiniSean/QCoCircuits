@@ -10,6 +10,7 @@ from qce_circuit.library.repetition_code.circuit_components import (
     get_circuit_initialize, get_circuit_initialize_with_heralded,
     get_circuit_final_measurement,
     get_circuit_qec_round_with_dynamical_decoupling,
+    get_circuit_qec_round_with_dynamical_decoupling_simplified,
     get_circuit_qec_with_detectors,
 )
 from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
@@ -17,6 +18,7 @@ from qce_circuit.connectivity import (
     IQubitID,
     IEdgeID,
 )
+from qce_circuit.structure.circuit_operations import Barrier
 from qce_circuit.structure.registry_acquisition import (
     AcquisitionRegistry,
 )
@@ -100,54 +102,16 @@ def construct_repetition_code_circuit_simplified(qec_cycles: int, description: O
     cycle_circuit: DeclarativeCircuit = DeclarativeCircuit(
         repetition_strategy=FixedRepetitionStrategy(repetitions=qec_cycles)
     )
-    cycle_circuit.add(get_circuit_qec_round_with_dynamical_decoupling(
+    cycle_circuit.add(get_circuit_qec_round_with_dynamical_decoupling_simplified(
         connectivity=description,
         registry=registry
     ))
 
+    result.add(Barrier(description.qubit_indices))
     result.add(cycle_circuit)
     result.add(get_circuit_final_measurement(
         connectivity=description,
         registry=registry,
     ))
+    result.add(Barrier(description.qubit_indices))
     return result
-
-
-if __name__ == '__main__':
-    from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
-    from qce_circuit.connectivity.intrf_channel_identifier import QubitIDObj
-    import matplotlib.pyplot as plt
-    from qce_circuit.addon_stim import to_stim
-
-    initial_state: InitialStateContainer = InitialStateContainer.from_ordered_list([
-        InitialStateEnum.ZERO,
-        InitialStateEnum.ZERO,
-        InitialStateEnum.ZERO,
-        InitialStateEnum.ZERO,
-        InitialStateEnum.ZERO,
-    ])
-    circuit_description: RepetitionCodeDescription = RepetitionCodeDescription.from_connectivity(
-        involved_qubit_ids=[
-            QubitIDObj('D7'),
-            QubitIDObj('Z3'),
-            QubitIDObj('D4'),
-            QubitIDObj('Z1'),
-            QubitIDObj('D5'),
-            QubitIDObj('Z4'),
-            QubitIDObj('D6'),
-            QubitIDObj('Z2'),
-            QubitIDObj('D3'),
-        ],
-        connectivity=Repetition9Code(),
-    )
-    circuit = construct_repetition_code_circuit(
-        description=circuit_description,
-        qec_cycles=7,
-        initial_state=initial_state,
-    )
-    plot_circuit(circuit, channel_map=circuit_description.circuit_channel_map)
-    plt.show()
-
-    stim_circuit = to_stim(circuit)
-    print(stim_circuit.diagram())
-
