@@ -346,6 +346,15 @@ def get_repetition_code_connectivity(initial_state: InitialStateContainer) -> Re
 
 def get_circuit_initialize(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
+    qubit_indices: List[int] = connectivity.qubit_indices
+    result.add(Barrier(qubit_indices))
+    for operation in connectivity.get_operations(initial_state=initial_state):
+        result.add(operation)
+    result.add(Barrier(qubit_indices))
+    return result
+
+def get_circuit_initialize_simplified(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer) -> DeclarativeCircuit:
+    result: DeclarativeCircuit = DeclarativeCircuit()
     for operation in connectivity.get_operations(initial_state=initial_state):
         result.add(operation)
     return result

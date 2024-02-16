@@ -7,7 +7,9 @@ from qce_circuit.library.repetition_code.circuit_components import (
     RepetitionCodeDescription,
     get_last_acquisition_operation,
     get_repetition_code_connectivity,
-    get_circuit_initialize, get_circuit_initialize_with_heralded,
+    get_circuit_initialize,
+    get_circuit_initialize_simplified,
+    get_circuit_initialize_with_heralded,
     get_circuit_final_measurement,
     get_circuit_qec_round_with_dynamical_decoupling,
     get_circuit_qec_round_with_dynamical_decoupling_simplified,
@@ -95,7 +97,7 @@ def construct_repetition_code_circuit_simplified(qec_cycles: int, description: O
 
     result: DeclarativeCircuit = DeclarativeCircuit()
     registry: AcquisitionRegistry = result.acquisition_registry
-    result.add(get_circuit_initialize(
+    result.add(get_circuit_initialize_simplified(
         connectivity=description,
         initial_state=initial_state,
     ))
