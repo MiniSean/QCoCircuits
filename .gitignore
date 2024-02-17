@@ -161,3 +161,7 @@ data/
 data/*
 
 *.yaml
+config_openql_platform.json
+
+temp/
+temp/*

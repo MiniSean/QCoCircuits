@@ -31,3 +31,8 @@ class IsolatedGroupException(Exception):
     """
     Raised when a list of grouped elements are not isolated. Members from one group are shared in another group.
     """
+
+class InvalidPointerException(Exception):
+    """
+    Raised when file-pointer is invalid (path-to-file does not exist).
+    """
