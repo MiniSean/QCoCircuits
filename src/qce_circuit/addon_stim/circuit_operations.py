@@ -118,6 +118,15 @@ class DetectorOperation(SingleQubitOperation, ICircuitOperation):
                 targets=[stim.target_rec(main_target), stim.target_rec(ref_target)],
                 gate_args=[self.qubit_index, arg_index],
             )
+        # Main target and secondary target
+        if self.main_target is not None and self.secondary_target is not None and self.reference_offset is None:
+            main_target: int = self.main_target - (self.last_acquisition_index + 1)
+            secondary_target: int = self.secondary_target - (self.last_acquisition_index + 1)
+            return stim.CircuitInstruction(
+                name=instruction_name,
+                targets=[stim.target_rec(main_target), stim.target_rec(secondary_target)],
+                gate_args=[self.qubit_index, arg_index],
+            )
         # Main target, secondary target and reference target
         if self.main_target is not None and self.secondary_target is not None and self.reference_offset is not None and self.secondary_offset is None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
@@ -128,7 +137,7 @@ class DetectorOperation(SingleQubitOperation, ICircuitOperation):
                 targets=[stim.target_rec(main_target), stim.target_rec(secondary_target), stim.target_rec(ref_target)],
                 gate_args=[self.qubit_index, arg_index],
             )
-        # Main target, secondary target and reference target
+        # Main target, secondary target and reference target and secondary offset
         if self.main_target is not None and self.secondary_target is not None and self.reference_offset is not None and self.secondary_offset is not None:
             main_target: int = self.main_target - (self.last_acquisition_index + 1)
             secondary_target: int = self.secondary_target - (self.last_acquisition_index + 1)
