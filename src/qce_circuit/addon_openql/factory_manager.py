@@ -21,8 +21,11 @@ from qce_circuit.structure.circuit_operations import (
     CPhase,
     DispersiveMeasure,
     Rx180,
-    Rym90,
+    Rx90,
+    Rxm90,
+    Ry180,
     Ry90,
+    Rym90,
     Wait,
 )
 from qce_circuit.addon_openql.operation_factories.factory_basic_operations import NameBasedOperationsFactory
@@ -44,8 +47,11 @@ class OpenQLFactoryManager(IOpenQLCircuitFactory, metaclass=SingletonABCMeta):
             CPhase: NameBasedOperationsFactory('cz'),
             DispersiveMeasure: NameBasedOperationsFactory('measure'),
             Rx180: NameBasedOperationsFactory('x180'),
-            Rym90: NameBasedOperationsFactory('my90'),
+            Rx90: NameBasedOperationsFactory('x90'),
+            Rxm90: NameBasedOperationsFactory('mx90'),
+            Ry180: NameBasedOperationsFactory('y180'),
             Ry90: NameBasedOperationsFactory('y90'),
+            Rym90: NameBasedOperationsFactory('my90'),
         }
     )
 
