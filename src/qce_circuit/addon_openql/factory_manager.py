@@ -1,7 +1,7 @@
 # -------------------------------------------
 # Module containing Singleton (default) openQL factory manager.
 # -------------------------------------------
-from typing import List, Type, Union
+from typing import List, Type, Union, Optional
 import openql as ql
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
 from qce_circuit.addon_openql.intrf_openql_factory import (
@@ -63,9 +63,9 @@ class OpenQLFactoryManager(IOpenQLCircuitFactory, metaclass=SingletonABCMeta):
     # endregion
 
     # region Interface Methods
-    def construct(self, circuit: Union[IDeclarativeCircuit, ICircuitCompositeOperation]) -> ql.Program:
+    def construct(self, circuit: Union[IDeclarativeCircuit, ICircuitCompositeOperation], circuit_id: Optional[str] = None) -> ql.Program:
         """:return: OpenQL circuit based on operation type."""
-        return self._factory.construct(circuit=circuit)
+        return self._factory.construct(circuit=circuit, circuit_id=circuit_id)
 
     def contains(self, factory_key: Type[ICircuitOperation]) -> bool:
         """:return: Boolean, whether factory key is included in the manager."""
@@ -73,5 +73,5 @@ class OpenQLFactoryManager(IOpenQLCircuitFactory, metaclass=SingletonABCMeta):
     # endregion
 
 
-def to_openql(circuit: IDeclarativeCircuit, factory: IOpenQLCircuitFactory = OpenQLFactoryManager()) -> ql.Program:
-    return factory.construct(circuit=circuit)
+def to_openql(circuit: IDeclarativeCircuit, factory: IOpenQLCircuitFactory = OpenQLFactoryManager(), circuit_id: Optional[str] = None) -> ql.Program:
+    return factory.construct(circuit=circuit, circuit_id=circuit_id)
