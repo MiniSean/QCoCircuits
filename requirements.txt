@@ -6,4 +6,4 @@ multipledispatch
 coverage
 matplotlib
 stim
-openql
+qutechopenql
