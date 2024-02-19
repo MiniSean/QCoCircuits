@@ -139,24 +139,19 @@ class RegistryDurationStrategy(IDurationStrategy):
     Forces fixed duration.
     """
     registry: DurationRegistry = field(init=True, repr=False)
-    _variable_key: TRegistryKey = field(init=False, repr=True)
+    registry_key: TRegistryKey = field(init=True, repr=True)
 
     # region Class Properties
     @property
     def unique_key(self) -> TRegistryKey:
         """:return: Unique duration registry key."""
-        return self._variable_key
+        return self.registry_key
     # endregion
 
     # region Interface Properties
     def get_variable_duration(self, task: ICircuitOperation) -> float:
         """:return: Duration [ns]."""
         return self.registry.get_registry_at(key=self.unique_key)
-    # endregion
-
-    # region Class Methods
-    def __post_init__(self):
-        object.__setattr__(self, '_variable_key', self.registry.generate_unique_key())
     # endregion
 
 

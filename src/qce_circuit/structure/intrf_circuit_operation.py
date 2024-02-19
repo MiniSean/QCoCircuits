@@ -161,6 +161,7 @@ class RelationLink(IRelationLink[TDurationComponent], Generic[TDurationComponent
     # endregion
 
     # region Interface Methods
+    # FIXME: Including caching significantly speeds up calculations. But it defeats the purpose of dynamic durations.
     @lru_cache(maxsize=None)
     def get_start_time(self, duration: float) -> float:
         """:return: Start time based on reference and self-duration."""

@@ -95,22 +95,17 @@ class RegistryRepetitionStrategy(IRepetitionStrategy):
     Data class, implementing IRepetitionStrategy interface.
     """
     registry: RepetitionRegistry = field(init=True, repr=False)
-    _variable_key: str = field(init=False, repr=True)
+    registry_key: str = field(init=True, repr=True)
 
     # region Class Properties
     @property
     def unique_key(self) -> str:
         """:return: Unique duration registry key."""
-        return self._variable_key
+        return self.registry_key
     # endregion
 
     # region Interface Properties
     def get_repetition_number(self, task: ICircuitOperation) -> int:
         """:return: Number of repetitions."""
         return self.registry.get_registry_at(key=self.unique_key)
-    # endregion
-
-    # region Class Methods
-    def __post_init__(self):
-        object.__setattr__(self, '_variable_key', self.registry.generate_unique_key())
     # endregion

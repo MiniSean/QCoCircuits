@@ -4,7 +4,7 @@
 from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from typing import List, Optional, TypeVar, Dict, Any
+from typing import List, Optional, TypeVar, Dict, Any, Tuple
 from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
@@ -147,6 +147,11 @@ class VisualCircuitDescription:
     @property
     def channel_spacing(self) -> float:
         return self.channel_height * 1.2
+
+    @property
+    def figure_size(self) -> Tuple[float, float]:
+        """:return: Figure size (x, y) depending on visualized circuit components."""
+        return (self.channel_width, self.channel_spacing * len(self.channel_indices))
     # endregion
 
     # region Class Methods
@@ -530,6 +535,7 @@ def plot_circuit_description(description: VisualCircuitDescription, **kwargs) ->
     # Data allocation
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, description.figure_size)
     fig, ax = construct_subplot(**kwargs)
 
     for i, channel_index in enumerate(description.channel_indices):
