@@ -70,8 +70,7 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
                 circuit_qec_with_detectors).circuit_level_acquisition_index + 1) - get_last_acquisition_operation(
                 circuit_qec_with_detectors, qubit_index=ancilla).circuit_level_acquisition_index
         else:
-            ancilla_reference_offset = (get_last_acquisition_operation(
-                result).circuit_level_acquisition_index + 1) - get_last_acquisition_operation(result, qubit_index=ancilla).circuit_level_acquisition_index
+            ancilla_reference_offset = None
 
         result.add(DetectorOperation(
             qubit_index=ancilla,

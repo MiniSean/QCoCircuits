@@ -131,6 +131,47 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
             self.stim_circuit,
             msg="Expected circuit result"
         )
+
+    def test_construction_zero_qec_rounds(self):
+        """Tests circuit representation to 0 qec-cycles."""
+        # Create specific repetition circuit based on Surface-17 layout
+        circuit_description: RepetitionCodeDescription = RepetitionCodeDescription.from_connectivity(
+            involved_qubit_ids=[
+                QubitIDObj('D6'),
+                QubitIDObj('Z2'),
+                QubitIDObj('D3'),
+                QubitIDObj('X2'),
+                QubitIDObj('D2'),
+            ],
+            connectivity=Repetition9Code(),
+        )
+        circuit = construct_repetition_code_circuit(
+            description=circuit_description,
+            initial_state=self.initial_state,
+            qec_cycles=0,
+        )
+        stim_circuit = to_stim(circuit=circuit)
+
+        expected_repr: str = '''
+            R 0 1 2 3 4
+            M 0 1 2 3 4
+            TICK
+            I 0
+            X 2
+            I 4
+            TICK
+            M 0 2 4
+            DETECTOR(1, 0) rec[-3] rec[-2]
+            DETECTOR(3, 0) rec[-1] rec[-2]
+            OBSERVABLE_INCLUDE(0) rec[-3]
+            OBSERVABLE_INCLUDE(0) rec[-2]
+            OBSERVABLE_INCLUDE(0) rec[-1]
+        '''
+        self.assertEqual(
+            stim.Circuit(expected_repr),
+            stim_circuit,
+            msg="Expected circuit result"
+        )
     # endregion
 
     # region Teardown
