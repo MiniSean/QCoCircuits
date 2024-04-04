@@ -161,18 +161,26 @@ class RelationLink(IRelationLink[TDurationComponent], Generic[TDurationComponent
     # endregion
 
     # region Interface Methods
-    # FIXME: Including caching significantly speeds up calculations. But it defeats the purpose of dynamic durations.
-    @lru_cache(maxsize=None)
     def get_start_time(self, duration: float) -> float:
         """:return: Start time based on reference and self-duration."""
         if self.reference_node is None:
             return 0.0
+        return self._get_start_time(
+            reference_start_time=self.reference_node.start_time,
+            reference_end_time=self.reference_node.end_time,
+            duration=duration,
+        )
+
+    # FIXME: Including caching significantly speeds up calculations. But it defeats the purpose of dynamic durations.
+    @lru_cache(maxsize=32)
+    def _get_start_time(self, reference_start_time: float, reference_end_time: float, duration: float) -> float:
+        """:return: Start time based on reference and self-duration."""
         if self._relation_type == RelationType.FOLLOWED_BY:
-            return self.reference_node.end_time
+            return reference_end_time
         if self._relation_type == RelationType.JOINED_START:
-            return self.reference_node.start_time
+            return reference_start_time
         if self._relation_type == RelationType.JOINED_END:
-            return self.reference_node.end_time - duration
+            return reference_end_time - duration
         raise RelationTypeNotImplementedException(f"Relation type: {self._relation_type}, not implemented.")
 
     def copy(self, relation_transfer_lookup: Optional[Dict[TDurationComponent, TDurationComponent]] = None) -> 'RelationLink':

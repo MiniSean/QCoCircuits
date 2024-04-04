@@ -2,6 +2,7 @@
 # Module containing visualization for ISurfaceCodeLayer.
 # -------------------------------------------
 from dataclasses import dataclass, field
+from collections.abc import Iterable
 from typing import Dict, List
 import numpy as np
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
@@ -243,6 +244,8 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     sequence_count: int = description.gate_sequence_count
     kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
     fig, axes = construct_subplot(ncols=sequence_count, **kwargs)
+    if not isinstance(axes, Iterable):
+        axes = [axes]
 
     for i, ax in enumerate(axes):
         descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
