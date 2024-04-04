@@ -31,3 +31,15 @@ class IsolatedGroupException(Exception):
     """
     Raised when a list of grouped elements are not isolated. Members from one group are shared in another group.
     """
+
+
+class IndexOutOfRangeException(Exception):
+    """
+    Raised when (gate-sequence) index falls out of range.
+    """
+
+
+class ExceedingCombinationCountException(Exception):
+    """
+    Raised when the expected number of (gate-sequence) combinations exceeds limit value.
+    """
