@@ -7,3 +7,4 @@ coverage
 matplotlib
 stim
 qutechopenql
+tqdm
