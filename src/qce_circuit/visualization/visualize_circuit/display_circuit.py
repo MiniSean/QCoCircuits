@@ -72,7 +72,6 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
-    MultiTwoQubitBlockFactory,
     Rx180Factory,
     Rx90Factory,
     Rxm90Factory,
@@ -89,6 +88,8 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     BarrierFactory,
     VirtualParkFactory,
 )
+from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
+    MultiTwoQubitBlockFactory
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     construct_subplot,
