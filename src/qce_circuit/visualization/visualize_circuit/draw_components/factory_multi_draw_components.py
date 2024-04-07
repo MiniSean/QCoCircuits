@@ -181,7 +181,7 @@ class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory):
         """:return: Draw components based on array-like of operations."""
         individual_factory: TwoQubitBlockFactory = TwoQubitBlockFactory()
         result: List[IDrawComponent] = []
-        scalar: float = 0.6  # Make sure operation is still displayed within original duration by 80%
+        scalar: float = 0.5  # Make sure operation is still displayed within original duration by 50%
 
         # Debugging
         time_shared_groups: List[TimeSharedOperations] = TimeSharedOperations.divide(operations=operations)

@@ -293,6 +293,9 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
         """Method used for drawing component on Axes."""
         transform: IRectTransform = self.rectilinear_transform
         horizontal_extension: float = 0.1 * transform.width
+        width_ratio: float = 0.8
+        width: float = width_ratio * (transform.right_pivot.x - transform.left_pivot.x)
+        half_width: float = 0.5 * width
 
         # Temporary to cover the background header bar
         cover_arc_xcoords: np.ndarray = np.asarray([
@@ -315,10 +318,10 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
         # Parking line
         arc_xcoords: np.ndarray = np.asarray([
             transform.left_pivot.x - horizontal_extension,
-            transform.left_pivot.x,
-            transform.left_pivot.x,
-            transform.right_pivot.x,
-            transform.right_pivot.x,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x + half_width,
+            transform.center_pivot.x + half_width,
             transform.right_pivot.x + horizontal_extension,
         ])
         arc_ycoords: np.ndarray = np.asarray([
