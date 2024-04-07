@@ -2,6 +2,7 @@
 # Module containing interface for draw methods.
 # -------------------------------------------
 from abc import ABC, abstractmethod
+from typing import TypeVar
 from matplotlib import pyplot as plt
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 
@@ -17,3 +18,6 @@ class IDrawComponent(ABC):
         """Method used for drawing component on Axes."""
         raise InterfaceMethodException
     # endregion
+
+
+TDrawComponent = TypeVar('TDrawComponent', bound=IDrawComponent)
