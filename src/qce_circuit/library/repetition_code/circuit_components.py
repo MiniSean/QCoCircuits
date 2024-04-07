@@ -38,6 +38,7 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     Wait,
     DispersiveMeasure,
+    VirtualPark,
 )
 from qce_circuit.structure.intrf_circuit_operation import (
     RelationLink,
@@ -157,6 +158,25 @@ class IRepetitionCodeDescription(ABC):
                 self.map_qubit_id_to_circuit_index(edge.qubit_ids[0]),
                 self.map_qubit_id_to_circuit_index(edge.qubit_ids[1])
             ))
+        return result
+
+    def get_park_sequence_indices(self, sequence_index: int) -> Optional[List[int]]:
+        """
+        :param sequence_index: Gate sequence index. If index is out of range, return None.
+        :return: (Optional) Array-like of integers corresponding qubit-circuit index.
+        """
+        # Guard clause, if index is out of range, return None.
+        if not 0 <= sequence_index < len(self.gate_sequences):
+            return None
+
+        sequence: GateSequenceLayer = self.gate_sequences[sequence_index]
+        result: List[int] = []
+        for park_operation in sequence.park_operations:
+            if park_operation.identifier not in self.qubit_ids:
+                continue
+            result.append(
+                self.map_qubit_id_to_circuit_index(park_operation.identifier),
+            )
         return result
 
     def get_active_ancilla_indices(self, sequence_index: int) -> Optional[List[int]]:
@@ -353,6 +373,7 @@ def get_circuit_initialize(connectivity: IRepetitionCodeDescription, initial_sta
     result.add(Barrier(qubit_indices))
     return result
 
+
 def get_circuit_initialize_simplified(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
     for operation in connectivity.get_operations(initial_state=initial_state):
@@ -503,6 +524,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
         sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
         next_sequence_active_ancilla_indices: Optional[List[int]] = connectivity.get_active_ancilla_indices(sequence_index + 1)
         sequence_active_gate_indices: List[Tuple[int, int]] = connectivity.get_gate_sequence_indices(sequence_index)
+        sequence_active_park_indices: List[int] = connectivity.get_park_sequence_indices(sequence_index)
 
         require_activation: List[int] = [qubit_index for qubit_index in sequence_active_ancilla_indices if qubit_index not in current_active_ancilla_indices]
         require_closure: List[int] = sequence_active_ancilla_indices
@@ -514,12 +536,16 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
             result.add(Rym90(qubit_index, relation=relation_activation))
+        relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
         # Schedule two-qubit gate
         for index0, index1 in sequence_active_gate_indices:
-            relation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
-            result.add(CPhase(index0, index1, relation=relation))
-        # Schedule Ancilla basis rotation for 'closure'
+            # relation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(CPhase(index0, index1, relation=relation_parking))
         relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+        # Schedule parking operation
+        for qubit_index in sequence_active_park_indices:
+            result.add(VirtualPark(qubit_index, relation=relation_parking))
+        # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
             result.add(Ry90(qubit_index, relation=relation_activation))
 

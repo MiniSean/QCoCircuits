@@ -23,13 +23,14 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     VirtualPark,
 )
-from qce_circuit.visualization.visualize_circuit.annotation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
 )
-from qce_circuit.visualization.visualize_circuit.channel_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.channel_components import (
     ChannelHeader,
     ChannelBar,
 )
+from qce_circuit.visualization.visualize_circuit.draw_components.transform_constructor import TransformConstructor
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
@@ -40,7 +41,7 @@ from qce_circuit.utilities.geometric_definitions import (
     FixedPivot,
     Vec2D,
 )
-from qce_circuit.visualization.visualize_circuit.operation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
     RotationAxis,
     RotationAngle,
     GateType,
@@ -48,7 +49,7 @@ from qce_circuit.visualization.visualize_circuit.operation_components import (
     BlockRotation,
     BlockGate,
 )
-from qce_circuit.visualization.visualize_circuit.multi_pivot_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
 )
 from qce_circuit.language.declarative_circuit import (
@@ -66,8 +67,9 @@ from qce_circuit.structure.intrf_circuit_operation_composite import (
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
+    BulkDrawComponentFactoryManager,
 )
-from qce_circuit.visualization.visualize_circuit.factory_draw_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_components import (
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
@@ -87,6 +89,8 @@ from qce_circuit.visualization.visualize_circuit.factory_draw_components import 
     BarrierFactory,
     VirtualParkFactory,
 )
+from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
+    MultiTwoQubitBlockFactory
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     construct_subplot,
@@ -96,34 +100,6 @@ from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     LabelFormat,
     IFigureAxesPair,
 )
-
-
-@dataclass(frozen=True)
-class TransformConstructor(ITransformConstructor):
-    """
-    Behaviour class, implementing ITransformConstructor interface
-    """
-    channel_height: float
-    channel_spacing: float
-    channel_indices: List[int]
-    """Array of unique, ordered channel indices."""
-
-    # region Interface Methods
-    def identifier_to_pivot(self, identifier: ChannelIdentifier, time_component: IDurationComponent) -> Vec2D:
-        """:return: Pivot based on channel identifier and duration component."""
-        return Vec2D(
-            x=time_component.start_time,
-            y=-1 * self.channel_indices.index(identifier.id) * self.channel_spacing
-        )
-
-    def identifier_to_width(self, time_component: IDurationComponent) -> float:
-        """:return: Rectilinear transform height based on duration component."""
-        return time_component.duration
-
-    def identifier_to_height(self, identifier: ChannelIdentifier) -> float:
-        """:return: Rectilinear transform height based on channel identifier."""
-        return self.channel_height
-    # endregion
 
 
 @dataclass(frozen=True)
@@ -182,35 +158,37 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
-        factory_manager: DrawComponentFactoryManager = DrawComponentFactoryManager(
-            default_factory=DefaultFactory(),
+        factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
+            individual_component_factory=DrawComponentFactoryManager(
+                default_factory=DefaultFactory(),
+                factory_lookup={
+                    CPhase: TwoQubitBlockFactory(),
+                    DispersiveMeasure: MeasureFactory(),
+                    Reset: ResetFactory(),
+                    Wait: WaitFactory(),
+                    Rx180: Rx180Factory(),
+                    Rx90: Rx90Factory(),
+                    Rxm90: Rxm90Factory(),
+                    Ry180: Ry180Factory(),
+                    Ry90: Ry90Factory(),
+                    Rym90: Rym90Factory(),
+                    Rphi90: Rphi90Factory(),
+                    VirtualPhase: ZPhaseFactory(),
+                    Identity: IdentityFactory(),
+                    Hadamard: HadamardFactory(),
+                    Barrier: BarrierFactory(),
+                    VirtualPark: VirtualParkFactory(),
+                }
+            ),
             factory_lookup={
-                CPhase: TwoQubitBlockFactory(),
-                DispersiveMeasure: MeasureFactory(),
-                Reset: ResetFactory(),
-                Wait: WaitFactory(),
-                Rx180: Rx180Factory(),
-                Rx90: Rx90Factory(),
-                Rxm90: Rxm90Factory(),
-                Ry180: Ry180Factory(),
-                Ry90: Ry90Factory(),
-                Rym90: Rym90Factory(),
-                Rphi90: Rphi90Factory(),
-                VirtualPhase: ZPhaseFactory(),
-                Identity: IdentityFactory(),
-                Hadamard: HadamardFactory(),
-                Barrier: BarrierFactory(),
-                VirtualPark: VirtualParkFactory(),
+                CPhase: MultiTwoQubitBlockFactory(),
             }
         )
         transform_constructor: TransformConstructor = self.get_transform_constructor()
-        return [
-            factory_manager.construct(
-                operation=operation,
-                transform_constructor=transform_constructor
-            )
-            for operation in self.operations
-        ]
+        return factory_manager.construct(
+            operations=self.operations,
+            transform_constructor=transform_constructor,
+        )
 
     def get_highlight_draw_components(self) -> List[IDrawComponent]:
         # Data allocation
