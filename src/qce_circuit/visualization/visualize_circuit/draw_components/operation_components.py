@@ -7,7 +7,7 @@ from enum import unique, Enum
 
 import numpy as np
 from matplotlib import pyplot as plt, patches as patches
-from qce_circuit.visualization.visualize_circuit.icon_components import IconMeasure
+from qce_circuit.visualization.visualize_circuit.draw_components.icon_components import IconMeasure
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,

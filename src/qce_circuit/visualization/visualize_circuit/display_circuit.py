@@ -23,10 +23,10 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     VirtualPark,
 )
-from qce_circuit.visualization.visualize_circuit.annotation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
 )
-from qce_circuit.visualization.visualize_circuit.channel_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.channel_components import (
     ChannelHeader,
     ChannelBar,
 )
@@ -40,7 +40,7 @@ from qce_circuit.utilities.geometric_definitions import (
     FixedPivot,
     Vec2D,
 )
-from qce_circuit.visualization.visualize_circuit.operation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
     RotationAxis,
     RotationAngle,
     GateType,
@@ -48,7 +48,7 @@ from qce_circuit.visualization.visualize_circuit.operation_components import (
     BlockRotation,
     BlockGate,
 )
-from qce_circuit.visualization.visualize_circuit.multi_pivot_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
 )
 from qce_circuit.language.declarative_circuit import (
@@ -68,7 +68,7 @@ from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components i
     DrawComponentFactoryManager,
     BulkDrawComponentFactoryManager,
 )
-from qce_circuit.visualization.visualize_circuit.factory_draw_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_components import (
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,

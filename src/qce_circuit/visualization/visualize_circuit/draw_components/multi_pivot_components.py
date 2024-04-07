@@ -18,7 +18,7 @@ from qce_circuit.utilities.geometric_definitions import (
     Vec2D,
     Line2D,
 )
-from qce_circuit.visualization.visualize_circuit.operation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
     RotationAngle,
     RotationAxis,
     BlockRotation,

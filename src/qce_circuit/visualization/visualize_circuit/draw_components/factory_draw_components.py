@@ -38,7 +38,7 @@ from qce_circuit.utilities.geometric_definitions.intrf_rectilinear_transform imp
     DynamicLength,
     DynamicPivot,
 )
-from qce_circuit.visualization.visualize_circuit.operation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
     RectangleTextBlock,
     BlockRotation,
     BlockMeasure,
@@ -46,11 +46,11 @@ from qce_circuit.visualization.visualize_circuit.operation_components import (
     RotationAngle,
     SquareParkBlock,
 )
-from qce_circuit.visualization.visualize_circuit.multi_pivot_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
     BlockVerticalBarrier,
 )
-from qce_circuit.visualization.visualize_circuit.annotation_components import (
+from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
     RoundedRectangleHighlight,
 )
