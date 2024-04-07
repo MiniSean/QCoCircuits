@@ -172,6 +172,8 @@ class IRepetitionCodeDescription(ABC):
         sequence: GateSequenceLayer = self.gate_sequences[sequence_index]
         result: List[int] = []
         for park_operation in sequence.park_operations:
+            if park_operation.identifier not in self.qubit_ids:
+                continue
             result.append(
                 self.map_qubit_id_to_circuit_index(park_operation.identifier),
             )
