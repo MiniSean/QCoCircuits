@@ -4,6 +4,7 @@
 from abc import ABCMeta
 from typing import List, Union
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.connectivity.intrf_channel_identifier import (
     IQubitID,
     IEdgeID,
@@ -35,6 +36,12 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     def gate_sequence_count(self) -> int:
         """:return: Number of gate-sequences in layer."""
         return len(self._gate_sequences)
+
+    @property
+    def involved_qubit_ids(self) -> List[IQubitID]:
+        """:return: (Only) involved qubit-ID's in gate sequence."""
+        gate_sequence_layers: List[GateSequenceLayer] = [self.get_gate_sequence_at_index(layer_index) for layer_index in range(self.gate_sequence_count)]
+        return unique_in_order([qubit_id for gate_sequence_layer in gate_sequence_layers for qubit_id in gate_sequence_layer.qubit_ids])
     # endregion
 
     # region ISurfaceCodeLayer Interface Properties

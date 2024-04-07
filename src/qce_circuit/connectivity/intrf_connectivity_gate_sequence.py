@@ -123,6 +123,12 @@ class IGateSequenceLayer(ABC):
     def gate_sequence_count(self) -> int:
         """:return: Number of gate-sequences in layer."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def involved_qubit_ids(self) -> List[IQubitID]:
+        """:return: (Only) involved qubit-ID's in gate sequence."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods

@@ -284,6 +284,21 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     # endregion
 
     # region Class Methods
+    def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, IQubitID]]:
+        """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
+        involved_qubit_ids = self.qubit_ids
+        involved_indices = [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in involved_qubit_ids]
+
+        # Step 1: Get the sort order of the first list
+        sort_order = sorted(range(len(involved_qubit_ids)), key=lambda x: involved_qubit_ids[x].id)
+        # Step 2: Apply this sort order to both lists
+        involved_qubit_ids = [involved_qubit_ids[i] for i in sort_order]
+        involved_indices = [involved_indices[i] for i in sort_order]
+
+        channel_order = involved_indices
+        channel_map = {i: qubit_id.id for i, qubit_id in zip(involved_indices, involved_qubit_ids)}
+        return channel_order, channel_map
+
     @classmethod
     def from_chain(cls, length: int) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on chain length."""

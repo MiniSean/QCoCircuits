@@ -261,11 +261,16 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
     # Apply custom channel order
     if custom_channel_order is None:
         custom_channel_order = []
-    # Apply custom channel map
+    # Construct custom channel map
     if custom_channel_map is None:
         custom_channel_map = {}
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
-    custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)
+    # Apply custom channel map
+    custom_channel_map = {
+        i: custom_channel_map[channel_index]
+        for i, channel_index in enumerate(channel_indices)
+    }
+    # custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)
     channel_states: List[InitialStateEnum] = [circuit.get_qubit_initial_state(channel_index=channel_index) for channel_index in channel_indices]
 
     operations: List[ICircuitOperation] = circuit.operations
