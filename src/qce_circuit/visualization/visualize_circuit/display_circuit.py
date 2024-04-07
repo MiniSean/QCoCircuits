@@ -66,11 +66,13 @@ from qce_circuit.structure.intrf_circuit_operation_composite import (
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
+    BulkDrawComponentFactoryManager,
 )
 from qce_circuit.visualization.visualize_circuit.factory_draw_components import (
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
+    MultiTwoQubitBlockFactory,
     Rx180Factory,
     Rx90Factory,
     Rxm90Factory,
@@ -182,35 +184,37 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
-        factory_manager: DrawComponentFactoryManager = DrawComponentFactoryManager(
-            default_factory=DefaultFactory(),
+        factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
+            individual_component_factory=DrawComponentFactoryManager(
+                default_factory=DefaultFactory(),
+                factory_lookup={
+                    CPhase: TwoQubitBlockFactory(),
+                    DispersiveMeasure: MeasureFactory(),
+                    Reset: ResetFactory(),
+                    Wait: WaitFactory(),
+                    Rx180: Rx180Factory(),
+                    Rx90: Rx90Factory(),
+                    Rxm90: Rxm90Factory(),
+                    Ry180: Ry180Factory(),
+                    Ry90: Ry90Factory(),
+                    Rym90: Rym90Factory(),
+                    Rphi90: Rphi90Factory(),
+                    VirtualPhase: ZPhaseFactory(),
+                    Identity: IdentityFactory(),
+                    Hadamard: HadamardFactory(),
+                    Barrier: BarrierFactory(),
+                    VirtualPark: VirtualParkFactory(),
+                }
+            ),
             factory_lookup={
-                CPhase: TwoQubitBlockFactory(),
-                DispersiveMeasure: MeasureFactory(),
-                Reset: ResetFactory(),
-                Wait: WaitFactory(),
-                Rx180: Rx180Factory(),
-                Rx90: Rx90Factory(),
-                Rxm90: Rxm90Factory(),
-                Ry180: Ry180Factory(),
-                Ry90: Ry90Factory(),
-                Rym90: Rym90Factory(),
-                Rphi90: Rphi90Factory(),
-                VirtualPhase: ZPhaseFactory(),
-                Identity: IdentityFactory(),
-                Hadamard: HadamardFactory(),
-                Barrier: BarrierFactory(),
-                VirtualPark: VirtualParkFactory(),
+                CPhase: MultiTwoQubitBlockFactory(),
             }
         )
         transform_constructor: TransformConstructor = self.get_transform_constructor()
-        return [
-            factory_manager.construct(
-                operation=operation,
-                transform_constructor=transform_constructor
-            )
-            for operation in self.operations
-        ]
+        return factory_manager.construct(
+            operations=self.operations,
+            transform_constructor=transform_constructor,
+        )
 
     def get_highlight_draw_components(self) -> List[IDrawComponent]:
         # Data allocation

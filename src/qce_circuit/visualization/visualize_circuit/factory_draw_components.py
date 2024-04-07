@@ -29,6 +29,7 @@ from qce_circuit.structure.circuit_operations import (
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
+    IOperationBulkDrawComponentFactory,
     IOperationDrawComponentFactory,
     ITransformConstructor,
 )
@@ -358,6 +359,21 @@ class TwoQubitBlockFactory(IOperationDrawComponentFactory):
             single_block_width=DynamicLength(lambda: main_transform.width),
             alignment=main_transform.parent_alignment,
         )
+    # endregion
+
+
+class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory):
+
+    # region Interface Methods
+    def construct(self, operations: List[CPhase], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
+        """:return: Draw components based on array-like of operations."""
+        individual_factory: TwoQubitBlockFactory = TwoQubitBlockFactory()
+        result: List[IDrawComponent] = []
+
+        for operation in operations:
+            result.append(individual_factory.construct(operation=operation, transform_constructor=transform_constructor))
+
+        return result
     # endregion
 
 

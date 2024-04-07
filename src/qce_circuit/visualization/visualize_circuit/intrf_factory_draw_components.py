@@ -2,7 +2,7 @@
 # Module containing factory interface for converting operation to draw-component.
 # Contains factory manager implementation.
 # -------------------------------------------
-from abc import ABC, abstractmethod
+from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass, field
 from typing import Type, Dict, List
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
@@ -90,8 +90,33 @@ class IOperationDrawComponentFactory(ABC):
     # endregion
 
 
+class IOperationBulkDrawComponentFactory(ABC):
+    """
+    Interface class, describing methods for constructing multiple draw-components from multiple operations.
+    """
+
+    # region Interface Methods
+    @abstractmethod
+    def construct(self, operations: List[ICircuitOperation], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
+        """:return: Draw components based on array-like of operations."""
+        raise InterfaceMethodException
+    # endregion
+
+
+class IOperationDrawComponentFactoryManager(IOperationDrawComponentFactory, IFactoryManager[Type[ICircuitOperation]], metaclass=ABCMeta):
+    """
+    Interface class, describing factory manager for operation draw-components.
+    """
+
+
+class IOperationBulkDrawComponentFactoryManager(IOperationBulkDrawComponentFactory, IFactoryManager[Type[ICircuitOperation]], metaclass=ABCMeta):
+    """
+    Interface class, describing factory manager for (bulk) operation draw-components.
+    """
+
+
 @dataclass(frozen=True)
-class DrawComponentFactoryManager(IOperationDrawComponentFactory, IFactoryManager[Type[ICircuitOperation]]):
+class DrawComponentFactoryManager(IOperationDrawComponentFactoryManager):
     """
     Behaviour class, implementing operation to draw-component construction based on factory-lookup
     """
@@ -117,6 +142,63 @@ class DrawComponentFactoryManager(IOperationDrawComponentFactory, IFactoryManage
             return self.default_factory.construct(operation=operation, transform_constructor=transform_constructor)
 
         return self.factory_lookup[type(operation)].construct(operation=operation, transform_constructor=transform_constructor)
+
+    def contains(self, factory_key: Type[ICircuitOperation]) -> bool:
+        """:return: Boolean, whether factory key is included in the manager."""
+        return factory_key in self.supported_factories
+    # endregion
+
+
+@dataclass(frozen=True)
+class BulkDrawComponentFactoryManager(IOperationBulkDrawComponentFactoryManager):
+    """
+    Behaviour class, implementing operation to draw-component construction based on factory-lookup
+    """
+    individual_component_factory: IOperationDrawComponentFactoryManager
+    """Factory that constructs component independent of operation-type."""
+    factory_lookup: Dict[Type[ICircuitOperation], IOperationBulkDrawComponentFactory] = field(default_factory=dict)
+    """Lookup that maps operation-type to draw-component factory."""
+
+    # region Interface Properties
+    @property
+    def supported_factories(self) -> List[Type[ICircuitOperation]]:
+        """:return: Array-like of supported factory types."""
+        return list(set(self.factory_lookup.keys()))
+    # endregion
+
+    # region Interface Methods
+    def construct(self, operations: List[ICircuitOperation], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
+        """:return: Draw components based on array-like of operations."""
+        result: List[IDrawComponent] = []
+        operation_lookup: Dict[Type[ICircuitOperation], List[ICircuitOperation]] = {}
+
+        # Group operations based on their type
+        for operation in operations:
+            operation_type = type(operation)
+            if operation_type not in operation_lookup:
+                operation_lookup[operation_type] = [operation]
+            else:
+                operation_lookup[operation_type].append(operation)
+
+        # Iterate over all (type) groups of operations and process them either by default factory or factory lookup
+        for _type, _operations in operation_lookup.items():
+            # Guard clause, if request not supported raise exception
+            operation_supported: bool = _type in self.factory_lookup
+
+            if not operation_supported:
+                for _operation in _operations:
+                    result.append(self.individual_component_factory.construct(
+                        operation=_operation,
+                        transform_constructor=transform_constructor,
+                    ))
+                continue
+
+            result.extend(self.factory_lookup[_type].construct(
+                operations=_operations,
+                transform_constructor=transform_constructor,
+            ))
+
+        return result
 
     def contains(self, factory_key: Type[ICircuitOperation]) -> bool:
         """:return: Boolean, whether factory key is included in the manager."""
