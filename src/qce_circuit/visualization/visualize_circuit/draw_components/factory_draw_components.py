@@ -55,7 +55,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.annotation_comp
 )
 
 
-class DefaultFactory(IOperationDrawComponentFactory):
+class DefaultFactory(IOperationDrawComponentFactory[ICircuitOperation, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: ICircuitOperation, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -74,7 +74,7 @@ class DefaultFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class ResetFactory(IOperationDrawComponentFactory):
+class ResetFactory(IOperationDrawComponentFactory[Reset, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Reset, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -93,7 +93,7 @@ class ResetFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Rx180Factory(IOperationDrawComponentFactory):
+class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Rx180, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -112,7 +112,7 @@ class Rx180Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Rx90Factory(IOperationDrawComponentFactory):
+class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Rx90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -131,7 +131,7 @@ class Rx90Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Rxm90Factory(IOperationDrawComponentFactory):
+class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Rxm90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -150,7 +150,7 @@ class Rxm90Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Ry180Factory(IOperationDrawComponentFactory):
+class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Ry180, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -169,7 +169,7 @@ class Ry180Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Ry90Factory(IOperationDrawComponentFactory):
+class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Ry90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -188,7 +188,7 @@ class Ry90Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Rym90Factory(IOperationDrawComponentFactory):
+class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Rym90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -207,7 +207,7 @@ class Rym90Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class ZPhaseFactory(IOperationDrawComponentFactory):
+class ZPhaseFactory(IOperationDrawComponentFactory[VirtualPhase, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: VirtualPhase, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -226,7 +226,7 @@ class ZPhaseFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class Rphi90Factory(IOperationDrawComponentFactory):
+class Rphi90Factory(IOperationDrawComponentFactory[VirtualPhase, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: VirtualPhase, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -245,7 +245,7 @@ class Rphi90Factory(IOperationDrawComponentFactory):
     # endregion
 
 
-class IdentityFactory(IOperationDrawComponentFactory):
+class IdentityFactory(IOperationDrawComponentFactory[Identity, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Identity, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -264,7 +264,7 @@ class IdentityFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class HadamardFactory(IOperationDrawComponentFactory):
+class HadamardFactory(IOperationDrawComponentFactory[Hadamard, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Hadamard, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -283,7 +283,7 @@ class HadamardFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class VirtualParkFactory(IOperationDrawComponentFactory):
+class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: VirtualPark, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -301,7 +301,7 @@ class VirtualParkFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class MeasureFactory(IOperationDrawComponentFactory):
+class MeasureFactory(IOperationDrawComponentFactory[DispersiveMeasure, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: DispersiveMeasure, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -319,7 +319,7 @@ class MeasureFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class WaitFactory(IOperationDrawComponentFactory):
+class WaitFactory(IOperationDrawComponentFactory[Wait, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Wait, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -338,7 +338,7 @@ class WaitFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class TwoQubitBlockFactory(IOperationDrawComponentFactory):
+class TwoQubitBlockFactory(IOperationDrawComponentFactory[CPhase, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: CPhase, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -361,7 +361,7 @@ class TwoQubitBlockFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class BarrierFactory(IOperationDrawComponentFactory):
+class BarrierFactory(IOperationDrawComponentFactory[Barrier, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: Barrier, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -379,7 +379,7 @@ class BarrierFactory(IOperationDrawComponentFactory):
     # endregion
 
 
-class FootprintFactory(IOperationDrawComponentFactory):
+class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation, IDrawComponent]):
 
     # region Interface Methods
     def construct(self, operation: ICircuitCompositeOperation, transform_constructor: ITransformConstructor) -> IDrawComponent:

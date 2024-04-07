@@ -4,11 +4,12 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass, field
-from typing import Type, Dict, List
+from typing import Type, Dict, List, Generic
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.utilities.intrf_factory_manager import IFactoryManager
 from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
+    TCircuitOperation,
     IDurationComponent,
     ChannelIdentifier,
 )
@@ -22,6 +23,7 @@ from qce_circuit.utilities.geometric_definitions import (
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import (
     IDrawComponent,
+    TDrawComponent,
 )
 
 
@@ -77,27 +79,27 @@ class ITransformConstructor(ABC):
     # endregion
 
 
-class IOperationDrawComponentFactory(ABC):
+class IOperationDrawComponentFactory(ABC, Generic[TCircuitOperation, TDrawComponent]):
     """
     Interface class, describing methods for constructing draw-components from operation class types.
     """
 
     # region Interface Methods
     @abstractmethod
-    def construct(self, operation: ICircuitOperation, transform_constructor: ITransformConstructor) -> IDrawComponent:
+    def construct(self, operation: TCircuitOperation, transform_constructor: ITransformConstructor) -> TDrawComponent:
         """:return: Draw component based on operation type."""
         raise InterfaceMethodException
     # endregion
 
 
-class IOperationBulkDrawComponentFactory(ABC):
+class IOperationBulkDrawComponentFactory(ABC, Generic[TCircuitOperation, TDrawComponent]):
     """
     Interface class, describing methods for constructing multiple draw-components from multiple operations.
     """
 
     # region Interface Methods
     @abstractmethod
-    def construct(self, operations: List[ICircuitOperation], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
+    def construct(self, operations: List[TCircuitOperation], transform_constructor: ITransformConstructor) -> List[TDrawComponent]:
         """:return: Draw components based on array-like of operations."""
         raise InterfaceMethodException
     # endregion
