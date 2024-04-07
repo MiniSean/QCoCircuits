@@ -38,10 +38,10 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
     Behaviour class, describing a global singleton registry.
     """
     _global_registry: Dict[str, float] = field(default_factory=lambda: {
-        GlobalRegistryKey.READOUT.value: 500,
-        GlobalRegistryKey.MICROWAVE.value: 20,
-        GlobalRegistryKey.FLUX.value: 60,
-        GlobalRegistryKey.RESET.value: 200000,
+        GlobalRegistryKey.READOUT.value: 2.0,
+        GlobalRegistryKey.MICROWAVE.value: 1.0,
+        GlobalRegistryKey.FLUX.value: 1.0,
+        GlobalRegistryKey.RESET.value: 2.0,
     })
 
     # region Class Methods
