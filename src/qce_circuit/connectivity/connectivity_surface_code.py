@@ -300,7 +300,7 @@ def get_neighbors(element: Union[IQubitID, IEdgeID], connectivity: IConnectivity
         for qubit_id in element.qubit_ids:
             combined_neighbors.extend(connectivity.get_neighbors(qubit_id, order=order))
         return unique_in_order(combined_neighbors)
-    raise NotImplemented(f"Finding the neighbor qubits of element with type {type(element)} is not supported. Try {type(IQubitID)} or {type(IEdgeID)}.")
+    raise NotImplementedError(f"Finding the neighbor qubits of element with type {type(element)} is not supported. Try {IQubitID} or {IEdgeID}.")
 
 
 def on_moving_side(qubit_id: IQubitID, edge_id: IEdgeID, connectivity: ISurfaceCodeLayer) -> bool:
