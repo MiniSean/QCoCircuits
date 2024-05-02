@@ -19,7 +19,7 @@ class WaitOperationsFactory(IOpenQLOperationFactory):
         """:return: Updated OpenQL Kernel based on operation type."""
         kernel.wait(
             qubits=get_qubit_index(operation),
-            duration=operation.duration,
+            duration=int(operation.duration),
         )
         return kernel
     # endregion

@@ -18,7 +18,7 @@ class BarrierOperationsFactory(IOpenQLOperationFactory):
     def construct(self, operation: ICircuitOperation, kernel: ql.Kernel) -> ql.Kernel:
         """:return: Updated OpenQL Kernel based on operation type."""
         kernel.barrier(
-            qubits=get_qubit_index(operation),
+            get_qubit_index(operation),
         )
         return kernel
     # endregion
