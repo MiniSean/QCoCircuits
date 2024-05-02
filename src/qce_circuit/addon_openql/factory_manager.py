@@ -31,6 +31,7 @@ from qce_circuit.structure.circuit_operations import (
 from qce_circuit.addon_openql.operation_factories.factory_basic_operations import NameBasedOperationsFactory
 from qce_circuit.addon_openql.operation_factories.factory_barrier_operations import BarrierOperationsFactory
 from qce_circuit.addon_openql.operation_factories.factory_wait_operations import WaitOperationsFactory
+from qce_circuit.addon_openql.operation_factories.factory_composite_operation import CompositeCPhaseOperationsFactory
 
 
 class OpenQLFactoryManager(IOpenQLCircuitFactory, metaclass=SingletonABCMeta):
@@ -39,12 +40,12 @@ class OpenQLFactoryManager(IOpenQLCircuitFactory, metaclass=SingletonABCMeta):
     """
     _factory: IOpenQLCircuitFactory = OpenQLCircuitFactoryManager(
         factory_lookup={
-            Reset: WaitOperationsFactory(),
+            Reset: NameBasedOperationsFactory('prepz'),
             Barrier: BarrierOperationsFactory(),
             Wait: WaitOperationsFactory(),
             Hadamard: NameBasedOperationsFactory('h'),
             Identity: NameBasedOperationsFactory('i'),
-            CPhase: NameBasedOperationsFactory('cz'),
+            CPhase: CompositeCPhaseOperationsFactory(),
             DispersiveMeasure: NameBasedOperationsFactory('measure'),
             Rx180: NameBasedOperationsFactory('x180'),
             Rx90: NameBasedOperationsFactory('x90'),
