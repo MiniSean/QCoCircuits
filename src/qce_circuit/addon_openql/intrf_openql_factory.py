@@ -68,17 +68,21 @@ class OpenQLCircuitFactoryManager(IOpenQLCircuitFactory):
 
         # Use circuit generated UUID to provide unique name to program and kernel, otherwise use (optional) circuit ID
         circuit_uuid: str = str(OpenQLCircuitFactoryManager.construct_uuid(circuit=process_circuit))
+        program_uuid: str = f"program_{circuit_uuid[:8]}"
+        kernel_uuid: str = f"kernel_{circuit_uuid[:8]}"
         if circuit_id is not None:
-            circuit_uuid = circuit_id
-        result_program: ql.Program = PlatformManager.construct_program(name=f"program_id_{circuit_uuid}")
-        kernel: ql.Kernel = PlatformManager.construct_kernel(name=f"kernel_id_{circuit_uuid}")
+            program_uuid = circuit_id
+        sub_program_uuid: str = f"sub_{program_uuid}"
+
+        result_program: ql.Program = PlatformManager.construct_program(name=program_uuid)
+        kernel: ql.Kernel = PlatformManager.construct_kernel(name=kernel_uuid)
 
         for operation_node in process_circuit._circuit_graph.get_node_iterator():
             operation: ICircuitOperation = operation_node.operation
 
             # Recursion, if operation is a composite operation
             if isinstance(operation, ICircuitCompositeOperation):
-                inner_program: ql.Program = self.construct(operation, circuit_id=f"sub_{circuit_uuid}")
+                inner_program: ql.Program = self.construct(operation, circuit_id=sub_program_uuid)
                 # TODO: deal with repetitions
                 for i in range(operation.nr_of_repetitions):
                     result_program.add_program(inner_program)
