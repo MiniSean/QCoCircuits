@@ -1,5 +1,5 @@
 # -------------------------------------------
-# Module containing Stim operation factories for basic operations.
+# Module containing OpenQL operation factories for basic operations.
 # -------------------------------------------
 from typing import List
 import openql as ql
