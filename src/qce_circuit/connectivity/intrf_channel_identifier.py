@@ -38,6 +38,20 @@ class IChannelIdentifier(ABC):
     def __eq__(self, other):
         """:returns: Boolean if other shares equal identifier, else InterfaceMethodException."""
         raise InterfaceMethodException
+
+    def __lt__(self, other):
+        if not isinstance(other, IChannelIdentifier):
+            return NotImplemented
+        return self.id < other.id
+
+    def __le__(self, other):
+        return self < other or self == other
+
+    def __gt__(self, other):
+        return not (self < other or self == other)
+
+    def __ge__(self, other):
+        return not self < other
     # endregion
 
 
