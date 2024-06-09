@@ -34,16 +34,16 @@ class Operation(Generic[TIdentifier]):
         return False
 
     @classmethod
-    def type_idle(cls, quibt_id: IQubitID) -> 'Operation':
+    def type_idle(cls, qubit_id: IQubitID) -> 'Operation':
         return Operation[IQubitID](
-            identifier=quibt_id,
+            identifier=qubit_id,
             type=OperationType.IDLE,
         )
 
     @classmethod
-    def type_park(cls, quibt_id: IQubitID) -> 'Operation':
+    def type_park(cls, qubit_id: IQubitID) -> 'Operation':
         return Operation[IQubitID](
-            identifier=quibt_id,
+            identifier=qubit_id,
             type=OperationType.PARK,
         )
 
