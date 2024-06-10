@@ -25,6 +25,7 @@ from qce_circuit.visualization.visualize_layout.plaquette_components import (
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
     ParkingComponent,
+    TextComponent,
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
@@ -113,18 +114,18 @@ class VisualConnectivityDescription:
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
-        return [
-            # HexagonComponent(
-            #     rotation=self.identifier_to_rotation(qubit_id),
-            #     pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-            #     alignment=TransformAlignment.MID_CENTER,
-            # )
-            DotComponent(
+        result: List[IDrawComponent] = []
+        for qubit_id in self.connectivity.qubit_ids:
+            result.append(DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
-            )
-            for qubit_id in self.connectivity.qubit_ids
-        ]
+            ))
+            result.append(TextComponent(
+                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                text=qubit_id.id,
+                alignment=TransformAlignment.MID_CENTER,
+            ))
+        return result
 
     def get_line_components(self) -> List[IDrawComponent]:
         return [
