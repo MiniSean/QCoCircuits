@@ -4,6 +4,7 @@
 from abc import abstractmethod
 from collections.abc import Iterable as ABCIterable
 from typing import Callable, Tuple, Optional, Iterable, List
+import numpy as np
 import matplotlib.pyplot as plt
 from enum import Enum
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
@@ -219,7 +220,7 @@ def construct_subplot(*args, **kwargs) -> IFigureAxesPair:
 
     # region Dress Axes
     axes: Iterable[plt.Axes] = [ax0] if not isinstance(ax0, ABCIterable) else ax0
-    for _ax in axes:
+    for _ax in np.ravel(axes):
         _ax = label_format.apply_to_axes(axes=_ax)
         _ax = axes_format.apply_to_axes(axes=_ax)
     # endregion
