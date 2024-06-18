@@ -181,8 +181,8 @@ class ISurfaceCodeLayer(IDeviceLayer, metaclass=ABCMeta):
 
     # region Interface Methods
     @abstractmethod
-    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> IParityGroup:
-        """:return: Parity group of which element (edge- or qubit-ID) is part of."""
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
         raise InterfaceMethodException
     
     @abstractmethod

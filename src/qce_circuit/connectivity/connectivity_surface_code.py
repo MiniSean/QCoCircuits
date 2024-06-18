@@ -226,13 +226,14 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     # endregion
 
     # region ISurfaceCodeLayer Interface Methods
-    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> IParityGroup:
-        """:return: Parity group of which element (edge- or qubit-ID) is part of."""
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
         # Assumes element is part of only a single parity group
         for parity_group in self.parity_group_x + self.parity_group_z:
             if parity_group.contains(element=element):
-                return parity_group
-        raise ElementNotIncludedException(f"Element: {element} is not included in any parity group.")
+                result.append(parity_group)
+        return result
     
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""
