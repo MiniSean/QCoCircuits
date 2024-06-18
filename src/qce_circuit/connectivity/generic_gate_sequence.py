@@ -58,12 +58,12 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     @property
     def data_qubit_ids(self) -> List[IQubitID]:
         """:return: (Data) qubit-ID's in device layer."""
-        return [data_id for parity_group in self.parity_group_x + self.parity_group_z for data_id in parity_group.data_ids]
+        return unique_in_order([data_id for parity_group in self.parity_group_x + self.parity_group_z for data_id in parity_group.data_ids])
 
     @property
     def ancilla_qubit_ids(self) -> List[IQubitID]:
         """:return: (Ancilla) qubit-ID's in device layer."""
-        return [parity_group.ancilla_id for parity_group in self.parity_group_x + self.parity_group_z]
+        return unique_in_order([parity_group.ancilla_id for parity_group in self.parity_group_x + self.parity_group_z])
     # endregion
 
     # region IDeviceLayer Interface Properties
