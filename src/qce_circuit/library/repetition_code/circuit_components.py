@@ -350,6 +350,8 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             non_empty_sequence: bool = len(subset_gate_sequence.park_operations) > 0 or len(subset_gate_sequence.gate_operations) > 0
             if non_empty_sequence:
                 gate_sequences.append(subset_gate_sequence)
+            else:
+                gate_sequences.append(GateSequenceLayer.empty())
         # Setup default qubit index map
         qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(involved_qubit_ids)}
         # Return constructed connectivity
