@@ -122,6 +122,47 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
 
 
 @dataclass(frozen=True)
+class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing schedule block.
+    """
+    pivot: Vec2D
+    width: float
+    height: float
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.width),
+            _height_strategy=FixedLength(self.height),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        rectangle = patches.Rectangle(
+            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+            width=self.rectilinear_transform.width,
+            height=self.rectilinear_transform.height,
+            linewidth=self.style_settings.border_width,
+            linestyle='--',
+            edgecolor=self.style_settings.border_color,
+            facecolor='none',
+            zorder=-1,
+        )
+        axes.add_patch(rectangle)
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
 class SquareBlock(IRectTransformComponent, IDrawComponent):
     """
     Data class, containing dimension data for drawing schedule block.

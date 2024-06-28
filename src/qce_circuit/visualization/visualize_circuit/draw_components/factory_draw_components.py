@@ -26,6 +26,7 @@ from qce_circuit.structure.circuit_operations import (
     Hadamard,
     Barrier,
     VirtualPark,
+    VirtualVacant,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -39,6 +40,7 @@ from qce_circuit.utilities.geometric_definitions.intrf_rectilinear_transform imp
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
     RectangleTextBlock,
+    RectangleVacantBlock,
     BlockRotation,
     BlockMeasure,
     RotationAxis,
@@ -293,6 +295,24 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             time_component=operation,
         )
         return SquareParkBlock(
+            pivot=transform.pivot,
+            height=transform.height,
+            width=transform.width,
+            alignment=transform.parent_alignment,
+        )
+    # endregion
+
+
+class VirtualVacantFactory(IOperationDrawComponentFactory[VirtualVacant, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualVacant, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return RectangleVacantBlock(
             pivot=transform.pivot,
             height=transform.height,
             width=transform.width,
