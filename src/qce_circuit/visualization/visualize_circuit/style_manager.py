@@ -122,7 +122,19 @@ class StyleSettings:
     def vacant_operation_style(self) -> OperationStyleSettings:
         return OperationStyleSettings(
             border_color=self.color_outline_dim,
-            background_color=self.color_background,
+            background_color='none',
+            text_color=self.color_text,
+            border_width=self.width_border,
+            line_width=self.width_line,
+            dot_radius=self.radius_dot,
+            font_size=self.font_size,
+        )
+
+    @property
+    def empty_operation_style(self) -> OperationStyleSettings:
+        return OperationStyleSettings(
+            border_color='none',
+            background_color='none',
             text_color=self.color_text,
             border_width=self.width_border,
             line_width=self.width_line,

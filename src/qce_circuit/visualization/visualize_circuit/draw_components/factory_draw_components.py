@@ -28,6 +28,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualPark,
     VirtualVacant,
     VirtualTwoQubitVacant,
+    VirtualEmpty,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -40,6 +41,7 @@ from qce_circuit.utilities.geometric_definitions.intrf_rectilinear_transform imp
     DynamicPivot,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.operation_components import (
+    RectangleBlock,
     RectangleTextBlock,
     RectangleVacantBlock,
     BlockRotation,
@@ -57,6 +59,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.annotation_comp
     HorizontalVariableIndicator,
     RoundedRectangleHighlight,
 )
+from qce_circuit.visualization.visualize_circuit.style_manager import StyleManager
 
 
 class DefaultFactory(IOperationDrawComponentFactory[ICircuitOperation, IDrawComponent]):
@@ -342,6 +345,25 @@ class VirtualTwoQubitVacantFactory(IOperationDrawComponentFactory[VirtualTwoQubi
             single_block_height=DynamicLength(lambda: main_transform.height),
             single_block_width=DynamicLength(lambda: main_transform.width),
             alignment=main_transform.parent_alignment,
+        )
+    # endregion
+
+
+class VirtualEmptyFactory(IOperationDrawComponentFactory[VirtualEmpty, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualEmpty, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return RectangleBlock(
+            pivot=transform.pivot,
+            height=transform.height,
+            width=transform.width,
+            alignment=transform.parent_alignment,
+            style_settings=StyleManager.read_config().empty_operation_style,
         )
     # endregion
 

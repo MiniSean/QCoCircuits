@@ -154,7 +154,7 @@ class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
             linewidth=self.style_settings.border_width,
             linestyle='--',
             edgecolor=self.style_settings.border_color,
-            facecolor='none',
+            facecolor=self.style_settings.background_color,
             zorder=-1,
         )
         axes.add_patch(rectangle)

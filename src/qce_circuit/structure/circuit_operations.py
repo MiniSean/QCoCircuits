@@ -857,6 +857,39 @@ class VirtualTwoQubitVacant(TwoQubitOperation, ICircuitOperation):
     # endregion
 
 
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualEmpty(SingleQubitOperation, ICircuitOperation):
+    """
+    Virtual empty position (behaves as Wait).
+    Allow to wait on specific (qubit) channel.
+    """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualEmpty':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualEmpty(
+            qubit_index=self.qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            qubit_channel=self.qubit_channel,
+            duration_strategy=self.duration_strategy,
+        )
+    # endregion
+
+
 if __name__ == '__main__':
     from qce_circuit.structure.registry_duration import (
         DurationRegistry,

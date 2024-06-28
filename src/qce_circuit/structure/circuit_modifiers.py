@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import Type, Generic, TypeVar, List, Optional
+from typing import Type, Generic, TypeVar, List, Optional, Union
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.language.intrf_declarative_circuit import IDeclarativeCircuit
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
@@ -15,6 +15,9 @@ from qce_circuit.structure.circuit_operations import (
     DispersiveMeasure,
     VirtualVacant,
     VirtualTwoQubitVacant,
+    VirtualEmpty,
+    Wait,
+    VirtualPark,
 )
 from qce_circuit.structure.intrf_circuit_operation import (
     QubitChannel,
@@ -95,7 +98,7 @@ class OperationVacantMask(IOperationMask[TMaskedOperation, VirtualVacant], Gener
 
 
 @dataclass(frozen=True)
-class ChannelVacantMask(IOperationMask[TMaskedOperation, VirtualVacant], Generic[TMaskedOperation]):
+class ChannelVacantMask(IOperationMask[TMaskedOperation, Union[VirtualVacant, VirtualEmpty]], Generic[TMaskedOperation]):
     qubit_channel: QubitChannel
     qubit_index: int
 
@@ -111,13 +114,26 @@ class ChannelVacantMask(IOperationMask[TMaskedOperation, VirtualVacant], Generic
         """:return: Boolean whether matched operation should be masked or not."""
         is_masked_operation: bool = (isinstance(matched_operation, SingleQubitOperation)
                                      or isinstance(matched_operation, DispersiveMeasure))
-        if not is_masked_operation:
+        is_mask_operation: bool = (isinstance(matched_operation, VirtualVacant)
+                                   or isinstance(matched_operation, VirtualEmpty))
+        if not is_masked_operation or is_mask_operation:
             return False
         is_masked_channel: bool = self.qubit_channel_identifier in matched_operation.channel_identifiers
         return is_masked_channel
 
-    def construct_operation_mask(self, masked_operation: TMaskedOperation) -> VirtualVacant:
+    def construct_operation_mask(self, masked_operation: TMaskedOperation) -> Union[VirtualVacant, VirtualEmpty]:
         """:return: Newly constructed 'mask'-operation based on masked-operation."""
+        # Guard clause, some operations should be masked with a VirtualEmpty operation
+        requires_empty_mask: bool = (isinstance(masked_operation, VirtualPark)
+                                     or isinstance(masked_operation, Wait))
+
+        if requires_empty_mask:
+            return VirtualEmpty(
+                qubit_index=masked_operation.qubit_index,
+                duration_strategy=masked_operation.duration_strategy,
+                relation=masked_operation.relation_link,
+            )
+
         return VirtualVacant(
             qubit_index=masked_operation.qubit_index,
             duration_strategy=masked_operation.duration_strategy,
@@ -152,7 +168,8 @@ class ChannelTwoQubitVacantMask(IOperationMask[TMaskedTwoQubitOperation, Virtual
     def match(self, matched_operation: TMaskedTwoQubitOperation) -> bool:
         """:return: Boolean whether matched operation should be masked or not."""
         is_masked_operation: bool = isinstance(matched_operation, TwoQubitOperation)
-        if not is_masked_operation:
+        is_mask_operation: bool = isinstance(matched_operation, VirtualTwoQubitVacant)
+        if not is_masked_operation or is_mask_operation:
             return False
         is_masked_channel: bool = all([
             identifier in matched_operation.channel_identifiers
