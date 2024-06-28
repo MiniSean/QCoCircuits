@@ -13,6 +13,7 @@ from qce_circuit.structure.intrf_circuit_operation import (
     IDurationComponent,
     ChannelIdentifier,
 )
+from qce_circuit.structure.circuit_operations import TwoQubitOperation
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransform,
     TransformAlignment,
@@ -177,6 +178,10 @@ class BulkDrawComponentFactoryManager(IOperationBulkDrawComponentFactoryManager)
         # Group operations based on their type
         for operation in operations:
             operation_type = type(operation)
+            # Work around, grouping two-qubit operations
+            if isinstance(operation, TwoQubitOperation):
+                operation_type = TwoQubitOperation
+
             if operation_type not in operation_lookup:
                 operation_lookup[operation_type] = [operation]
             else:

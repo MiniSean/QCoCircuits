@@ -249,6 +249,14 @@ class BlockTwoQubitVacant(BlockTwoQubitGate, IRectTransformComponent, IDrawCompo
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
+        DotComponent(
+            base_transform=self.main_transform_block,
+            style_settings=self.style_settings,
+        ).draw(axes=axes)
+        DotComponent(
+            base_transform=self.second_transform_block,
+            style_settings=self.style_settings,
+        ).draw(axes=axes)
         axes.plot(
             [self.main_transform_block.center_pivot.x, self.second_transform_block.center_pivot.x],
             [self.main_transform_block.center_pivot.y, self.second_transform_block.center_pivot.y],

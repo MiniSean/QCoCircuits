@@ -17,6 +17,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualPhase,
     Rphi90,
     CPhase,
+    TwoQubitOperation,
     DispersiveMeasure,
     Identity,
     Hadamard,
@@ -192,7 +193,10 @@ class VisualCircuitDescription:
                 }
             ),
             factory_lookup={
-                CPhase: MultiTwoQubitBlockFactory(),
+                TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
+                    CPhase: TwoQubitBlockFactory(),
+                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory()
+                }),
             }
         )
         transform_constructor: TransformConstructor = self.get_transform_constructor()

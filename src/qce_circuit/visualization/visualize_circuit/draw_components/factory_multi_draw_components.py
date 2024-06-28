@@ -2,14 +2,15 @@
 # Module containing functionality for constructing multiple draw components from multiple operation class types.
 # Mainly intended to deal with (two-qubit gate) overlapping draw components.
 # -------------------------------------------
-from typing import List, Generic, Dict, Tuple, TypeVar
-from dataclasses import dataclass
+from typing import List, Generic, Dict, Tuple, TypeVar, Type
+from dataclasses import dataclass, field
 from qce_circuit.structure.intrf_circuit_operation import TCircuitOperation, ChannelIdentifier, QubitChannel
 from qce_circuit.structure.circuit_operations import CPhase, TwoQubitOperation
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_components import TwoQubitBlockFactory
 from qce_circuit.visualization.visualize_circuit.draw_components.transform_constructor import OffsetTransformConstructor
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
+    IOperationDrawComponentFactory,
     IOperationBulkDrawComponentFactory,
     ITransformConstructor,
 )
@@ -174,12 +175,13 @@ class TimeSharedOperations(Generic[TCircuitOperation]):
     # endregion
 
 
-class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory):
+@dataclass(frozen=True)
+class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory[TCircuitTwoQubitOperation, IDrawComponent]):
+    factory_lookup: Dict[Type[TCircuitTwoQubitOperation], IOperationDrawComponentFactory] = field(default_factory=dict)
 
     # region Interface Methods
-    def construct(self, operations: List[CPhase], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
+    def construct(self, operations: List[TCircuitTwoQubitOperation], transform_constructor: ITransformConstructor) -> List[IDrawComponent]:
         """:return: Draw components based on array-like of operations."""
-        individual_factory: TwoQubitBlockFactory = TwoQubitBlockFactory()
         result: List[IDrawComponent] = []
         scalar: float = 0.5  # Make sure operation is still displayed within original duration by 50%
 
@@ -193,6 +195,8 @@ class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory):
             )
             for space_group in space_shared_groups:
                 for operation in space_group.operations:
+                    individual_factory: IOperationDrawComponentFactory = self.factory_lookup[type(operation.operation)]
+
                     # Guard clause, if group size is one, treat normally
                     if operation.group_size == 1:
                         result.append(individual_factory.construct(
