@@ -27,6 +27,7 @@ from qce_circuit.structure.circuit_operations import (
     Barrier,
     VirtualPark,
     VirtualVacant,
+    VirtualTwoQubitVacant,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -50,6 +51,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
     BlockVerticalBarrier,
+    BlockTwoQubitVacant,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -317,6 +319,29 @@ class VirtualVacantFactory(IOperationDrawComponentFactory[VirtualVacant, IDrawCo
             height=transform.height,
             width=transform.width,
             alignment=transform.parent_alignment,
+        )
+    # endregion
+
+
+class VirtualTwoQubitVacantFactory(IOperationDrawComponentFactory[VirtualTwoQubitVacant, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualTwoQubitVacant, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        main_transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=ChannelIdentifier(_id=operation.control_qubit_index, _channel=QubitChannel.FLUX),
+            time_component=operation,
+        )
+        second_transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=ChannelIdentifier(_id=operation.target_qubit_index, _channel=QubitChannel.FLUX),
+            time_component=operation,
+        )
+        return BlockTwoQubitVacant(
+            main_pivot=DynamicPivot(lambda: main_transform.pivot),
+            vertical_pivot=DynamicPivot(lambda: second_transform.pivot),
+            single_block_height=DynamicLength(lambda: main_transform.height),
+            single_block_width=DynamicLength(lambda: main_transform.width),
+            alignment=main_transform.parent_alignment,
         )
     # endregion
 

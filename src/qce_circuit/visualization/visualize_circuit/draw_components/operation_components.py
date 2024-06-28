@@ -130,7 +130,7 @@ class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().vacant_operation_style)
 
     # region Interface Properties
     @property

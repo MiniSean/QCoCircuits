@@ -792,11 +792,21 @@ class Barrier(ICircuitOperation):
 
 
 @dataclass(frozen=False, unsafe_hash=True)
-class VirtualVacant(Wait, ICircuitOperation):
+class VirtualVacant(SingleQubitOperation, ICircuitOperation):
     """
-    Virtual vacant operation (behaves as Wait.
+    Virtual vacant operation (behaves as Wait).
     Allow to wait on specific (qubit) channel.
     """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
 
     # region Interface Methods
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualVacant':
@@ -810,6 +820,39 @@ class VirtualVacant(Wait, ICircuitOperation):
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
             qubit_channel=self.qubit_channel,
             duration_strategy=self.duration_strategy,
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualTwoQubitVacant(TwoQubitOperation, ICircuitOperation):
+    """
+    Virtual vacant operation (behaves as TwoQubitOperation).
+    Allow to wait on specific (qubit) channel.
+    """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.control_qubit_index, _channel=self.qubit_channel),
+            ChannelIdentifier(_id=self.target_qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualTwoQubitVacant':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualTwoQubitVacant(
+            control_qubit_index=self.control_qubit_index,
+            target_qubit_index=self.target_qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
 

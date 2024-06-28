@@ -119,6 +119,18 @@ class StyleSettings:
         )
 
     @property
+    def vacant_operation_style(self) -> OperationStyleSettings:
+        return OperationStyleSettings(
+            border_color=self.color_outline_dim,
+            background_color=self.color_background,
+            text_color=self.color_text,
+            border_width=self.width_border,
+            line_width=self.width_line,
+            dot_radius=self.radius_dot,
+            font_size=self.font_size,
+        )
+
+    @property
     def indicator_style(self) -> IndicatorStyleSettings:
         return IndicatorStyleSettings(
             text_color=self.color_text,

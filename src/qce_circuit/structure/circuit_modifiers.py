@@ -2,24 +2,27 @@
 # Module containing functionality for modifying circuit structure.
 # -------------------------------------------
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
-from typing import Type, Generic, TypeVar, List
+from dataclasses import dataclass, field
+from typing import Type, Generic, TypeVar, List, Optional
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.language.intrf_declarative_circuit import IDeclarativeCircuit
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
 from qce_circuit.structure.circuit_operations import (
     ICircuitOperation,
     SingleQubitOperation,
+    TwoQubitOperation,
     ChannelIdentifier,
     DispersiveMeasure,
     VirtualVacant,
+    VirtualTwoQubitVacant,
 )
 from qce_circuit.structure.intrf_circuit_operation import (
     QubitChannel,
 )
 
 
-TMaskedOperation = TypeVar('TMaskedOperation', bound=ICircuitOperation)
+TMaskedOperation = TypeVar('TMaskedOperation', bound=SingleQubitOperation)
+TMaskedTwoQubitOperation = TypeVar('TMaskedTwoQubitOperation', bound=TwoQubitOperation)
 TMaskOperation = TypeVar('TMaskOperation', bound=ICircuitOperation)
 
 
@@ -101,7 +104,6 @@ class ChannelVacantMask(IOperationMask[TMaskedOperation, VirtualVacant], Generic
     def qubit_channel_identifier(self) -> ChannelIdentifier:
         """:return: Identifier for qubit index and channel type."""
         return ChannelIdentifier(_id=self.qubit_index, _channel=self.qubit_channel)
-
     # endregion
 
     # region Interface Methods
@@ -123,3 +125,47 @@ class ChannelVacantMask(IOperationMask[TMaskedOperation, VirtualVacant], Generic
         )
     # endregion
 
+
+@dataclass(frozen=True)
+class ChannelTwoQubitVacantMask(IOperationMask[TMaskedTwoQubitOperation, VirtualTwoQubitVacant], Generic[TMaskedTwoQubitOperation]):
+    """
+    Behaviour class, describes masking of two-qubit operations.
+    By default, the control qubit is specified and all target qubit pairs are considered.
+    By default, the flux-channel is considered.
+    Additional target qubit specification allows for unique operation masking.
+    """
+    control_qubit_index: int
+    target_qubit_index: Optional[int] = field(default=None)
+    qubit_channel: QubitChannel = field(default=QubitChannel.FLUX)
+
+    # region Class Properties
+    @property
+    def qubit_channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Identifier for qubit index and channel type."""
+        result: List[ChannelIdentifier] = [ChannelIdentifier(_id=self.control_qubit_index, _channel=self.qubit_channel)]
+        if self.target_qubit_index is not None:
+            result.append(ChannelIdentifier(_id=self.target_qubit_index, _channel=self.qubit_channel))
+        return result
+    # endregion
+
+    # region Interface Methods
+    def match(self, matched_operation: TMaskedTwoQubitOperation) -> bool:
+        """:return: Boolean whether matched operation should be masked or not."""
+        is_masked_operation: bool = isinstance(matched_operation, TwoQubitOperation)
+        if not is_masked_operation:
+            return False
+        is_masked_channel: bool = all([
+            identifier in matched_operation.channel_identifiers
+            for identifier in self.qubit_channel_identifiers
+        ])
+        return is_masked_channel
+
+    def construct_operation_mask(self, masked_operation: TMaskedTwoQubitOperation) -> VirtualTwoQubitVacant:
+        """:return: Newly constructed 'mask'-operation based on masked-operation."""
+        return VirtualTwoQubitVacant(
+            control_qubit_index=masked_operation.control_qubit_index,
+            target_qubit_index=masked_operation.target_qubit_index,
+            relation=masked_operation.relation_link,
+            duration_strategy=masked_operation.duration_strategy,
+        )
+    # endregion

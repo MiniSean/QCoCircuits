@@ -239,6 +239,29 @@ class BlockTwoQubitGate(IRectTransformComponent, IDrawComponent):
 
 
 @dataclass(frozen=True)
+class BlockTwoQubitVacant(BlockTwoQubitGate, IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing information to draw a two-qubit gate block
+    that uses two pivots to comply with vertical alignment.
+    """
+    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().vacant_operation_style)
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        axes.plot(
+            [self.main_transform_block.center_pivot.x, self.second_transform_block.center_pivot.x],
+            [self.main_transform_block.center_pivot.y, self.second_transform_block.center_pivot.y],
+            linestyle='--',
+            linewidth=self.style_settings.line_width,
+            color=self.style_settings.border_color,
+            zorder=-10,
+        )
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
 class BlockVerticalBarrier(IRectTransformComponent, IDrawComponent):
     """
     Data class, containing information to draw a vertical barrier block
