@@ -191,6 +191,9 @@ class RelationLink(IRelationLink[TDurationComponent], Generic[TDurationComponent
     # endregion
 
     # region Class Methods
+    def __repr__(self):
+        return f"<RelationLink>{self.reference_node.__class__.__name__}[{self._relation_type.name}]"
+
     @classmethod
     def no_relation(cls) -> 'RelationLink':
         """:return: Class method constructor for generating no-relation link (default)."""
@@ -385,4 +388,7 @@ class MultiRelationLink(IRelationLink[TCircuitOperation], Generic[TCircuitOperat
         )
     # endregion
 
-
+    # region Class Methods
+    def __repr__(self):
+        return f"<RelationLinks>{[node.__class__.__name__ for node in self._reference_nodes]}[{self._relation_type.name}, {self._relation_to_group.name}]"
+    # endregion
