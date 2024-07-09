@@ -220,6 +220,15 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
         raise InterfaceMethodException
 
     @abstractmethod
+    def flatten(self) -> 'IDeclarativeCircuit':
+        """
+        WARNING: Applies modification inplace.
+        Iterates over composite operations and flattens them.
+        :return: Modified self.
+        """
+        raise InterfaceMethodException
+
+    @abstractmethod
     def set_qubit_initial_state(self, channel_index: int, state: InitialStateEnum) -> 'IDeclarativeCircuit':
         """
         Currently only used for visualization.

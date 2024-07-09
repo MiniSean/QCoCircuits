@@ -124,6 +124,25 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         result._added_operations = self._added_operations
         return result
 
+    def flatten(self) -> 'IDeclarativeCircuit':
+        """
+        WARNING: Applies modifiers inplace.
+        Iterates over composite operations and flattens them.
+        If any operation is still pointing to a composite-operation, remove relation link and add to circuit.
+        :return: Modified self.
+        """
+        result: DeclarativeCircuit = DeclarativeCircuit(
+            nr_qubits=self.nr_qubits,
+        )
+        for operation in self.operations:
+            relates_to_composite: bool = isinstance(operation.relation_link.reference_node, CircuitCompositeOperation)
+            if relates_to_composite:
+                operation.relation_link = RelationLink.no_relation()
+
+            result.add(operation)
+
+        return result
+
     def set_qubit_initial_state(self, channel_index: int, state: InitialStateEnum) -> 'DeclarativeCircuit':
         """
         Currently only used for visualization.
