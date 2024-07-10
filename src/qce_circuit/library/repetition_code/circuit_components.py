@@ -335,7 +335,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return RepetitionCodeDescription.from_chain(length=chain_distance)
 
     @classmethod
-    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer) -> 'RepetitionCodeDescription':
+    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, qubit_index_map: Optional[Dict[IQubitID, int]] = None) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on pre-defined connectivity and involved qubit-ID's."""
         data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.data_qubit_ids]
         ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
@@ -359,7 +359,8 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             else:
                 gate_sequences.append(GateSequenceLayer.empty())
         # Setup default qubit index map
-        qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(involved_qubit_ids)}
+        if qubit_index_map is None:
+            qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(involved_qubit_ids)}
         # Return constructed connectivity
         return RepetitionCodeDescription(
             _data_qubit_ids=data_qubit_ids,
