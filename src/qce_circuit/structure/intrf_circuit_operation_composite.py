@@ -156,9 +156,17 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         return self.relation_link.get_start_time(duration=self.duration)
 
     @property
+    def empty_composite(self) -> bool:
+        """:return: Boolean, whether composite operation contains sub-operations (not empty) or not (empty)."""
+        return len(self._circuit_graph.leaf_nodes) == 1 and self._circuit_graph.leaf_nodes[0].is_root
+
+    @property
     def duration(self) -> float:
         """:return: Duration [ns]."""
         total_duration: float = 0.0
+        # Guard clause, if graph does not contain non-Head nodes, return zero total duration
+        if self.empty_composite:
+            return total_duration
         # Calculate relative start time of internal operations
         relative_start_time: float = +np.inf
         for start_node in self._circuit_graph.get_nodes_at(depth=1):
