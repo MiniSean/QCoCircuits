@@ -2,10 +2,10 @@
 # Module containing circuit components for constructing full repetition-code circuit.
 # -------------------------------------------
 from abc import ABC, abstractmethod
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import List, Tuple, Optional, Dict
 import numpy as np
-from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
     DeclarativeCircuit,
     AcquisitionRegistry,
@@ -46,6 +46,12 @@ from qce_circuit.structure.intrf_circuit_operation import (
 )
 from qce_circuit.structure.intrf_acquisition_operation import IAcquisitionOperation
 from qce_circuit.structure.intrf_circuit_operation import ICircuitOperation
+from qce_circuit.structure.registry_duration import (
+    IDurationStrategy,
+    GlobalDurationRegistry,
+    GlobalDurationRegistryManager,
+    GlobalRegistryKey,
+)
 from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
 
 
@@ -364,6 +370,23 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     # endregion
 
 
+@dataclass(frozen=True)
+class GlobalDecouplingWaitDurationStrategy(IDurationStrategy):
+    """
+    Data class, implementing IDurationStrategy interface.
+    Exposes wait duration during dynamical decoupling based on global duration settings.
+    """
+    _registry: GlobalDurationRegistry = field(default_factory=GlobalDurationRegistryManager.read_config, compare=False, repr=False)
+
+    # region Interface Properties
+    def get_variable_duration(self, task: ICircuitOperation) -> float:
+        """:return: Duration [ns]."""
+        global_readout_duration: float = self._registry.get_registry_at(key=GlobalRegistryKey.READOUT)
+        global_microwave_duration: float = self._registry.get_registry_at(key=GlobalRegistryKey.MICROWAVE)
+        return max(0.0, 0.5 * (global_readout_duration - global_microwave_duration))
+    # endregion
+
+
 def get_last_acquisition_operation(_circuit: DeclarativeCircuit, qubit_index: Optional[int] = None) -> Optional[IAcquisitionOperation]:
     """:return: (Optional) last DispersiveMeasure for specific qubit index, added to the circuit."""
     added_operations: List[ICircuitOperation] = _circuit.operations
@@ -434,7 +457,6 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
     all_indices: List[int] = connectivity.qubit_indices
     current_active_ancilla_indices: List[int] = []
 
-    relation_activation = RelationLink.no_relation()
     for sequence_index in range(connectivity.gate_sequence_count):
         # Check if ancilla's need to be 'activated'
         sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
@@ -451,18 +473,23 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
 
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
-            result.add(Rym90(qubit_index, relation=relation_activation))
-        relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(Rym90(qubit_index))
+        if len(require_activation) > 0:
+            result.add(Barrier(all_indices))
+
         # Schedule two-qubit gate
         for index0, index1 in sequence_active_gate_indices:
-            result.add(CPhase(index0, index1, relation=relation_parking))
-        relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(CPhase(index0, index1))
+
         # Schedule parking operation
         for qubit_index in sequence_active_park_indices:
-            result.add(VirtualPark(qubit_index, relation=relation_parking))
+            result.add(VirtualPark(qubit_index))
+        if len(sequence_active_gate_indices) > 0 or len(sequence_active_park_indices) > 0:
+            result.add(Barrier(all_indices))
+
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
-            result.add(Ry90(qubit_index, relation=relation_activation))
+            result.add(Ry90(qubit_index))
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
@@ -483,7 +510,6 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
     all_indices: List[int] = connectivity.qubit_indices
     current_active_ancilla_indices: List[int] = []
 
-    relation_activation = RelationLink.no_relation()
     for sequence_index in range(connectivity.gate_sequence_count):
         # Check if ancilla's need to be 'activated'
         sequence_active_ancilla_indices: List[int] = connectivity.get_active_ancilla_indices(sequence_index)
@@ -500,18 +526,23 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
 
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
-            result.add(Rym90(qubit_index, relation=relation_activation))
-        relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(Rym90(qubit_index))
+        if len(require_activation) > 0:
+            result.add(Barrier(all_indices))
+
         # Schedule two-qubit gate
         for index0, index1 in sequence_active_gate_indices:
-            result.add(CPhase(index0, index1, relation=relation_parking))
-        relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+            result.add(CPhase(index0, index1))
+
         # Schedule parking operation
         for qubit_index in sequence_active_park_indices:
-            result.add(VirtualPark(qubit_index, relation=relation_parking))
+            result.add(VirtualPark(qubit_index))
+        if len(sequence_active_gate_indices) > 0 or len(sequence_active_park_indices) > 0:
+            result.add(Barrier(all_indices))
+
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
-            result.add(Ry90(qubit_index, relation=relation_activation))
+            result.add(Ry90(qubit_index))
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
@@ -521,7 +552,7 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
             acquisition_tag='parity',
         ))
-    dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
+    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
     for data_index in data_indices:
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
         result.add(Rx180(data_index))
@@ -559,14 +590,23 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
             result.add(Rym90(qubit_index, relation=relation_activation))
-        relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+        try:
+            relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+        except NoReferenceOperationException:
+            relation_parking = RelationLink.no_relation()
+
         # Schedule two-qubit gate
         for index0, index1 in sequence_active_gate_indices:
             result.add(CPhase(index0, index1, relation=relation_parking))
-        relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
         # Schedule parking operation
         for qubit_index in sequence_active_park_indices:
             result.add(VirtualPark(qubit_index, relation=relation_parking))
+
+        try:
+            relation_activation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
+        except NoReferenceOperationException:
+            relation_activation = RelationLink.no_relation()
+
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
             result.add(Ry90(qubit_index, relation=relation_activation))
@@ -581,7 +621,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
             acquisition_tag='parity',
             relation=relation,
         ))
-    dynamical_decoupling_wait = FixedDurationStrategy(duration=0.5)
+    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
     for data_index in data_indices:
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
         result.add(Rx180(data_index))
