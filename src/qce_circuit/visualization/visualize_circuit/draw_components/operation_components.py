@@ -31,6 +31,9 @@ class RotationAxis(Enum):
     Y = 'Y'
     Z = 'Z'
     PHI = r'\phi'
+    X_EF = 'X12'
+    Y_EF = 'Y12'
+    Z_EF = 'Z12'
 
 
 @unique

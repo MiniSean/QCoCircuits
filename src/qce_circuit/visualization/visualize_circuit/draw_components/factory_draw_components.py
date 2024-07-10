@@ -214,6 +214,25 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
     # endregion
 
 
+class Rx180efFactory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: Rx180, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.X_EF,
+            rotation_angle=RotationAngle.RAD180,
+        )
+    # endregion
+
+
 class ZPhaseFactory(IOperationDrawComponentFactory[VirtualPhase, IDrawComponent]):
 
     # region Interface Methods

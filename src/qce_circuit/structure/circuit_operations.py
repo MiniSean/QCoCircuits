@@ -404,6 +404,36 @@ class Rym90(SingleQubitOperation, ICircuitOperation):
 
 
 @dataclass(frozen=False, unsafe_hash=True)
+class Rx180ef(SingleQubitOperation, ICircuitOperation):
+    """
+    Rotation-X (180 degrees) operation between excited (e) and second-excited (f) state.
+    """
+    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=QubitChannel.MICROWAVE),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'Rx180ef':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return Rx180ef(
+            qubit_index=self.qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
 class VirtualPhase(SingleQubitOperation, ICircuitOperation):
     """
     Virtual (Z) phase rotation operation.
