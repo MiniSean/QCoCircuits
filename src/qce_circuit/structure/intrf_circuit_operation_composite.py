@@ -264,14 +264,20 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         :return: Self. Extend self with other graph branch.
         """
         leaf_nodes = self._circuit_graph.leaf_nodes
-        multi_relation = MultiRelationLink(
-            _reference_nodes=[node.operation for node in leaf_nodes],
-            _relation_to_group=MultiRelationType.LATEST,
-            _relation_type=RelationType.FOLLOWED_BY,
-        )
+        relation: IRelationLink = RelationLink.no_relation()
+
+        # Guard clause, if root node is leaf node, ensure incoming nodes have relation pointing to graph-head
+        root_is_leaf: bool = len(leaf_nodes) == 1 and leaf_nodes[0].is_root
+        if not root_is_leaf:
+            relation = MultiRelationLink(
+                _reference_nodes=[node.operation for node in leaf_nodes],
+                _relation_to_group=MultiRelationType.LATEST,
+                _relation_type=RelationType.FOLLOWED_BY,
+            )
+
         for node in other._circuit_graph.get_node_iterator():
             if not node.operation.has_relation:
-                node.operation.relation_link = multi_relation
+                node.operation.relation_link = relation
             self.add(operation=node.operation)
         return self
 

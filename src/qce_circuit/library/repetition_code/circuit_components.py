@@ -557,6 +557,7 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
         result.add(Rx180(data_index))
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    result.add(Barrier(all_indices))
     return result
 
 
