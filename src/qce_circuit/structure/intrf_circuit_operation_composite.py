@@ -170,8 +170,9 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         # Calculate relative start time of internal operations
         relative_start_time: float = +np.inf
         for start_node in self._circuit_graph.get_nodes_at(depth=1):
-            if start_node.operation.start_time < relative_start_time:
-                relative_start_time = start_node.operation.start_time
+            start_time: float = start_node.operation.start_time
+            if start_time < relative_start_time:
+                relative_start_time = start_time
         # Calculate internal duration of operation branch
         for leaf_node in self._circuit_graph.leaf_nodes:
             delta_time = leaf_node.operation.end_time - relative_start_time
