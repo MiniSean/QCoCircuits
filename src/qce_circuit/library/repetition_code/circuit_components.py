@@ -133,11 +133,14 @@ class IRepetitionCodeDescription(ABC):
 
     def get_element(self, index: int) -> IQubitID:
         """:return: Qubit-ID element corresponding to index."""
-        return self.qubit_ids[index]
+        for qubit_id in self.qubit_ids:
+            if self.map_qubit_id_to_circuit_index(qubit_id=qubit_id) == index:
+                return qubit_id
+        raise ValueError(f'Index {index} does not point to any element. Try self.map_qubit_id_to_circuit_index.')
 
     def get_index(self, element: IQubitID) -> int:
         """:return: Index corresponding to Qubit-ID element."""
-        return self.qubit_ids.index(element)
+        return self.map_qubit_id_to_circuit_index(qubit_id=element)
 
     def get_edges(self, qubit: IQubitID) -> List[IEdgeID]:
         """:return: All qubit-to-qubit edges from qubit-ID."""
