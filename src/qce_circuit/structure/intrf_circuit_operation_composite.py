@@ -210,6 +210,16 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
 
         if has_relation and not relation_node_present:
             warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
+            # NOTE: this implementation should be tested.
+            # Adding operation and resetting its relation link can have unintended consequences.
+            if first_in_channel:
+                node.operation.relation_link = RelationLink.no_relation()
+                self._circuit_graph.append_to(self._circuit_graph.root_node, node)
+            else:
+                node.operation.relation_link = RelationLink(
+                    _reference_node=leaf_node.operation,
+                )
+                self._circuit_graph.append_to(leaf_node, node)
 
         return self
 
