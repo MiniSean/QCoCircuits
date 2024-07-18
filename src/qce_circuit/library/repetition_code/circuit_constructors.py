@@ -1,21 +1,22 @@
 # -------------------------------------------
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
-from typing import Optional, List
+from typing import Optional, List, Dict
 from qce_circuit.library.repetition_code.circuit_components import (
     IRepetitionCodeDescription,
     RepetitionCodeDescription,
     get_last_acquisition_operation,
-    get_repetition_code_connectivity,
-    get_circuit_initialize,
     get_circuit_initialize_simplified,
     get_circuit_initialize_with_heralded,
     get_circuit_final_measurement,
-    get_circuit_qec_round_with_dynamical_decoupling,
     get_circuit_qec_round_with_dynamical_decoupling_simplified,
     get_circuit_qec_with_detectors,
 )
-from qce_circuit.library.repetition_code.repetition_code_connectivity import Repetition9Code
+from qce_circuit.library.state_calibration.circuit_components import (
+    CalibrationDescription,
+    CalibrateType,
+)
+from qce_circuit.library.state_calibration.circuit_constructors import construct_calibration_circuit
 from qce_circuit.connectivity import (
     IQubitID,
     IEdgeID,
@@ -27,7 +28,6 @@ from qce_circuit.structure.registry_acquisition import (
 from qce_circuit.structure.registry_repetition import FixedRepetitionStrategy
 from qce_circuit.language import (
     DeclarativeCircuit,
-    InitialStateEnum,
     InitialStateContainer
 )
 from qce_circuit.addon_stim.circuit_operations import (
@@ -115,4 +115,31 @@ def construct_repetition_code_circuit_simplified(qec_cycles: int, description: O
         registry=registry,
     ))
     result.add(Barrier(description.qubit_indices))
+    return result
+
+
+def construct_repetition_code_multi_round_circuit(qec_cycles: List[int], description: IRepetitionCodeDescription, initial_state: InitialStateContainer = InitialStateContainer.empty()) -> DeclarativeCircuit:
+    # Data allocation
+    result: Optional[DeclarativeCircuit] = DeclarativeCircuit()
+    channel_map: Dict[int, IQubitID] = description.circuit_channel_map
+    calibration_description = CalibrationDescription(
+        _qubit_ids=description.qubit_ids,
+        _qubit_index_map={value: key for key, value in channel_map.items()},
+        _type=CalibrateType.QUTRIT,
+    )
+
+    for qec_cycle in qec_cycles:
+        cycle_circuit: DeclarativeCircuit = construct_repetition_code_circuit(
+            qec_cycles=qec_cycle,
+            description=description,
+            initial_state=initial_state,
+        )
+        cycle_circuit = cycle_circuit.apply_modifiers()
+        cycle_circuit = cycle_circuit.flatten()
+
+        result.add(cycle_circuit)
+    calibration_circuit = construct_calibration_circuit(
+        description=calibration_description
+    )
+    result.add(calibration_circuit)
     return result
