@@ -106,6 +106,50 @@ class CircuitGraphBranch(GraphBranch[OperationGraphNode]):
         return None
     # endregion
 
+    # region Static Class Methods
+    @staticmethod
+    def add_to_graph(graph: 'CircuitGraphBranch', operation: ICircuitOperation) -> 'CircuitGraphBranch':
+        """:return: Updated graph. Adds operation to graph."""
+        # Data allocation
+        node: OperationGraphNode = OperationGraphNode(operation=operation)
+        leaf_node: Optional[OperationGraphNode] = graph.get_leaf_at_any(channel_identifiers=operation.channel_identifiers)
+        has_relation: bool = operation.has_relation
+        first_in_channel: bool = leaf_node is None
+
+        # Logic
+        if not has_relation and first_in_channel:
+            graph.append_to(graph.root_node, node)
+            return graph
+
+        if not has_relation and not first_in_channel:
+            node.operation.relation_link = RelationLink(
+                _reference_node=leaf_node.operation,
+            )
+            graph.append_to(leaf_node, node)
+            return graph
+
+        relation_node: Optional[OperationGraphNode] = graph.get_corresponding_node(operation=node.operation.relation_link.reference_node)
+        relation_node_present: bool = relation_node is not None
+        if has_relation and relation_node_present:
+            graph.append_to(relation_node, node)
+            return graph
+
+        if has_relation and not relation_node_present:
+            warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
+            # NOTE: this implementation should be tested.
+            # Adding operation and resetting its relation link can have unintended consequences.
+            if first_in_channel:
+                node.operation.relation_link = RelationLink.no_relation()
+                graph.append_to(graph.root_node, node)
+            else:
+                node.operation.relation_link = RelationLink(
+                    _reference_node=leaf_node.operation,
+                )
+                graph.append_to(leaf_node, node)
+
+        return graph
+    # endregion
+
 
 class ICircuitCompositeOperation(ICircuitOperation, metaclass=ABCMeta):
     """
@@ -185,42 +229,10 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
     def add(self, operation: ICircuitOperation) -> ICircuitCompositeOperation:
         """:return: Self. Adds operation to circuit."""
         # Data allocation
-        node: OperationGraphNode = OperationGraphNode(operation=operation)
-        leaf_node: Optional[OperationGraphNode] = self._circuit_graph.get_leaf_at_any(channel_identifiers=operation.channel_identifiers)
-        has_relation: bool = operation.has_relation
-        first_in_channel: bool = leaf_node is None
-
-        # Logic
-        if not has_relation and first_in_channel:
-            self._circuit_graph.append_to(self._circuit_graph.root_node, node)
-            return self
-
-        if not has_relation and not first_in_channel:
-            node.operation.relation_link = RelationLink(
-                _reference_node=leaf_node.operation,
-            )
-            self._circuit_graph.append_to(leaf_node, node)
-            return self
-
-        relation_node: Optional[OperationGraphNode] = self._circuit_graph.get_corresponding_node(operation=node.operation.relation_link.reference_node)
-        relation_node_present: bool = relation_node is not None
-        if has_relation and relation_node_present:
-            self._circuit_graph.append_to(relation_node, node)
-            return self
-
-        if has_relation and not relation_node_present:
-            warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
-            # NOTE: this implementation should be tested.
-            # Adding operation and resetting its relation link can have unintended consequences.
-            if first_in_channel:
-                node.operation.relation_link = RelationLink.no_relation()
-                self._circuit_graph.append_to(self._circuit_graph.root_node, node)
-            else:
-                node.operation.relation_link = RelationLink(
-                    _reference_node=leaf_node.operation,
-                )
-                self._circuit_graph.append_to(leaf_node, node)
-
+        self._circuit_graph = CircuitGraphBranch.add_to_graph(
+            graph=self._circuit_graph,
+            operation=operation,
+        )
         return self
 
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'CircuitCompositeOperation':
