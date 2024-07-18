@@ -11,6 +11,9 @@ from qce_circuit.utilities.custom_context_managers import WhileLoopSafety
 from qce_circuit.utilities.array_manipulation import unique_in_order
 
 
+MAX_GRAPH_DEPTH: int = 5000
+
+
 class IGraphEvaluation(ABC):
     """
     Interface class, exposing method for evaluating circuit topology to an ordered list of nodes.
@@ -427,6 +430,7 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
     """Fixed entrypoint (node) for branch."""
     _endpoint_node: TGraphNode = field(init=False, repr=False, compare=False)
     """Fixed endpoint (node) for branch."""
+    _cached_branch_iterator: List[List[TGraphNode]] = field(init=False, repr=False, compare=False)
 
     # region Interface Properties
     @property
@@ -531,6 +535,7 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
                 node.release_pointer(pointer=outgoing_pointer)
             # Point towards self endpoint
             node.point_towards(pointer=self._endpoint_node)
+        self._update_branch_iterator()  # Update internal branch iterator
 
     @classmethod
     def from_node(cls, node: TGraphNode) -> 'GraphBranch[TGraphNode]':
@@ -544,24 +549,8 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
         """
         :return: Iterator, going through layers of child nodes from root (self._entrypoint_node) to self._endpoint_node.
         """
-        # Data allocation
-        iteration_nodes: List[TGraphNode] = [self._entrypoint_node]  # Root
-        next_iteration_nodes: List[TGraphNode] = []
-
-        with WhileLoopSafety(max_iterations=100) as loop:
-            while len(iteration_nodes) > 0 and loop.safety_condition():
-                yield iteration_nodes
-
-                # Iterate through nodes
-                for potential_leaf_node in iteration_nodes:
-                    # Check next pointers of potential leaf node (excluding endpoint)
-                    potential_next_pointers: List[TGraphNode] = potential_leaf_node.get_next_pointers()
-                    excluding_endpoint: List[TGraphNode] = [node for node in potential_next_pointers if node is not self._endpoint_node]
-                    # Collect next iteration
-                    next_iteration_nodes.extend(excluding_endpoint)
-                # Prepare for next round
-                iteration_nodes = unique_in_order(next_iteration_nodes)  # Filter duplicate nodes
-                next_iteration_nodes = []
+        for iteration_nodes in self._cached_branch_iterator:
+            yield iteration_nodes
 
     # TODO: Write unit test for following method
     def get_node_iterator(self) -> Iterator[TGraphNode]:
@@ -606,14 +595,14 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
         object.__setattr__(self, '_entrypoint_node', GraphNode())
         object.__setattr__(self, '_endpoint_node', GraphNode())
         self._entrypoint_node.point_towards(self._endpoint_node)
+        self._update_branch_iterator()
 
     def __repr__(self):
         internal_nodes: str = ""
         iteration_nodes: List[TGraphNode] = [self._entrypoint_node]
         next_iteration_nodes: List[TGraphNode] = []
 
-        graph_depth: int = 100
-        with WhileLoopSafety(max_iterations=graph_depth) as loop:
+        with WhileLoopSafety(max_iterations=MAX_GRAPH_DEPTH) as loop:
             # Execute while loop in safety environment
             while len(iteration_nodes) > 0 and loop.safety_condition():
                 for iteration_node in iteration_nodes:
@@ -634,6 +623,33 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
                       f"{internal_nodes}" \
                       f"EndPoint: {self._endpoint_node.__repr__()}\n"
         return result
+
+    def _update_branch_iterator(self) -> List[List[TGraphNode]]:
+        """
+        Internal function to update and cache branch iterator.
+        :return: None.
+        """
+        # Data allocation
+        result: List[List[TGraphNode]] = []
+        iteration_nodes: List[TGraphNode] = [self._entrypoint_node]  # Root
+        next_iteration_nodes: List[TGraphNode] = []
+
+        with WhileLoopSafety(max_iterations=MAX_GRAPH_DEPTH) as loop:
+            while len(iteration_nodes) > 0 and loop.safety_condition():
+                result.append(iteration_nodes)
+
+                # Iterate through nodes
+                for potential_leaf_node in iteration_nodes:
+                    # Check next pointers of potential leaf node (excluding endpoint)
+                    potential_next_pointers: List[TGraphNode] = potential_leaf_node.get_next_pointers()
+                    excluding_endpoint: List[TGraphNode] = [node for node in potential_next_pointers if node is not self._endpoint_node]
+                    # Collect next iteration
+                    next_iteration_nodes.extend(excluding_endpoint)
+                # Prepare for next round
+                iteration_nodes = list(set(next_iteration_nodes))  # Filter duplicate nodes
+                next_iteration_nodes = []
+        object.__setattr__(self, '_cached_branch_iterator', result)
+        return self._cached_branch_iterator
     # endregion
 
 
