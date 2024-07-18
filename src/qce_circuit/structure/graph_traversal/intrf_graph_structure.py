@@ -489,6 +489,8 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
     # endregion
 
     # region Interface IGraphBranch Methods
+    # TODO: Come up with bulk_append operation.
+    #  Allowing for bulk additions without heavy update-endpoints calculation.
     def append(self, pointer: TGraphNode) -> 'GraphBranch[TGraphNode]':
         """:return: Appends self with another entry/end point maintainer."""
         # Append before endpoint
