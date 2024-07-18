@@ -318,6 +318,14 @@ class ICircuitOperation(ICircuitNode, IRelationComponent['ICircuitOperation'], I
         :return: Array-like of decomposed operations.
         """
         raise InterfaceMethodException
+
+    @abstractmethod
+    def apply_flatten_to_self(self) -> 'ICircuitOperation':
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        raise InterfaceMethodException
     # endregion
 
     # region Class Methods

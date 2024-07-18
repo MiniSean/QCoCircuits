@@ -96,6 +96,13 @@ class SingleQubitOperation(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
 
@@ -598,6 +605,13 @@ class TwoQubitOperation(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
 
@@ -731,6 +745,13 @@ class DispersiveMeasure(IAcquisitionOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
     # region Class Methods
@@ -812,6 +833,13 @@ class Barrier(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
     # region Class Methods

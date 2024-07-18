@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import warnings
 from typing import List, Iterator, Optional, Dict
 import numpy as np
+from tqdm import tqdm
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.intrf_circuit_operation import (
@@ -286,6 +287,20 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
             # Extend decomposed operation list
             result.extend(node.operation.decomposed_operations())
         return result
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        flatten_circuit_graph: CircuitGraphBranch = CircuitGraphBranch()
+        for operation in tqdm(self.decomposed_operations(), desc="Flatten Circuit Graph"):
+            CircuitGraphBranch.add_to_graph(
+                graph=flatten_circuit_graph,
+                operation=operation,
+            )
+        self._circuit_graph = flatten_circuit_graph
+        return self
     # endregion
 
     # region Class Methods
