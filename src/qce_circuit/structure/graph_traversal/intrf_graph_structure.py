@@ -182,6 +182,14 @@ class IGraphNavigation(ABC, Generic[TGraphNode]):
         :return: Array-like of TGraphNode (leaf nodes).
         """
         raise InterfaceMethodException
+
+    @property
+    def empty_graph(self) -> bool:
+        """
+        Definition for empty graph.
+        :return: Boolean, whether branch graph contains nodes (not empty) or not (empty).
+        """
+        return len(self.leaf_nodes) == 1 and self.leaf_nodes[0].is_root
     # endregion
 
     # region Interface Methods

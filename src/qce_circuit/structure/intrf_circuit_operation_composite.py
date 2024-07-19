@@ -221,7 +221,7 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
     @property
     def empty_composite(self) -> bool:
         """:return: Boolean, whether composite operation contains sub-operations (not empty) or not (empty)."""
-        return len(self._circuit_graph.leaf_nodes) == 1 and self._circuit_graph.leaf_nodes[0].is_root
+        return self._circuit_graph.empty_graph
 
     @property
     def duration(self) -> float:
