@@ -244,7 +244,7 @@ def reorder_indices(original_order: List[T], specific_order: List[T]) -> List[T]
 
     # Check if all elements in specific_order are in original_order
     if not all(item in original_order for item in specific_order):
-        raise ValueError("All indices in specific_order must be in original_order")
+        raise ValueError(f"All indices in specific_order must be in original_order. Instead got {specific_order}, {original_order}")
 
     # Create the reordered list
     reordered_list = specific_order + [item for item in original_order if item not in specific_order]
