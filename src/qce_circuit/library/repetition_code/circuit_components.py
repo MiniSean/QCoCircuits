@@ -293,7 +293,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     # endregion
 
     # region Class Methods
-    def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, IQubitID]]:
+    def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
         """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
         involved_qubit_ids = self.qubit_ids
         involved_indices = [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in involved_qubit_ids]
