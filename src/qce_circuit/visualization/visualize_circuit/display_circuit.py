@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Optional, TypeVar, Dict, Any, Tuple
+from qce_circuit.structure.intrf_circuit_operation import RelationLink
 from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
@@ -69,6 +70,11 @@ from qce_circuit.structure.intrf_circuit_operation import (
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
+from qce_circuit.structure.registry_duration import (
+    temporary_override_get_registry_at,
+    GlobalRegistryKey,
+)
+from qce_circuit.utilities.custom_context_managers import clear_lru_cache
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
@@ -109,6 +115,14 @@ from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     LabelFormat,
     IFigureAxesPair,
 )
+
+
+VISUALIZATION_DURATION_REGISTRY = {
+    GlobalRegistryKey.READOUT: 2.0,
+    GlobalRegistryKey.MICROWAVE: 1.0,
+    GlobalRegistryKey.FLUX: 1.0,
+    GlobalRegistryKey.RESET: 2.0,
+}
 
 
 @dataclass(frozen=True)
@@ -522,8 +536,21 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, **kwargs) -> IFigureAxesPair:
-    return plot_circuit_description(
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, **kwargs) -> IFigureAxesPair:
+    if compact_visualization:
+        with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
+            with clear_lru_cache(RelationLink.get_start_time):
+                fig, ax = plot_circuit_description(
+                    description=construct_visual_description(
+                        circuit=circuit,
+                        custom_channel_order=channel_order,
+                        custom_channel_map=channel_map,
+                    ),
+                    **kwargs
+                )
+        return fig, ax
+    # Else
+    fig, ax = plot_circuit_description(
         description=construct_visual_description(
             circuit=circuit,
             custom_channel_order=channel_order,
@@ -531,6 +558,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
         ),
         **kwargs
     )
+    return fig, ax
 
 
 def plot_circuit_description(description: VisualCircuitDescription, **kwargs) -> IFigureAxesPair:

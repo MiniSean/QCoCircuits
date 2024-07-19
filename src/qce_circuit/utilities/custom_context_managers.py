@@ -2,6 +2,7 @@
 # Customized context managers for better maintainability
 # -------------------------------------------
 import warnings
+import contextlib
 from qce_circuit.utilities.custom_warnings import WhileLoopSafetyExceededWarning
 
 
@@ -30,3 +31,18 @@ class WhileLoopSafety:
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
     # endregion
+
+
+@contextlib.contextmanager
+def clear_lru_cache(method):
+    """
+    Context manager to temporarily clear the LRU cache of a given method.
+
+    :param method: (function) The LRU cached method to clear.
+    :yields: None.
+    """
+    method.cache_clear()
+    try:
+        yield
+    finally:
+        method.cache_clear()

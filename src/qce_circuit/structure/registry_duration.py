@@ -3,6 +3,7 @@
 # A registry can be used to manage and access the variable durations.
 # -------------------------------------------
 import os
+import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Callable, Optional
@@ -82,6 +83,26 @@ class GlobalDurationRegistryManager(metaclass=Singleton):
             )
         return GlobalDurationRegistry(**read_yaml(filename=cls.CONFIG_NAME))
     # endregion
+
+
+@contextlib.contextmanager
+def temporary_override_get_registry_at(temp_registry: Dict[GlobalRegistryKey, float]):
+    """
+    Context manager to temporarily override the get_registry_at method of
+    GlobalDurationRegistry to use a predefined GlobalDurationRegistry instance.
+    :param temp_registry:  (GlobalDurationRegistry) The temporary GlobalDurationRegistry instance to return.
+    :yields: None
+    """
+    original_method = GlobalDurationRegistry.get_registry_at
+
+    def temp_get_registry_at(self, key: GlobalRegistryKey) -> Optional[float]:
+        return temp_registry.get(key, None)
+
+    try:
+        GlobalDurationRegistry.get_registry_at = temp_get_registry_at
+        yield
+    finally:
+        GlobalDurationRegistry.get_registry_at = original_method
 
 
 class DurationRegistry(IRegistry[TRegistryKey, float]):
