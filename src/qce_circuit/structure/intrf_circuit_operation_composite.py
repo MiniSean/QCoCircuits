@@ -65,14 +65,29 @@ class CircuitGraphBranch(GraphBranch[OperationGraphNode]):
     # endregion
 
     # region Class Methods
-    def append_to(self, endpoint: OperationGraphNode, pointer: OperationGraphNode) -> 'CircuitGraphBranch':
-        """:return: Appends self with another entry/end point maintainer."""
+    def append_pointer_to(self, endpoint: OperationGraphNode, pointer: OperationGraphNode) -> 'CircuitGraphBranch':
+        """
+        Individual pointer append function for backwards compatibility.
+        :return: Appends self with another entry/end point maintainer.
+        """
+        return self.append_pointers_to(
+            endpoint=endpoint,
+            pointers=[pointer],
+        )
+
+    def append_pointers_to(self, endpoint: OperationGraphNode, pointers: List[OperationGraphNode]) -> 'CircuitGraphBranch':
+        """
+        Processes group appending.
+        Makes updating leaf pointers more efficient.
+        :return: Appends self with another entry/end point maintainer.
+        """
         # Append before endpoint
         incoming_pointers: List[IEndpoint] = self._endpoint_node.incoming_pointers
         for incoming_pointer in incoming_pointers:
             if incoming_pointer is endpoint:
                 incoming_pointer.release_pointer(pointer=self._endpoint_node)
-        endpoint.point_towards(pointer=pointer)
+        for pointer in pointers:
+            endpoint.point_towards(pointer=pointer)
         # Update branch pointers
         self.update_point_leafs_to_endpoint()  # Points all leaf nodes to endpoint
         return self
@@ -117,36 +132,39 @@ class CircuitGraphBranch(GraphBranch[OperationGraphNode]):
         has_relation: bool = operation.has_relation
         first_in_channel: bool = leaf_node is None
 
-        # Logic
+        # Node has no relation and is first in graph, append to root
         if not has_relation and first_in_channel:
-            graph.append_to(graph.root_node, node)
+            graph.append_pointer_to(graph.root_node, node)
             return graph
 
+        # Node has no relation, append to nearest leaf node
         if not has_relation and not first_in_channel:
             node.operation.relation_link = RelationLink(
                 _reference_node=leaf_node.operation,
             )
-            graph.append_to(leaf_node, node)
+            graph.append_pointer_to(leaf_node, node)
             return graph
 
+        # Node has relation and is present in graph, append to this (reference) node in graph
         relation_node: Optional[OperationGraphNode] = graph.get_corresponding_node(operation=node.operation.relation_link.reference_node)
         relation_node_present: bool = relation_node is not None
         if has_relation and relation_node_present:
-            graph.append_to(relation_node, node)
+            graph.append_pointer_to(relation_node, node)
             return graph
 
+        # Node has relation but is not present in graph, ignore relation and append as if node has no relation
         if has_relation and not relation_node_present:
             warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
             # NOTE: this implementation should be tested.
             # Adding operation and resetting its relation link can have unintended consequences.
             if first_in_channel:
                 node.operation.relation_link = RelationLink.no_relation()
-                graph.append_to(graph.root_node, node)
+                graph.append_pointer_to(graph.root_node, node)
             else:
                 node.operation.relation_link = RelationLink(
                     _reference_node=leaf_node.operation,
                 )
-                graph.append_to(leaf_node, node)
+                graph.append_pointer_to(leaf_node, node)
 
         return graph
     # endregion
