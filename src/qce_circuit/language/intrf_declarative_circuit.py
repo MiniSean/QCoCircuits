@@ -189,7 +189,7 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
             return self.add_sub_circuit(operation=operation)
         if isinstance(operation, ICircuitOperation):
             return self.add_operation(operation=operation)
-        raise InterfaceMethodException
+        raise NotImplementedError(f"Unsupported operation: {type(operation)}")
 
     def add_declarative_circuit(self, circuit: 'IDeclarativeCircuit') -> 'ICircuitOperation':
         """:return: Added operation. Adds declarative-circuit to circuit."""
