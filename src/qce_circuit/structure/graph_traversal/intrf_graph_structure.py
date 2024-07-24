@@ -652,7 +652,7 @@ class GraphBranch(IGraphBranch[TGraphNode], Generic[TGraphNode]):
                     if is_leaf:
                         leaf_nodes.append(potential_leaf_node)
                 # Prepare for next round
-                iteration_nodes = list(set(next_iteration_nodes))  # Filter duplicate nodes
+                iteration_nodes = unique_in_order(next_iteration_nodes)  # Filter duplicate nodes
                 next_iteration_nodes = []
         object.__setattr__(self, '_cached_branch_iterator', result)
         object.__setattr__(self, '_cached_leaf_nodes', unique_in_order(leaf_nodes))

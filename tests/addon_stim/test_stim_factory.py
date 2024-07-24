@@ -65,19 +65,20 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
             X 2
             I 4
             TICK
-            H 1
+            SQRT_Y_DAG 1
             TICK
             CZ 1 0
             TICK
             CZ 1 2
             TICK
-            H 1 3
+            SQRT_Y 1
+            SQRT_Y_DAG 3
             TICK
             CZ 3 2
             TICK
             CZ 3 4
             TICK
-            H 3
+            SQRT_Y 3
             TICK
             M 1 3
             DETECTOR(1, 0) rec[-2]
@@ -107,13 +108,13 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
             X 2
             I 4
             TICK
-            H 1 3
+            SQRT_Y_DAG 1 3
             TICK
             CZ 0 1 2 3
             TICK
             CZ 1 2 3 4
             TICK
-            H 1 3
+            SQRT_Y 1 3
             TICK
             M 1 3
             DETECTOR(1, 0) rec[-2]
