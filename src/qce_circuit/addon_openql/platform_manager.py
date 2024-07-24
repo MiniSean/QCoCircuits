@@ -107,6 +107,8 @@ class PlatformManager(metaclass=Singleton):
         - Instruction containing native instruction set to which all higher-level instructions can be compiled to.
         """
         result = ql.Platform.get_platform_json()
+        # Update qubit count limit (for unittests)
+        result["hardware_settings"]["qubit_number"] = 100
         # Add custom (default) instructions. (For unittests)
         result["instructions"]["update_ph"] = dict(
             prototype=["Z:qubit"],
