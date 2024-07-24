@@ -106,7 +106,13 @@ class PlatformManager(metaclass=Singleton):
         - Hardware settings (e.g. cycle time 20ns and number of qubits in quantum chip)
         - Instruction containing native instruction set to which all higher-level instructions can be compiled to.
         """
-        return ql.Platform.get_platform_json()
+        result = ql.Platform.get_platform_json()
+        # Add custom (default) instructions. (For unittests)
+        result["instructions"]["update_ph"] = dict(
+            prototype=["Z:qubit"],
+            duration=40,
+        )
+        return result
 
     @classmethod
     def read_config(cls) -> Body:
