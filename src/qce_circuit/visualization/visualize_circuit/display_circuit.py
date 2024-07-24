@@ -300,7 +300,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
     # Apply custom channel map
     custom_channel_map = {
-        i: custom_channel_map[channel_index]
+        i: custom_channel_map.get(channel_index, channel_index)  # Default to channel_index: channel_index
         for i, channel_index in enumerate(channel_indices)
     }
     # custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)

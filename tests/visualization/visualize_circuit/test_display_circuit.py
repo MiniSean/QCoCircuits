@@ -1,9 +1,9 @@
 import unittest
 from typing import Dict
+from qce_circuit.language.intrf_declarative_circuit import InitialStateEnum
 from qce_circuit.visualization.visualize_circuit.display_circuit import plot_circuit
 from qce_circuit.library.repetition_code.circuit_constructors import (
     construct_repetition_code_circuit_simplified,
-    InitialStateEnum,
 )
 from qce_circuit.language import (
     DeclarativeCircuit,
