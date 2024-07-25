@@ -4,6 +4,7 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Type, Generic, TypeVar, List, Optional, Union
+from tqdm import tqdm
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.language.intrf_declarative_circuit import IDeclarativeCircuit
 from qce_circuit.language.declarative_circuit import DeclarativeCircuit
@@ -59,7 +60,7 @@ def replace_operation(circuit: IDeclarativeCircuit, operation_masks: List[IOpera
     relation_transfer_lookup = {}
 
     # Iterate through nodes and rebuild circuit composite
-    for operation in circuit.operations:
+    for operation in tqdm(circuit.operations, desc="Replacing Circuit Operations"):
         operation_copy: ICircuitOperation = operation.copy(relation_transfer_lookup=relation_transfer_lookup)
 
         for operation_mask in operation_masks:
