@@ -60,9 +60,9 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
     ))
 
     # Add detector operations
-    for ancilla in description.ancilla_qubit_indices:
+    for ancilla in description.gate_ancilla_qubit_indices:
         ancilla_element: IQubitID = description.get_element(index=ancilla)
-        involved_edges: List[IEdgeID] = description.get_edges(qubit=ancilla_element)
+        involved_edges: List[IEdgeID] = description.get_edges(qubit_id=ancilla_element)
         neighbor_a: IQubitID = involved_edges[0].get_connected_qubit_id(element=ancilla_element)
         neighbor_b: IQubitID = involved_edges[1].get_connected_qubit_id(element=ancilla_element)
         if qec_cycles > 0:
@@ -80,7 +80,7 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
             reference_offset=ancilla_reference_offset + len(description.data_qubit_indices) if qec_cycles > 0 else ancilla_reference_offset,
             secondary_offset=len(description.ancilla_qubit_indices) if qec_cycles > 1 else None,
         ))
-    for data in description.data_qubit_indices:
+    for data in description.measure_data_qubit_indices:
         result.add(LogicalObservableOperation(
             qubit_index=data,
             last_acquisition_index=get_last_acquisition_operation(result).circuit_level_acquisition_index,

@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Callable
 import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
@@ -169,6 +169,69 @@ class IRepetitionCodeDescription(ABC):
         return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.rotation_ancilla_qubit_ids]
 
     @property
+    def gate_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'fluxed' (2-qubit gate) operation."""
+        result: List[IQubitID] = []
+        for sequence_layer in self.gate_sequences:
+            for gate_operation in sequence_layer.gate_operations:
+                for qubit_id in gate_operation.identifier.qubit_ids:
+                    if qubit_id not in result:
+                        result.append(qubit_id)
+
+        return result
+
+    @property
+    def gate_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'fluxed' (2-qubit gate) operation."""
+        return [qubit_id for qubit_id in self.gate_qubit_ids if qubit_id in self.data_qubit_ids]
+
+    @property
+    def gate_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'fluxed' (2-qubit gate) operation."""
+        return [qubit_id for qubit_id in self.gate_qubit_ids if qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def gate_data_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Data-qubit-indices for 'fluxed' (2-qubit gate) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.gate_data_qubit_ids]
+
+    @property
+    def gate_ancilla_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Ancilla-qubit-indices for 'fluxed' (2-qubit gate) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.gate_ancilla_qubit_ids]
+
+    @property
+    def park_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'fluxed' (parking) operation."""
+        result: List[IQubitID] = []
+        for sequence_layer in self.gate_sequences:
+            for park_operation in sequence_layer.park_operations:
+                if park_operation.identifier not in result:
+                    result.append(park_operation.identifier)
+
+        return result
+
+    @property
+    def park_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'fluxed' (parking) operation."""
+        return [qubit_id for qubit_id in self.park_qubit_ids if qubit_id in self.data_qubit_ids]
+
+    @property
+    def park_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'fluxed' (parking) operation."""
+        return [qubit_id for qubit_id in self.park_qubit_ids if qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def park_data_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Data-qubit-indices for 'fluxed' (parking) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.park_data_qubit_ids]
+
+    @property
+    def park_ancilla_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Ancilla-qubit-indices for 'fluxed' (parking) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.park_ancilla_qubit_ids]
+
+    @property
     def gate_sequence_count(self) -> int:
         """:return: Number of gate sequence layers."""
         return len(self.gate_sequences)
@@ -210,12 +273,12 @@ class IRepetitionCodeDescription(ABC):
         """:return: Index corresponding to Qubit-ID element."""
         return self.map_qubit_id_to_circuit_index(qubit_id=element)
 
-    def get_edges(self, qubit: IQubitID) -> List[IEdgeID]:
+    def get_edges(self, qubit_id: IQubitID) -> List[IEdgeID]:
         """:return: All qubit-to-qubit edges from qubit-ID."""
         result: List[IEdgeID] = []
         edge_ids: List[IEdgeID] = unique_in_order([identifier for sequence in self.gate_sequences for identifier in sequence.edge_ids])
         for edge in edge_ids:
-            if edge.contains(element=qubit):
+            if edge.contains(element=qubit_id):
                 result.append(edge)
         return result
 
@@ -378,18 +441,10 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     # region Class Methods
     def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
         """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
-        involved_qubit_ids = self.qubit_ids
-        involved_indices = [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in involved_qubit_ids]
-
-        # Step 1: Get the sort order of the first list
-        sort_order = sorted(range(len(involved_qubit_ids)), key=lambda x: involved_qubit_ids[x].id)
-        # Step 2: Apply this sort order to both lists
-        involved_qubit_ids = [involved_qubit_ids[i] for i in sort_order]
-        involved_indices = [involved_indices[i] for i in sort_order]
-
-        channel_order = involved_indices
-        channel_map = {i: qubit_id.id for i, qubit_id in zip(involved_indices, involved_qubit_ids)}
-        return channel_order, channel_map
+        return AdvancedRepetitionCodeDescription.channel_order_and_mapping(
+            involved_qubit_ids=self.qubit_ids,
+            mapping=self.map_qubit_id_to_circuit_index,
+        )
 
     @classmethod
     def from_chain(cls, length: int) -> 'RepetitionCodeDescription':
@@ -454,6 +509,178 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
         )
+    # endregion
+
+
+@dataclass(frozen=True)
+class AdvancedRepetitionCodeDescription(IRepetitionCodeDescription):
+    """
+    Data class, describing repetition code circuit descriptions with advanced options.
+    """
+    _all_data_qubit_ids: List[IQubitID]
+    _all_ancilla_qubit_ids: List[IQubitID]
+    _involved_data_qubit_ids: List[IQubitID]
+    _involved_ancilla_qubit_ids: List[IQubitID]
+    _measure_qubit_ids: List[IQubitID]
+    _rotation_qubit_ids: List[IQubitID]
+    _gate_sequences: List[GateSequenceLayer]
+    _qubit_index_map: Dict[IQubitID, int]
+    """Mapping from Qubit-ID to circuit channel index."""
+
+    # region Interface Properties
+    @property
+    def qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) qubit-ID's in connectivity."""
+        # Example arrays
+        a = np.asarray(self._all_data_qubit_ids)
+        b = np.asarray(self._all_ancilla_qubit_ids)
+
+        # Ensure a and b are of the same length or handle cases where they are not
+        length = min(len(a), len(b))
+        result = np.empty((length * 2,), dtype=a.dtype)
+
+        # Fill in c by alternating elements from a and b
+        result[0::2], result[1::2] = a[:length], b[:length]
+
+        # If a and b were of different lengths, append the remaining elements
+        if len(a) > length:
+            result = np.append(result, a[length:])
+        elif len(b) > length:
+            result = np.append(result, b[length:])
+        return list(result)
+
+    @property
+    def data_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Data-qubit-ID's in connectivity."""
+        return self._all_data_qubit_ids
+
+    @property
+    def ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: (All) Ancilla-qubit-ID's in connectivity."""
+        return self._all_ancilla_qubit_ids
+
+    @property
+    def prepare_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'prepare' operation."""
+        return self.qubit_ids
+
+    @property
+    def measure_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'measure' operation."""
+        return self._measure_qubit_ids
+
+    @property
+    def rotation_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'rotation' (gate) operation."""
+        return self._rotation_qubit_ids
+
+    @property
+    def gate_sequences(self) -> List[GateSequenceLayer]:
+        """:return: Array-like of gate sequences."""
+        return self._gate_sequences
+    # endregion
+
+    # region Interface Methods
+    def map_qubit_id_to_circuit_index(self, qubit_id: IQubitID) -> int:
+        """
+        :param qubit_id: Identifier that is mapped to circuit channel index.
+        :return: Circuit channel index corresponding to qubit-ID.
+        """
+        return self._qubit_index_map[qubit_id]
+
+    def get_operations(self, initial_state: InitialStateContainer, **kwargs) -> List[ICircuitOperation]:
+        """
+        :param initial_state: Container with qubit-index to initial state enum mapping.
+        :return: Array-like of circuit operations, corresponding to initial state preparation.
+        """
+        return [
+            initial_state.get_operation(
+                qubit_index=self.map_qubit_id_to_circuit_index(
+                    qubit_id=self.data_qubit_ids[initial_state_index],
+                ),
+                initial_state_index=initial_state_index,
+                **kwargs,
+            )
+            for initial_state_index in initial_state.initial_states.keys()
+        ]
+    # endregion
+
+    # region Class Methods
+    def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
+        """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
+        return self.channel_order_and_mapping(
+            involved_qubit_ids=self.qubit_ids,
+            mapping=self.map_qubit_id_to_circuit_index,
+        )
+
+    @classmethod
+    def from_connectivity(cls, all_qubit_ids: List[IQubitID], gate_sequence_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, include_measure_qubit_ids: Optional[List[IQubitID]] = None, include_rotation_qubit_ids: Optional[List[IQubitID]] = None, qubit_index_map: Optional[Dict[IQubitID, int]] = None) -> 'AdvancedRepetitionCodeDescription':
+        """
+        Note: involved qubit-ID's describe the qubits part of the flux gate sequence.
+        :return: Class method constructor based on pre-defined connectivity, all qubit-ID's + involved and inclusion settings.
+        """
+        all_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in all_qubit_ids if qubit_id in connectivity.data_qubit_ids]
+        all_ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in all_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
+        involved_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in gate_sequence_qubit_ids if qubit_id in connectivity.data_qubit_ids]
+        involved_ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in gate_sequence_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
+
+        if include_measure_qubit_ids is None:
+            include_measure_qubit_ids = connectivity.qubit_ids
+        if include_rotation_qubit_ids is None:
+            include_rotation_qubit_ids = connectivity.qubit_ids
+
+        # Populate gate sequence part of involved qubit-ID's
+        gate_sequences: List[GateSequenceLayer] = []
+        for i in range(connectivity.gate_sequence_count):
+            entire_gate_sequence: GateSequenceLayer = connectivity.get_gate_sequence_at_index(index=i)
+            # Mandatory gate operations
+            gate_operations: List[Operation[IEdgeID]] = [element for element in entire_gate_sequence.gate_operations if all([qubit_id in gate_sequence_qubit_ids for qubit_id in element.identifier.qubit_ids])]
+            # Dynamic park operations
+            edge_identifiers: List[IEdgeID] = [element.identifier for element in gate_operations]
+            park_operations: List[Operation[IQubitID]] = [Operation.type_park(element) for element in connectivity.qubit_ids if get_requires_parking(element=element, edge_ids=edge_identifiers, connectivity=connectivity)]
+            # Only include park- and gate-operations for which all identifiers are part of involved qubit-ID's
+            subset_gate_sequence: GateSequenceLayer = GateSequenceLayer(
+                _park_operations=park_operations,
+                _gate_operations=gate_operations,
+            )
+            non_empty_sequence: bool = len(subset_gate_sequence.park_operations) > 0 or len(subset_gate_sequence.gate_operations) > 0
+            if non_empty_sequence:
+                gate_sequences.append(subset_gate_sequence)
+            else:
+                gate_sequences.append(GateSequenceLayer.empty())
+
+        # Setup default qubit index map
+        if qubit_index_map is None:
+            qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(all_qubit_ids)}
+
+        # Return constructed connectivity
+        return AdvancedRepetitionCodeDescription(
+            _all_data_qubit_ids=all_data_qubit_ids,
+            _all_ancilla_qubit_ids=all_ancilla_qubit_ids,
+            _involved_data_qubit_ids=involved_data_qubit_ids,
+            _involved_ancilla_qubit_ids=involved_ancilla_qubit_ids,
+            _measure_qubit_ids=include_measure_qubit_ids,
+            _rotation_qubit_ids=include_rotation_qubit_ids,
+            _gate_sequences=gate_sequences,
+            _qubit_index_map=qubit_index_map,
+        )
+    # endregion
+
+    # region Static Class Methods
+    @staticmethod
+    def channel_order_and_mapping(involved_qubit_ids: List[IQubitID], mapping: Callable[[IQubitID], int]) -> Tuple[List[int], Dict[int, str]]:
+        """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
+        involved_indices = [mapping(qubit_id) for qubit_id in involved_qubit_ids]
+
+        # Step 1: Get the sort order of the first list
+        sort_order = sorted(range(len(involved_qubit_ids)), key=lambda x: involved_qubit_ids[x].id)
+        # Step 2: Apply this sort order to both lists
+        involved_qubit_ids = [involved_qubit_ids[i] for i in sort_order]
+        involved_indices = [involved_indices[i] for i in sort_order]
+
+        channel_order = involved_indices
+        channel_map = {i: qubit_id.id for i, qubit_id in zip(involved_indices, involved_qubit_ids)}
+        return channel_order, channel_map
     # endregion
 
 
