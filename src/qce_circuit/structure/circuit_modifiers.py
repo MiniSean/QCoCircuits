@@ -19,6 +19,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualEmpty,
     Wait,
     VirtualPark,
+    Reset,
 )
 from qce_circuit.structure.intrf_circuit_operation import (
     QubitChannel,
@@ -119,7 +120,8 @@ class ChannelVacantMask(IOperationMask[TMaskedOperation, Union[VirtualVacant, Vi
                                    or isinstance(matched_operation, VirtualEmpty))
         if not is_masked_operation or is_mask_operation:
             return False
-        is_masked_channel: bool = self.qubit_channel_identifier in matched_operation.channel_identifiers
+        is_masked_channel: bool = (self.qubit_channel_identifier in matched_operation.channel_identifiers
+                                   and QubitChannel.ALL not in [_id.channel for _id in matched_operation.channel_identifiers])
         return is_masked_channel
 
     def construct_operation_mask(self, masked_operation: TMaskedOperation) -> Union[VirtualVacant, VirtualEmpty]:
