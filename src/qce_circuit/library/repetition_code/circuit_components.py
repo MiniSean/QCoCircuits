@@ -714,6 +714,12 @@ def get_circuit_qec_with_detectors(connectivity: IRepetitionCodeDescription, qec
     result: DeclarativeCircuit = DeclarativeCircuit()
     # Guard clause, if qec-cycles is 0, return empty circuit
     if qec_cycles == 0:
+        for ancilla_index in connectivity.measure_ancilla_qubit_indices:
+            result.add(DispersiveMeasure(
+                ancilla_index,
+                acquisition_strategy=RegistryAcquisitionStrategy(registry),
+                acquisition_tag='final',
+            ))
         return result
 
     all_indices: List[int] = connectivity.qubit_indices
