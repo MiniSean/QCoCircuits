@@ -1072,7 +1072,7 @@ def get_circuit_qec_with_detectors(connectivity: IRepetitionCodeDescription, qec
         return result
 
     all_indices: List[int] = connectivity.qubit_indices
-    ancilla_indices: List[int] = connectivity.measure_ancilla_qubit_indices
+    ancilla_indices: List[int] = connectivity.detector_qubit_indices
     requires_first_sub_circuit: bool = qec_cycles > 1
     requires_third_sub_circuit_offset: bool = qec_cycles > 2
     requires_second_sub_circuit: bool = qec_cycles > 3
