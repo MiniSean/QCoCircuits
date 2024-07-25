@@ -719,7 +719,7 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
                 filtered_gate_operations.append(operation)
 
             # Force only required parking operations
-            filtered_park_operations: List[Operation[IQubitID]] = []
+            filtered_park_operations: List[Operation[IQubitID]] = _gate_sequence.park_operations
             if self._only_required_parking_operations:
                 edge_identifiers: List[IEdgeID] = [element.identifier for element in filtered_gate_operations]
                 filtered_park_operations = [Operation.type_park(element) for element in self._connectivity.qubit_ids if get_requires_parking(element=element, edge_ids=edge_identifiers, connectivity=self._connectivity)]
