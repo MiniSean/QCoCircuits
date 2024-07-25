@@ -81,6 +81,24 @@ class IRepetitionCodeDescription(ABC):
 
     @property
     @abstractmethod
+    def prepare_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'prepare' operation."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def measure_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'measure' operation."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def rotation_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'rotation' (gate) operation."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
         raise InterfaceMethodException
@@ -99,6 +117,56 @@ class IRepetitionCodeDescription(ABC):
     def ancilla_qubit_indices(self) -> List[int]:
         """:return: (All) Ancilla-qubit-indices."""
         return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def prepare_qubit_indices(self) -> List[int]:
+        """:return: sub-set of qubit-indices for 'prepare' operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.prepare_qubit_ids]
+
+    @property
+    def measure_qubit_indices(self) -> List[int]:
+        """:return: sub-set of qubit-indices for 'measure' operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.measure_qubit_ids]
+
+    @property
+    def measure_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'measure' operation."""
+        return [qubit_id for qubit_id in self.measure_qubit_ids if qubit_id in self.data_qubit_ids]
+
+    @property
+    def measure_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'measure' operation."""
+        return [qubit_id for qubit_id in self.measure_qubit_ids if qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def measure_data_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Data-qubit-indices for 'measure' operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.measure_data_qubit_ids]
+
+    @property
+    def measure_ancilla_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Ancilla-qubit-indices for 'measure' operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.measure_ancilla_qubit_ids]
+
+    @property
+    def rotation_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'rotation' (gate) operation."""
+        return [qubit_id for qubit_id in self.rotation_qubit_ids if qubit_id in self.data_qubit_ids]
+
+    @property
+    def rotation_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'rotation' (gate) operation."""
+        return [qubit_id for qubit_id in self.rotation_qubit_ids if qubit_id in self.ancilla_qubit_ids]
+
+    @property
+    def rotation_data_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Data-qubit-indices for 'rotation' (gate) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.rotation_data_qubit_ids]
+
+    @property
+    def rotation_ancilla_qubit_indices(self) -> List[int]:
+        """:return: sub-set of Ancilla-qubit-indices for 'rotation' (gate) operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.rotation_ancilla_qubit_ids]
 
     @property
     def gate_sequence_count(self) -> int:
@@ -198,7 +266,7 @@ class IRepetitionCodeDescription(ABC):
         if not 0 <= sequence_index < len(self.gate_sequences):
             return None
 
-        ancilla_ids: List[IQubitID] = self.ancilla_qubit_ids
+        ancilla_ids: List[IQubitID] = self.rotation_ancilla_qubit_ids
         sequence: GateSequenceLayer = self.gate_sequences[sequence_index]
         result: List[int] = []
         for edge in sequence.edge_ids:
@@ -260,6 +328,21 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     def ancilla_qubit_ids(self) -> List[IQubitID]:
         """:return: (All) Ancilla-qubit-ID's in connectivity."""
         return self._ancilla_qubit_ids
+
+    @property
+    def prepare_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'prepare' operation."""
+        return self.qubit_ids
+
+    @property
+    def measure_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'measure' operation."""
+        return self.qubit_ids
+
+    @property
+    def rotation_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'rotation' (gate) operation."""
+        return self.qubit_ids
 
     @property
     def gate_sequences(self) -> List[GateSequenceLayer]:
@@ -427,10 +510,9 @@ def get_circuit_initialize_simplified(connectivity: IRepetitionCodeDescription, 
 
 def get_circuit_initialize_with_heralded(connectivity: IRepetitionCodeDescription, initial_state: InitialStateContainer, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
-    qubit_indices: List[int] = connectivity.qubit_indices
-    for qubit_index in qubit_indices:
+    for qubit_index in connectivity.prepare_qubit_indices:
         result.add(Reset(qubit_index))
-    for qubit_index in qubit_indices:
+    for qubit_index in connectivity.measure_qubit_indices:
         result.add(DispersiveMeasure(
             qubit_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
@@ -445,7 +527,7 @@ def get_circuit_initialize_with_heralded(connectivity: IRepetitionCodeDescriptio
 
 def get_circuit_final_measurement(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
-    for data_index in connectivity.data_qubit_indices:
+    for data_index in connectivity.measure_data_qubit_indices:
         result.add(DispersiveMeasure(
             data_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
@@ -457,7 +539,6 @@ def get_circuit_final_measurement(connectivity: IRepetitionCodeDescription, regi
 def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
 
-    ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
     all_indices: List[int] = connectivity.qubit_indices
     current_active_ancilla_indices: List[int] = []
 
@@ -497,7 +578,7 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
-    for ancilla_index in ancilla_indices:
+    for ancilla_index in connectivity.measure_ancilla_qubit_indices:
         result.add(DispersiveMeasure(
             ancilla_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
@@ -509,8 +590,6 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
 def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCodeDescription, registry: AcquisitionRegistry) -> DeclarativeCircuit:
     result: DeclarativeCircuit = DeclarativeCircuit()
 
-    data_indices: List[int] = connectivity.data_qubit_indices
-    ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
     all_indices: List[int] = connectivity.qubit_indices
     current_active_ancilla_indices: List[int] = []
 
@@ -550,14 +629,14 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
-    for ancilla_index in ancilla_indices:
+    for ancilla_index in connectivity.measure_ancilla_qubit_indices:
         result.add(DispersiveMeasure(
             ancilla_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
             acquisition_tag='parity',
         ))
     dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in data_indices:
+    for data_index in connectivity.rotation_data_qubit_indices:
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
         result.add(Rx180(data_index))
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
@@ -572,9 +651,6 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
     """
     result: DeclarativeCircuit = DeclarativeCircuit()
 
-    data_indices: List[int] = connectivity.data_qubit_indices
-    ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
-    all_indices: List[int] = connectivity.qubit_indices
     current_active_ancilla_indices: List[int] = []
 
     relation_activation = RelationLink.no_relation()
@@ -619,7 +695,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
     # Ancilla measurement
     # result.add(Barrier(all_indices))
     relation = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
-    for ancilla_index in ancilla_indices:
+    for ancilla_index in connectivity.measure_ancilla_qubit_indices:
         result.add(DispersiveMeasure(
             ancilla_index,
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
@@ -627,7 +703,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
             relation=relation,
         ))
     dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in data_indices:
+    for data_index in connectivity.rotation_data_qubit_indices:
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
         result.add(Rx180(data_index))
         result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
@@ -641,7 +717,7 @@ def get_circuit_qec_with_detectors(connectivity: IRepetitionCodeDescription, qec
         return result
 
     all_indices: List[int] = connectivity.qubit_indices
-    ancilla_indices: List[int] = connectivity.ancilla_qubit_indices
+    ancilla_indices: List[int] = connectivity.measure_ancilla_qubit_indices
     requires_first_sub_circuit: bool = qec_cycles > 1
     requires_third_sub_circuit_offset: bool = qec_cycles > 2
     requires_second_sub_circuit: bool = qec_cycles > 3
