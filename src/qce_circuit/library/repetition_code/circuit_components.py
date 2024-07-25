@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict
+from typing import List, Tuple, Optional, Dict, Callable
 import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
@@ -507,7 +507,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     # region Class Methods
     def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
         """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
-        return AdvancedRepetitionCodeDescription.channel_order_and_mapping(
+        return CompositeRepetitionCodeDescription.channel_order_and_mapping(
             involved_qubit_ids=self.qubit_ids,
             mapping=self.map_qubit_id_to_circuit_index,
         )
@@ -782,10 +782,27 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
     # region Class Methods
     def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
         """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
-        return AdvancedRepetitionCodeDescription.channel_order_and_mapping(
+        return CompositeRepetitionCodeDescription.channel_order_and_mapping(
             involved_qubit_ids=self.qubit_ids,
             mapping=self.map_qubit_id_to_circuit_index,
         )
+    # endregion
+
+    # region Static Class Methods
+    @staticmethod
+    def channel_order_and_mapping(involved_qubit_ids: List[IQubitID], mapping: Callable[[IQubitID], int]) -> Tuple[List[int], Dict[int, str]]:
+        """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
+        involved_indices = [mapping(qubit_id) for qubit_id in involved_qubit_ids]
+
+        # Step 1: Get the sort order of the first list
+        sort_order = sorted(range(len(involved_qubit_ids)), key=lambda x: involved_qubit_ids[x].id)
+        # Step 2: Apply this sort order to both lists
+        involved_qubit_ids = [involved_qubit_ids[i] for i in sort_order]
+        involved_indices = [involved_indices[i] for i in sort_order]
+
+        channel_order = involved_indices
+        channel_map = {i: qubit_id.id for i, qubit_id in zip(involved_indices, involved_qubit_ids)}
+        return channel_order, channel_map
     # endregion
 
 
