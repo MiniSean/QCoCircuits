@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Callable
+from typing import List, Tuple, Optional, Dict
 import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
@@ -95,6 +95,30 @@ class IRepetitionCodeDescription(ABC):
     @abstractmethod
     def rotation_qubit_ids(self) -> List[IQubitID]:
         """:return: sub-set of qubit-ID's for 'rotation' (gate) operation."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def detector_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'detector' operation.
+        Mainly used by STIM decoding
+        """
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def observable_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'observable' operation.
+        Mainly used by STIM decoding
+        """
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def calibration_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'state-calibration' operation."""
         raise InterfaceMethodException
 
     @property
@@ -230,6 +254,27 @@ class IRepetitionCodeDescription(ABC):
     def park_ancilla_qubit_indices(self) -> List[int]:
         """:return: sub-set of Ancilla-qubit-indices for 'fluxed' (parking) operation."""
         return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.park_ancilla_qubit_ids]
+
+    @property
+    def detector_qubit_indices(self) -> List[int]:
+        """
+        :return: sub-set of qubit-indices for 'detector' operation.
+        Mainly used by STIM decoding
+        """
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.detector_qubit_ids]
+
+    @property
+    def observable_qubit_indices(self) -> List[int]:
+        """
+        :return: sub-set of qubit-indices for 'observable' operation.
+        Mainly used by STIM decoding
+        """
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.observable_qubit_ids]
+
+    @property
+    def calibration_qubit_indices(self) -> List[int]:
+        """:return: sub-set of qubit-indices for 'state-calibration' operation."""
+        return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.calibration_qubit_ids]
 
     @property
     def gate_sequence_count(self) -> int:
@@ -408,6 +453,27 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return self.qubit_ids
 
     @property
+    def detector_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'detector' operation.
+        Mainly used by STIM decoding
+        """
+        return self.ancilla_qubit_ids
+
+    @property
+    def observable_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'observable' operation.
+        Mainly used by STIM decoding
+        """
+        return self.data_qubit_ids
+
+    @property
+    def calibration_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'state-calibration' operation."""
+        return self.qubit_ids
+
+    @property
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
         return self._gate_sequences
@@ -513,71 +579,156 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
 
 
 @dataclass(frozen=True)
-class AdvancedRepetitionCodeDescription(IRepetitionCodeDescription):
+class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
     """
-    Data class, describing repetition code circuit descriptions with advanced options.
+    Data class, describing code description based on a default description.
+    Adds (optional) leading components which inform the complete description to uses Readout, 1QG, 2QG, Parking from different (leading) descriptions.
+    Adds (optional) exclusion components which force the exclusion of certain Readout, 1QG, 2QG, Parking operations (qubit-ID) based.
     """
-    _all_data_qubit_ids: List[IQubitID]
-    _all_ancilla_qubit_ids: List[IQubitID]
-    _involved_data_qubit_ids: List[IQubitID]
-    _involved_ancilla_qubit_ids: List[IQubitID]
-    _measure_qubit_ids: List[IQubitID]
-    _rotation_qubit_ids: List[IQubitID]
-    _gate_sequences: List[GateSequenceLayer]
+    _base_description: IRepetitionCodeDescription
     _qubit_index_map: Dict[IQubitID, int]
     """Mapping from Qubit-ID to circuit channel index."""
+    _connectivity: IGenericSurfaceCodeLayer
+    """Connectivity layer used for determining dynamic parking operations."""
+    _leading_readout_description: Optional[IRepetitionCodeDescription] = field(default=None)
+    _leading_gate_description: Optional[IRepetitionCodeDescription] = field(default=None)
+    _exclude_readout_qubit_ids: List[IQubitID] = field(default_factory=list)
+    _exclude_rotation_qubit_ids: List[IQubitID] = field(default_factory=list)
+    _exclude_gate_edge_ids: List[IEdgeID] = field(default_factory=list)
+    _exclude_gate_qubit_ids: List[IQubitID] = field(default_factory=list)
+    _only_required_parking_operations: bool = field(default=False)
 
     # region Interface Properties
     @property
     def qubit_ids(self) -> List[IQubitID]:
         """:return: (All) qubit-ID's in connectivity."""
-        # Example arrays
-        a = np.asarray(self._all_data_qubit_ids)
-        b = np.asarray(self._all_ancilla_qubit_ids)
-
-        # Ensure a and b are of the same length or handle cases where they are not
-        length = min(len(a), len(b))
-        result = np.empty((length * 2,), dtype=a.dtype)
-
-        # Fill in c by alternating elements from a and b
-        result[0::2], result[1::2] = a[:length], b[:length]
-
-        # If a and b were of different lengths, append the remaining elements
-        if len(a) > length:
-            result = np.append(result, a[length:])
-        elif len(b) > length:
-            result = np.append(result, b[length:])
-        return list(result)
+        result: List[IQubitID] = self._base_description.qubit_ids
+        # Add all qubit-ID's from (optional) readout description
+        if self._leading_readout_description is not None:
+            for _qubit_id in self._leading_readout_description.qubit_ids:
+                if _qubit_id not in result:
+                    result.append(_qubit_id)
+        # Add all qubit-ID's from (optional) gate description
+        if self._leading_gate_description is not None:
+            for _qubit_id in self._leading_gate_description.qubit_ids:
+                if _qubit_id not in result:
+                    result.append(_qubit_id)
+        return result
 
     @property
     def data_qubit_ids(self) -> List[IQubitID]:
         """:return: (All) Data-qubit-ID's in connectivity."""
-        return self._all_data_qubit_ids
+        return self._base_description.data_qubit_ids
 
     @property
     def ancilla_qubit_ids(self) -> List[IQubitID]:
         """:return: (All) Ancilla-qubit-ID's in connectivity."""
-        return self._all_ancilla_qubit_ids
+        return self._base_description.ancilla_qubit_ids
 
     @property
     def prepare_qubit_ids(self) -> List[IQubitID]:
         """:return: sub-set of qubit-ID's for 'prepare' operation."""
-        return self.qubit_ids
+        return self.measure_qubit_ids
 
     @property
     def measure_qubit_ids(self) -> List[IQubitID]:
         """:return: sub-set of qubit-ID's for 'measure' operation."""
-        return self._measure_qubit_ids
+        result: List[IQubitID] = self._base_description.measure_qubit_ids
+        if self._leading_readout_description is not None:
+            result = self._leading_readout_description.measure_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_readout_qubit_ids]
+
+    @property
+    def measure_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'measure' operation."""
+        result: List[IQubitID] = self._base_description.measure_data_qubit_ids
+        if self._leading_readout_description is not None:
+            result = self._leading_readout_description.measure_data_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_readout_qubit_ids]
+
+    @property
+    def measure_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'measure' operation."""
+        result: List[IQubitID] = self._base_description.measure_ancilla_qubit_ids
+        if self._leading_readout_description is not None:
+            result = self._leading_readout_description.measure_ancilla_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_readout_qubit_ids]
 
     @property
     def rotation_qubit_ids(self) -> List[IQubitID]:
         """:return: sub-set of qubit-ID's for 'rotation' (gate) operation."""
-        return self._rotation_qubit_ids
+        result: List[IQubitID] = self._base_description.rotation_qubit_ids
+        if self._leading_gate_description is not None:
+            result = self._leading_gate_description.rotation_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_rotation_qubit_ids]
+
+    @property
+    def rotation_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Data-qubit-ID's for 'rotation' (gate) operation."""
+        result: List[IQubitID] = self._base_description.rotation_data_qubit_ids
+        if self._leading_gate_description is not None:
+            result = self._leading_gate_description.rotation_data_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_rotation_qubit_ids]
+
+    @property
+    def rotation_ancilla_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of Ancilla-qubit-ID's for 'rotation' (gate) operation."""
+        result: List[IQubitID] = self._base_description.rotation_ancilla_qubit_ids
+        if self._leading_gate_description is not None:
+            result = self._leading_gate_description.rotation_ancilla_qubit_ids
+        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_rotation_qubit_ids]
+
+    @property
+    def detector_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'detector' operation.
+        Mainly used by STIM decoding
+        """
+        return self._base_description.detector_qubit_ids
+
+    @property
+    def observable_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: sub-set of qubit-ID's for 'observable' operation.
+        Mainly used by STIM decoding
+        """
+        return self._base_description.observable_qubit_ids
+
+    @property
+    def calibration_qubit_ids(self) -> List[IQubitID]:
+        """:return: sub-set of qubit-ID's for 'state-calibration' operation."""
+        return self.measure_qubit_ids
 
     @property
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
-        return self._gate_sequences
+        base_gate_sequence: List[GateSequenceLayer] = self._base_description.gate_sequences
+        if self._leading_gate_description is not None:
+            base_gate_sequence = self._leading_gate_description.gate_sequences
+
+        result: List[GateSequenceLayer] = []
+        # Filtered gate-sequence
+        for _gate_sequence in base_gate_sequence:
+            # Filtered gate operations
+            filtered_gate_operations: List[Operation[IEdgeID]] = []
+            for operation in _gate_sequence.gate_operations:
+                if operation.identifier in self._exclude_gate_edge_ids:
+                    continue
+                if any([_qubit_id in self._exclude_gate_qubit_ids for _qubit_id in operation.identifier.qubit_ids]):
+                    continue
+                filtered_gate_operations.append(operation)
+
+            # Force only required parking operations
+            filtered_park_operations: List[Operation[IQubitID]] = []
+            if self._only_required_parking_operations:
+                edge_identifiers: List[IEdgeID] = [element.identifier for element in filtered_gate_operations]
+                filtered_park_operations = [Operation.type_park(element) for element in self._connectivity.qubit_ids if get_requires_parking(element=element, edge_ids=edge_identifiers, connectivity=self._connectivity)]
+
+            result.append(GateSequenceLayer(
+                _park_operations=filtered_park_operations,
+                _gate_operations=filtered_gate_operations,
+            ))
+        return result
     # endregion
 
     # region Interface Methods
@@ -603,84 +754,38 @@ class AdvancedRepetitionCodeDescription(IRepetitionCodeDescription):
             )
             for initial_state_index in initial_state.initial_states.keys()
         ]
+
+    def get_active_ancilla_indices(self, sequence_index: int) -> Optional[List[int]]:
+        """
+        Determines which ancilla indices need to be 'active' for a given sequence index.
+        :param sequence_index: Gate sequence index. If index is out of range, return None.
+        :return: (Optional) Array-like of single-integer (corresponding to ancilla-index).
+        """
+        leading_gate_sequences: List[GateSequenceLayer] = self._base_description.gate_sequences
+        if self._leading_gate_description is not None:
+            leading_gate_sequences = self._leading_gate_description.gate_sequences
+
+        # Guard clause, if index is out of range, return None.
+        if not 0 <= sequence_index < len(leading_gate_sequences):
+            return None
+
+        ancilla_ids: List[IQubitID] = self.rotation_ancilla_qubit_ids
+        sequence: GateSequenceLayer = leading_gate_sequences[sequence_index]
+        result: List[int] = []
+        for edge in sequence.edge_ids:
+            for qubit_id in edge.qubit_ids:
+                if qubit_id in ancilla_ids:
+                    result.append(self.map_qubit_id_to_circuit_index(qubit_id))
+        return result
     # endregion
 
     # region Class Methods
     def get_channel_order_and_mapping(self) -> Tuple[List[int], Dict[int, str]]:
         """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
-        return self.channel_order_and_mapping(
+        return AdvancedRepetitionCodeDescription.channel_order_and_mapping(
             involved_qubit_ids=self.qubit_ids,
             mapping=self.map_qubit_id_to_circuit_index,
         )
-
-    @classmethod
-    def from_connectivity(cls, all_qubit_ids: List[IQubitID], gate_sequence_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, include_measure_qubit_ids: Optional[List[IQubitID]] = None, include_rotation_qubit_ids: Optional[List[IQubitID]] = None, qubit_index_map: Optional[Dict[IQubitID, int]] = None) -> 'AdvancedRepetitionCodeDescription':
-        """
-        Note: involved qubit-ID's describe the qubits part of the flux gate sequence.
-        :return: Class method constructor based on pre-defined connectivity, all qubit-ID's + involved and inclusion settings.
-        """
-        all_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in all_qubit_ids if qubit_id in connectivity.data_qubit_ids]
-        all_ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in all_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
-        involved_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in gate_sequence_qubit_ids if qubit_id in connectivity.data_qubit_ids]
-        involved_ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in gate_sequence_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
-
-        if include_measure_qubit_ids is None:
-            include_measure_qubit_ids = connectivity.qubit_ids
-        if include_rotation_qubit_ids is None:
-            include_rotation_qubit_ids = connectivity.qubit_ids
-
-        # Populate gate sequence part of involved qubit-ID's
-        gate_sequences: List[GateSequenceLayer] = []
-        for i in range(connectivity.gate_sequence_count):
-            entire_gate_sequence: GateSequenceLayer = connectivity.get_gate_sequence_at_index(index=i)
-            # Mandatory gate operations
-            gate_operations: List[Operation[IEdgeID]] = [element for element in entire_gate_sequence.gate_operations if all([qubit_id in gate_sequence_qubit_ids for qubit_id in element.identifier.qubit_ids])]
-            # Dynamic park operations
-            edge_identifiers: List[IEdgeID] = [element.identifier for element in gate_operations]
-            park_operations: List[Operation[IQubitID]] = [Operation.type_park(element) for element in connectivity.qubit_ids if get_requires_parking(element=element, edge_ids=edge_identifiers, connectivity=connectivity)]
-            # Only include park- and gate-operations for which all identifiers are part of involved qubit-ID's
-            subset_gate_sequence: GateSequenceLayer = GateSequenceLayer(
-                _park_operations=park_operations,
-                _gate_operations=gate_operations,
-            )
-            non_empty_sequence: bool = len(subset_gate_sequence.park_operations) > 0 or len(subset_gate_sequence.gate_operations) > 0
-            if non_empty_sequence:
-                gate_sequences.append(subset_gate_sequence)
-            else:
-                gate_sequences.append(GateSequenceLayer.empty())
-
-        # Setup default qubit index map
-        if qubit_index_map is None:
-            qubit_index_map: Dict[IQubitID, int] = {qubit_id: i for i, qubit_id in enumerate(all_qubit_ids)}
-
-        # Return constructed connectivity
-        return AdvancedRepetitionCodeDescription(
-            _all_data_qubit_ids=all_data_qubit_ids,
-            _all_ancilla_qubit_ids=all_ancilla_qubit_ids,
-            _involved_data_qubit_ids=involved_data_qubit_ids,
-            _involved_ancilla_qubit_ids=involved_ancilla_qubit_ids,
-            _measure_qubit_ids=include_measure_qubit_ids,
-            _rotation_qubit_ids=include_rotation_qubit_ids,
-            _gate_sequences=gate_sequences,
-            _qubit_index_map=qubit_index_map,
-        )
-    # endregion
-
-    # region Static Class Methods
-    @staticmethod
-    def channel_order_and_mapping(involved_qubit_ids: List[IQubitID], mapping: Callable[[IQubitID], int]) -> Tuple[List[int], Dict[int, str]]:
-        """:return: Tuple of channel order and mapping based on sorting qubit-ID's in increasing order."""
-        involved_indices = [mapping(qubit_id) for qubit_id in involved_qubit_ids]
-
-        # Step 1: Get the sort order of the first list
-        sort_order = sorted(range(len(involved_qubit_ids)), key=lambda x: involved_qubit_ids[x].id)
-        # Step 2: Apply this sort order to both lists
-        involved_qubit_ids = [involved_qubit_ids[i] for i in sort_order]
-        involved_indices = [involved_indices[i] for i in sort_order]
-
-        channel_order = involved_indices
-        channel_map = {i: qubit_id.id for i, qubit_id in zip(involved_indices, involved_qubit_ids)}
-        return channel_order, channel_map
     # endregion
 
 

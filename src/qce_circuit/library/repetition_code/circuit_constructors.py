@@ -60,7 +60,7 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
     ))
 
     # Add detector operations
-    for ancilla in description.gate_ancilla_qubit_indices:
+    for ancilla in description.detector_qubit_indices:
         ancilla_element: IQubitID = description.get_element(index=ancilla)
         involved_edges: List[IEdgeID] = description.get_edges(qubit_id=ancilla_element)
         neighbor_a: IQubitID = involved_edges[0].get_connected_qubit_id(element=ancilla_element)
@@ -77,10 +77,10 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
             last_acquisition_index=get_last_acquisition_operation(result).circuit_level_acquisition_index,
             main_target=get_last_acquisition_operation(result, qubit_index=description.get_index(neighbor_a)).circuit_level_acquisition_index,
             secondary_target=get_last_acquisition_operation(result, qubit_index=description.get_index(neighbor_b)).circuit_level_acquisition_index,
-            reference_offset=ancilla_reference_offset + len(description.data_qubit_indices) if qec_cycles > 0 else ancilla_reference_offset,
-            secondary_offset=len(description.ancilla_qubit_indices) if qec_cycles > 1 else None,
+            reference_offset=ancilla_reference_offset + len(description.observable_qubit_indices) if qec_cycles > 0 else ancilla_reference_offset,
+            secondary_offset=len(description.detector_qubit_indices) if qec_cycles > 1 else None,
         ))
-    for data in description.measure_data_qubit_indices:
+    for data in description.observable_qubit_indices:
         result.add(LogicalObservableOperation(
             qubit_index=data,
             last_acquisition_index=get_last_acquisition_operation(result).circuit_level_acquisition_index,
@@ -123,7 +123,7 @@ def construct_repetition_code_multi_round_circuit(qec_cycles: List[int], descrip
     result: Optional[DeclarativeCircuit] = DeclarativeCircuit()
     channel_map: Dict[int, IQubitID] = description.circuit_channel_map
     calibration_description = CalibrationDescription(
-        _qubit_ids=description.qubit_ids,
+        _qubit_ids=description.calibration_qubit_ids,
         _qubit_index_map={value: key for key, value in channel_map.items()},
         _type=CalibrateType.QUTRIT,
     )
