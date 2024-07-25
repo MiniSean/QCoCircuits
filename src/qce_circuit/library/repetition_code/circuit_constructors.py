@@ -138,6 +138,7 @@ def construct_repetition_code_multi_round_circuit(qec_cycles: List[int], descrip
         cycle_circuit = cycle_circuit.flatten()
 
         result.add(cycle_circuit)
+        result.add(Barrier(description.qubit_indices))
     calibration_circuit = construct_calibration_circuit(
         description=calibration_description
     )
