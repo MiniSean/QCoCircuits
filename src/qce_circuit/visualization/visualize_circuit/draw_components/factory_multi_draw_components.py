@@ -195,6 +195,10 @@ class MultiTwoQubitBlockFactory(IOperationBulkDrawComponentFactory[TCircuitTwoQu
             )
             for space_group in space_shared_groups:
                 for operation in space_group.operations:
+                    # Guard clause, operation not in lookup, continue
+                    if type(operation.operation) not in self.factory_lookup:
+                        continue
+
                     individual_factory: IOperationDrawComponentFactory = self.factory_lookup[type(operation.operation)]
 
                     # Guard clause, if group size is one, treat normally

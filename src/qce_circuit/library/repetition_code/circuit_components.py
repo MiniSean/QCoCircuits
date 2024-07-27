@@ -35,6 +35,7 @@ from qce_circuit.structure.circuit_operations import (
     Ry90,
     Rym90,
     CPhase,
+    TwoQubitVirtualPhase,
     Barrier,
     Wait,
     DispersiveMeasure,
@@ -907,7 +908,7 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
 
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
-            result.add(Rym90(qubit_index))
+            result.add(Ry90(qubit_index))
         if len(require_activation) > 0:
             result.add(Barrier(all_indices))
 
@@ -918,12 +919,20 @@ def get_circuit_qec_round(connectivity: IRepetitionCodeDescription, registry: Ac
         # Schedule parking operation
         for qubit_index in sequence_active_park_indices:
             result.add(VirtualPark(qubit_index))
+
+        if len(sequence_active_gate_indices) > 0:
+            result.add(Barrier(all_indices))
+
+        # Schedule single qubit phase updates
+        for index0, index1 in sequence_active_gate_indices:
+            result.add(TwoQubitVirtualPhase(index0, index1))
+
         if len(sequence_active_gate_indices) > 0 or len(sequence_active_park_indices) > 0:
             result.add(Barrier(all_indices))
 
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
-            result.add(Ry90(qubit_index))
+            result.add(Rym90(qubit_index))
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
@@ -958,7 +967,7 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
 
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
-            result.add(Rym90(qubit_index))
+            result.add(Ry90(qubit_index))
         if len(require_activation) > 0:
             result.add(Barrier(all_indices))
 
@@ -969,12 +978,20 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
         # Schedule parking operation
         for qubit_index in sequence_active_park_indices:
             result.add(VirtualPark(qubit_index))
+
+        if len(sequence_active_gate_indices) > 0:
+            result.add(Barrier(all_indices))
+
+        # Schedule single qubit phase updates
+        for index0, index1 in sequence_active_gate_indices:
+            result.add(TwoQubitVirtualPhase(index0, index1))
+
         if len(sequence_active_gate_indices) > 0 or len(sequence_active_park_indices) > 0:
             result.add(Barrier(all_indices))
 
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
-            result.add(Ry90(qubit_index))
+            result.add(Rym90(qubit_index))
 
     # Ancilla measurement
     result.add(Barrier(all_indices))
@@ -1019,7 +1036,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
 
         # Schedule Ancilla basis rotation for 'activation'
         for qubit_index in require_activation:
-            result.add(Rym90(qubit_index, relation=relation_activation))
+            result.add(Ry90(qubit_index, relation=relation_activation))
         try:
             relation_parking = RelationLink(result.get_last_entry(), RelationType.FOLLOWED_BY)
         except NoReferenceOperationException:
@@ -1039,7 +1056,7 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
 
         # Schedule Ancilla basis rotation for 'closure'
         for qubit_index in require_closure:
-            result.add(Ry90(qubit_index, relation=relation_activation))
+            result.add(Rym90(qubit_index, relation=relation_activation))
 
     # Ancilla measurement
     # result.add(Barrier(all_indices))
