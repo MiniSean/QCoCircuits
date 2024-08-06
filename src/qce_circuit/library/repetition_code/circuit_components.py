@@ -634,10 +634,7 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
     @property
     def measure_qubit_ids(self) -> List[IQubitID]:
         """:return: sub-set of qubit-ID's for 'measure' operation."""
-        result: List[IQubitID] = self._base_description.measure_qubit_ids
-        if self._leading_readout_description is not None:
-            result = self._leading_readout_description.measure_qubit_ids
-        return [qubit_id for qubit_id in result if qubit_id not in self._exclude_readout_qubit_ids]
+        return self.measure_ancilla_qubit_ids + self.measure_data_qubit_ids
 
     @property
     def measure_data_qubit_ids(self) -> List[IQubitID]:
