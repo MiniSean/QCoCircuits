@@ -1135,6 +1135,7 @@ def get_circuit_qec_with_detectors(connectivity: IRepetitionCodeDescription, qec
             ))
         # Add coordinate shift
         second_sub_circuit.add(CoordinateShiftOperation(qubit_indices=all_indices, space_shift=0, time_shift=1))
+        second_sub_circuit.add(Barrier(qubit_indices=all_indices))
         result.add(second_sub_circuit)
 
     # ----
