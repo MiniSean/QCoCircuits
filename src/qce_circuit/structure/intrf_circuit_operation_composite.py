@@ -6,6 +6,7 @@ from dataclasses import dataclass, field
 import warnings
 from typing import List, Iterator, Optional, Dict
 import numpy as np
+from tqdm import tqdm
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.intrf_circuit_operation import (
@@ -64,14 +65,29 @@ class CircuitGraphBranch(GraphBranch[OperationGraphNode]):
     # endregion
 
     # region Class Methods
-    def append_to(self, endpoint: OperationGraphNode, pointer: OperationGraphNode) -> 'CircuitGraphBranch':
-        """:return: Appends self with another entry/end point maintainer."""
+    def append_pointer_to(self, endpoint: OperationGraphNode, pointer: OperationGraphNode) -> 'CircuitGraphBranch':
+        """
+        Individual pointer append function for backwards compatibility.
+        :return: Appends self with another entry/end point maintainer.
+        """
+        return self.append_pointers_to(
+            endpoint=endpoint,
+            pointers=[pointer],
+        )
+
+    def append_pointers_to(self, endpoint: OperationGraphNode, pointers: List[OperationGraphNode]) -> 'CircuitGraphBranch':
+        """
+        Processes group appending.
+        Makes updating leaf pointers more efficient.
+        :return: Appends self with another entry/end point maintainer.
+        """
         # Append before endpoint
         incoming_pointers: List[IEndpoint] = self._endpoint_node.incoming_pointers
         for incoming_pointer in incoming_pointers:
             if incoming_pointer is endpoint:
                 incoming_pointer.release_pointer(pointer=self._endpoint_node)
-        endpoint.point_towards(pointer=pointer)
+        for pointer in pointers:
+            endpoint.point_towards(pointer=pointer)
         # Update branch pointers
         self.update_point_leafs_to_endpoint()  # Points all leaf nodes to endpoint
         return self
@@ -104,6 +120,53 @@ class CircuitGraphBranch(GraphBranch[OperationGraphNode]):
             if operation is node.operation:
                 return node
         return None
+    # endregion
+
+    # region Static Class Methods
+    @staticmethod
+    def add_to_graph(graph: 'CircuitGraphBranch', operation: ICircuitOperation) -> 'CircuitGraphBranch':
+        """:return: Updated graph. Adds operation to graph."""
+        # Data allocation
+        node: OperationGraphNode = OperationGraphNode(operation=operation)
+        leaf_node: Optional[OperationGraphNode] = graph.get_leaf_at_any(channel_identifiers=operation.channel_identifiers)
+        has_relation: bool = operation.has_relation
+        first_in_channel: bool = leaf_node is None
+
+        # Node has no relation and is first in graph, append to root
+        if not has_relation and first_in_channel:
+            graph.append_pointer_to(graph.root_node, node)
+            return graph
+
+        # Node has no relation, append to nearest leaf node
+        if not has_relation and not first_in_channel:
+            node.operation.relation_link = RelationLink(
+                _reference_node=leaf_node.operation,
+            )
+            graph.append_pointer_to(leaf_node, node)
+            return graph
+
+        # Node has relation and is present in graph, append to this (reference) node in graph
+        relation_node: Optional[OperationGraphNode] = graph.get_corresponding_node(operation=node.operation.relation_link.reference_node)
+        relation_node_present: bool = relation_node is not None
+        if has_relation and relation_node_present:
+            graph.append_pointer_to(relation_node, node)
+            return graph
+
+        # Node has relation but is not present in graph, ignore relation and append as if node has no relation
+        if has_relation and not relation_node_present:
+            warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
+            # NOTE: this implementation should be tested.
+            # Adding operation and resetting its relation link can have unintended consequences.
+            if first_in_channel:
+                node.operation.relation_link = RelationLink.no_relation()
+                graph.append_pointer_to(graph.root_node, node)
+            else:
+                node.operation.relation_link = RelationLink(
+                    _reference_node=leaf_node.operation,
+                )
+                graph.append_pointer_to(leaf_node, node)
+
+        return graph
     # endregion
 
 
@@ -156,14 +219,23 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         return self.relation_link.get_start_time(duration=self.duration)
 
     @property
+    def empty_composite(self) -> bool:
+        """:return: Boolean, whether composite operation contains sub-operations (not empty) or not (empty)."""
+        return self._circuit_graph.empty_graph
+
+    @property
     def duration(self) -> float:
         """:return: Duration [ns]."""
         total_duration: float = 0.0
+        # Guard clause, if graph does not contain non-Head nodes, return zero total duration
+        if self.empty_composite:
+            return total_duration
         # Calculate relative start time of internal operations
         relative_start_time: float = +np.inf
         for start_node in self._circuit_graph.get_nodes_at(depth=1):
-            if start_node.operation.start_time < relative_start_time:
-                relative_start_time = start_node.operation.start_time
+            start_time: float = start_node.operation.start_time
+            if start_time < relative_start_time:
+                relative_start_time = start_time
         # Calculate internal duration of operation branch
         for leaf_node in self._circuit_graph.leaf_nodes:
             delta_time = leaf_node.operation.end_time - relative_start_time
@@ -176,32 +248,10 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
     def add(self, operation: ICircuitOperation) -> ICircuitCompositeOperation:
         """:return: Self. Adds operation to circuit."""
         # Data allocation
-        node: OperationGraphNode = OperationGraphNode(operation=operation)
-        leaf_node: Optional[OperationGraphNode] = self._circuit_graph.get_leaf_at_any(channel_identifiers=operation.channel_identifiers)
-        has_relation: bool = operation.has_relation
-        first_in_channel: bool = leaf_node is None
-
-        # Logic
-        if not has_relation and first_in_channel:
-            self._circuit_graph.append_to(self._circuit_graph.root_node, node)
-            return self
-
-        if not has_relation and not first_in_channel:
-            node.operation.relation_link = RelationLink(
-                _reference_node=leaf_node.operation,
-            )
-            self._circuit_graph.append_to(leaf_node, node)
-            return self
-
-        relation_node: Optional[OperationGraphNode] = self._circuit_graph.get_corresponding_node(operation=node.operation.relation_link.reference_node)
-        relation_node_present: bool = relation_node is not None
-        if has_relation and relation_node_present:
-            self._circuit_graph.append_to(relation_node, node)
-            return self
-
-        if has_relation and not relation_node_present:
-            warnings.warn(f"Expected operation relation ({node.operation.relation_link.reference_node}) is not present in circuit.")
-
+        self._circuit_graph = CircuitGraphBranch.add_to_graph(
+            graph=self._circuit_graph,
+            operation=operation,
+        )
         return self
 
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'CircuitCompositeOperation':
@@ -255,6 +305,20 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
             # Extend decomposed operation list
             result.extend(node.operation.decomposed_operations())
         return result
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        flatten_circuit_graph: CircuitGraphBranch = CircuitGraphBranch()
+        for operation in tqdm(self.decomposed_operations(), desc="Flatten Circuit Graph"):
+            CircuitGraphBranch.add_to_graph(
+                graph=flatten_circuit_graph,
+                operation=operation,
+            )
+        self._circuit_graph = flatten_circuit_graph
+        return self
     # endregion
 
     # region Class Methods
@@ -264,14 +328,20 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
         :return: Self. Extend self with other graph branch.
         """
         leaf_nodes = self._circuit_graph.leaf_nodes
-        multi_relation = MultiRelationLink(
-            _reference_nodes=[node.operation for node in leaf_nodes],
-            _relation_to_group=MultiRelationType.LATEST,
-            _relation_type=RelationType.FOLLOWED_BY,
-        )
+        relation: IRelationLink = RelationLink.no_relation()
+
+        # Guard clause, if root node is leaf node, ensure incoming nodes have relation pointing to graph-head
+        root_is_leaf: bool = len(leaf_nodes) == 1 and leaf_nodes[0].is_root
+        if not root_is_leaf:
+            relation = MultiRelationLink(
+                _reference_nodes=[node.operation for node in leaf_nodes],
+                _relation_to_group=MultiRelationType.LATEST,
+                _relation_type=RelationType.FOLLOWED_BY,
+            )
+
         for node in other._circuit_graph.get_node_iterator():
             if not node.operation.has_relation:
-                node.operation.relation_link = multi_relation
+                node.operation.relation_link = relation
             self.add(operation=node.operation)
         return self
 

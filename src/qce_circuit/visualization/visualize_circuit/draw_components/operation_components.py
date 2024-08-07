@@ -31,6 +31,9 @@ class RotationAxis(Enum):
     Y = 'Y'
     Z = 'Z'
     PHI = r'\phi'
+    X_EF = 'X12'
+    Y_EF = 'Y12'
+    Z_EF = 'Z12'
 
 
 @unique
@@ -117,6 +120,47 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
             ha='center',
             va='center',
         )
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing schedule block.
+    """
+    pivot: Vec2D
+    width: float
+    height: float
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().vacant_operation_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.width),
+            _height_strategy=FixedLength(self.height),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        rectangle = patches.Rectangle(
+            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+            width=self.rectilinear_transform.width,
+            height=self.rectilinear_transform.height,
+            linewidth=self.style_settings.border_width,
+            linestyle='--',
+            edgecolor=self.style_settings.border_color,
+            facecolor=self.style_settings.background_color,
+            zorder=-1,
+        )
+        axes.add_patch(rectangle)
         return axes
     # endregion
 
@@ -293,6 +337,9 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
         """Method used for drawing component on Axes."""
         transform: IRectTransform = self.rectilinear_transform
         horizontal_extension: float = 0.1 * transform.width
+        width_ratio: float = 0.8
+        width: float = width_ratio * (transform.right_pivot.x - transform.left_pivot.x)
+        half_width: float = 0.5 * width
 
         # Temporary to cover the background header bar
         cover_arc_xcoords: np.ndarray = np.asarray([
@@ -315,10 +362,10 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
         # Parking line
         arc_xcoords: np.ndarray = np.asarray([
             transform.left_pivot.x - horizontal_extension,
-            transform.left_pivot.x,
-            transform.left_pivot.x,
-            transform.right_pivot.x,
-            transform.right_pivot.x,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x + half_width,
+            transform.center_pivot.x + half_width,
             transform.right_pivot.x + horizontal_extension,
         ])
         arc_ycoords: np.ndarray = np.asarray([

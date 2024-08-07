@@ -34,16 +34,16 @@ class Operation(Generic[TIdentifier]):
         return False
 
     @classmethod
-    def type_idle(cls, quibt_id: IQubitID) -> 'Operation':
+    def type_idle(cls, qubit_id: IQubitID) -> 'Operation':
         return Operation[IQubitID](
-            identifier=quibt_id,
+            identifier=qubit_id,
             type=OperationType.IDLE,
         )
 
     @classmethod
-    def type_park(cls, quibt_id: IQubitID) -> 'Operation':
+    def type_park(cls, qubit_id: IQubitID) -> 'Operation':
         return Operation[IQubitID](
-            identifier=quibt_id,
+            identifier=qubit_id,
             type=OperationType.PARK,
         )
 
@@ -122,6 +122,12 @@ class IGateSequenceLayer(ABC):
     @abstractmethod
     def gate_sequence_count(self) -> int:
         """:return: Number of gate-sequences in layer."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def involved_qubit_ids(self) -> List[IQubitID]:
+        """:return: (Only) involved qubit-ID's in gate sequence."""
         raise InterfaceMethodException
     # endregion
 

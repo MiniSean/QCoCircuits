@@ -33,6 +33,12 @@ class IsolatedGroupException(Exception):
     """
 
 
+class InvalidPointerException(Exception):
+    """
+    Raised when file-pointer is invalid (path-to-file does not exist).
+    """
+
+
 class IndexOutOfRangeException(Exception):
     """
     Raised when (gate-sequence) index falls out of range.

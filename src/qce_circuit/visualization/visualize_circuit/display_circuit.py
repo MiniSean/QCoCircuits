@@ -4,7 +4,8 @@
 from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from typing import List, Optional, TypeVar, Dict, Any
+from typing import List, Optional, TypeVar, Dict, Any, Tuple
+from qce_circuit.structure.intrf_circuit_operation import RelationLink
 from qce_circuit.structure.circuit_operations import (
     Reset,
     Wait,
@@ -14,14 +15,19 @@ from qce_circuit.structure.circuit_operations import (
     Ry180,
     Ry90,
     Rym90,
+    Rx180ef,
     VirtualPhase,
     Rphi90,
     CPhase,
+    TwoQubitOperation,
     DispersiveMeasure,
     Identity,
     Hadamard,
     Barrier,
     VirtualPark,
+    VirtualVacant,
+    VirtualTwoQubitVacant,
+    VirtualEmpty,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -64,6 +70,11 @@ from qce_circuit.structure.intrf_circuit_operation import (
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
+from qce_circuit.structure.registry_duration import (
+    temporary_override_get_registry_at,
+    GlobalRegistryKey,
+)
+from qce_circuit.utilities.custom_context_managers import clear_lru_cache
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
     ITransformConstructor,
     DrawComponentFactoryManager,
@@ -79,6 +90,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     Ry180Factory,
     Ry90Factory,
     Rym90Factory,
+    Rx180efFactory,
     ZPhaseFactory,
     Rphi90Factory,
     ResetFactory,
@@ -88,6 +100,9 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     HadamardFactory,
     BarrierFactory,
     VirtualParkFactory,
+    VirtualVacantFactory,
+    VirtualTwoQubitVacantFactory,
+    VirtualEmptyFactory,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
     MultiTwoQubitBlockFactory
@@ -100,6 +115,14 @@ from qce_circuit.visualization.visualize_circuit.plotting_functionality import (
     LabelFormat,
     IFigureAxesPair,
 )
+
+
+VISUALIZATION_DURATION_REGISTRY = {
+    GlobalRegistryKey.READOUT: 2.0,
+    GlobalRegistryKey.MICROWAVE: 1.0,
+    GlobalRegistryKey.FLUX: 1.0,
+    GlobalRegistryKey.RESET: 2.0,
+}
 
 
 @dataclass(frozen=True)
@@ -123,6 +146,11 @@ class VisualCircuitDescription:
     @property
     def channel_spacing(self) -> float:
         return self.channel_height * 1.2
+
+    @property
+    def figure_size(self) -> Tuple[float, float]:
+        """:return: Figure size (x, y) depending on visualized circuit components."""
+        return (self.channel_width, self.channel_spacing * len(self.channel_indices))
     # endregion
 
     # region Class Methods
@@ -172,16 +200,23 @@ class VisualCircuitDescription:
                     Ry180: Ry180Factory(),
                     Ry90: Ry90Factory(),
                     Rym90: Rym90Factory(),
+                    Rx180ef: Rx180efFactory(),
                     Rphi90: Rphi90Factory(),
                     VirtualPhase: ZPhaseFactory(),
                     Identity: IdentityFactory(),
                     Hadamard: HadamardFactory(),
                     Barrier: BarrierFactory(),
                     VirtualPark: VirtualParkFactory(),
+                    VirtualVacant: VirtualVacantFactory(),
+                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
+                    VirtualEmpty: VirtualEmptyFactory(),
                 }
             ),
             factory_lookup={
-                CPhase: MultiTwoQubitBlockFactory(),
+                TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
+                    CPhase: TwoQubitBlockFactory(),
+                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory()
+                }),
             }
         )
         transform_constructor: TransformConstructor = self.get_transform_constructor()
@@ -223,7 +258,7 @@ def reorder_indices(original_order: List[T], specific_order: List[T]) -> List[T]
 
     # Check if all elements in specific_order are in original_order
     if not all(item in original_order for item in specific_order):
-        raise ValueError("All indices in specific_order must be in original_order")
+        raise ValueError(f"All indices in specific_order must be in original_order. Instead got {specific_order}, {original_order}")
 
     # Create the reordered list
     reordered_list = specific_order + [item for item in original_order if item not in specific_order]
@@ -256,11 +291,19 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
     # Apply custom channel order
     if custom_channel_order is None:
         custom_channel_order = []
-    # Apply custom channel map
+    # Construct custom channel map
     if custom_channel_map is None:
-        custom_channel_map = {}
+        custom_channel_map = {
+            channel_index: channel_index
+            for channel_index in channel_indices
+        }
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
-    custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)
+    # Apply custom channel map
+    custom_channel_map = {
+        i: custom_channel_map.get(channel_index, channel_index)  # Default to channel_index: channel_index
+        for i, channel_index in enumerate(channel_indices)
+    }
+    # custom_channel_map = reorder_map(original_order=custom_channel_map, specific_order=custom_channel_order)
     channel_states: List[InitialStateEnum] = [circuit.get_qubit_initial_state(channel_index=channel_index) for channel_index in channel_indices]
 
     operations: List[ICircuitOperation] = circuit.operations
@@ -493,8 +536,21 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, **kwargs) -> IFigureAxesPair:
-    return plot_circuit_description(
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, **kwargs) -> IFigureAxesPair:
+    if compact_visualization:
+        with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
+            with clear_lru_cache(RelationLink.get_start_time):
+                fig, ax = plot_circuit_description(
+                    description=construct_visual_description(
+                        circuit=circuit,
+                        custom_channel_order=channel_order,
+                        custom_channel_map=channel_map,
+                    ),
+                    **kwargs
+                )
+        return fig, ax
+    # Else
+    fig, ax = plot_circuit_description(
         description=construct_visual_description(
             circuit=circuit,
             custom_channel_order=channel_order,
@@ -502,12 +558,14 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
         ),
         **kwargs
     )
+    return fig, ax
 
 
 def plot_circuit_description(description: VisualCircuitDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, description.figure_size)
     fig, ax = construct_subplot(**kwargs)
 
     for i, channel_index in enumerate(description.channel_indices):

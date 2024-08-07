@@ -94,6 +94,7 @@ class DetectorOperation(SingleQubitOperation, ICircuitOperation):
             secondary_target=self.secondary_target,
             reference_offset=self.reference_offset,
             secondary_offset=self.secondary_offset,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
 
@@ -181,6 +182,7 @@ class LogicalObservableOperation(SingleQubitOperation, ICircuitOperation):
             qubit_index=self.qubit_index,
             last_acquisition_index=self.last_acquisition_index,
             main_target=self.main_target,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
 

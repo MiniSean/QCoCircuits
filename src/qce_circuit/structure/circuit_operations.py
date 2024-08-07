@@ -96,6 +96,13 @@ class SingleQubitOperation(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
 
@@ -404,6 +411,36 @@ class Rym90(SingleQubitOperation, ICircuitOperation):
 
 
 @dataclass(frozen=False, unsafe_hash=True)
+class Rx180ef(SingleQubitOperation, ICircuitOperation):
+    """
+    Rotation-X (180 degrees) operation between excited (e) and second-excited (f) state.
+    """
+    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=QubitChannel.MICROWAVE),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'Rx180ef':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return Rx180ef(
+            qubit_index=self.qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
 class VirtualPhase(SingleQubitOperation, ICircuitOperation):
     """
     Virtual (Z) phase rotation operation.
@@ -568,6 +605,13 @@ class TwoQubitOperation(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
 
@@ -598,6 +642,38 @@ class CPhase(TwoQubitOperation, ICircuitOperation):
         :return: Copy of self with updated relation link.
         """
         return CPhase(
+            control_qubit_index=self.control_qubit_index,
+            target_qubit_index=self.target_qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class TwoQubitVirtualPhase(TwoQubitOperation, ICircuitOperation):
+    """
+    Virtual (Z) phase rotation operation.
+    """
+    duration_strategy: IDurationStrategy = field(init=False, default=FixedDurationStrategy(duration=0.0))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.control_qubit_index, _channel=QubitChannel.MICROWAVE),
+            ChannelIdentifier(_id=self.target_qubit_index, _channel=QubitChannel.MICROWAVE),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'TwoQubitVirtualPhase':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return TwoQubitVirtualPhase(
             control_qubit_index=self.control_qubit_index,
             target_qubit_index=self.target_qubit_index,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
@@ -701,6 +777,13 @@ class DispersiveMeasure(IAcquisitionOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
     # region Class Methods
@@ -782,12 +865,118 @@ class Barrier(ICircuitOperation):
         :return: Array-like of decomposed operations.
         """
         return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
     # endregion
 
     # region Class Methods
     def __hash__(self):
         """Overwrites @dataclass behaviour. Circuit operation requires hash based on instance identity."""
         return id(self)
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualVacant(SingleQubitOperation, ICircuitOperation):
+    """
+    Virtual vacant operation (behaves as Wait).
+    Allow to wait on specific (qubit) channel.
+    """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualVacant':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualVacant(
+            qubit_index=self.qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            qubit_channel=self.qubit_channel,
+            duration_strategy=self.duration_strategy,
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualTwoQubitVacant(TwoQubitOperation, ICircuitOperation):
+    """
+    Virtual vacant operation (behaves as TwoQubitOperation).
+    Allow to wait on specific (qubit) channel.
+    """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.control_qubit_index, _channel=self.qubit_channel),
+            ChannelIdentifier(_id=self.target_qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualTwoQubitVacant':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualTwoQubitVacant(
+            control_qubit_index=self.control_qubit_index,
+            target_qubit_index=self.target_qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        )
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualEmpty(SingleQubitOperation, ICircuitOperation):
+    """
+    Virtual empty position (behaves as Wait).
+    Allow to wait on specific (qubit) channel.
+    """
+    qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=self.qubit_channel),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualEmpty':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualEmpty(
+            qubit_index=self.qubit_index,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            qubit_channel=self.qubit_channel,
+            duration_strategy=self.duration_strategy,
+        )
     # endregion
 
 

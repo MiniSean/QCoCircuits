@@ -6,4 +6,5 @@ multipledispatch
 coverage
 matplotlib
 stim
+qutechopenql
 tqdm

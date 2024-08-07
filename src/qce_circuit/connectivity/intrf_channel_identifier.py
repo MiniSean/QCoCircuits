@@ -38,6 +38,20 @@ class IChannelIdentifier(ABC):
     def __eq__(self, other):
         """:returns: Boolean if other shares equal identifier, else InterfaceMethodException."""
         raise InterfaceMethodException
+
+    def __lt__(self, other):
+        if not isinstance(other, IChannelIdentifier):
+            return NotImplemented
+        return self.id < other.id
+
+    def __le__(self, other):
+        return self < other or self == other
+
+    def __gt__(self, other):
+        return not (self < other or self == other)
+
+    def __ge__(self, other):
+        return not self < other
     # endregion
 
 
@@ -298,4 +312,12 @@ class EdgeIDObj(IEdgeID):
 
     def __repr__(self):
         return f'<Edge-ID>{self.id}'
+
+    @classmethod
+    def from_qubit_ids(cls, qubit_id0: QID, qubit_id1: QID) -> 'EdgeIDObj':
+        """:return: Class method constructor based on qubit-IDs."""
+        return EdgeIDObj(
+            qubit_id0=QubitIDObj(_id=qubit_id0),
+            qubit_id1=QubitIDObj(_id=qubit_id1),
+        )
     # endregion

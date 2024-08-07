@@ -222,7 +222,7 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         elif state == StateKey.STATE_2:
             single_cycle_indices: List[int] = self._calibration_kernel.get_state_2_measurement_index(element=qubit_id)
         else:
-            raise NotImplemented(f"Calibration indices for state: {state}, is not implemented.")
+            raise NotImplementedError(f"Calibration indices for state: {state}, is not implemented.")
         return self.create_sliced_array(single_cycle_indices, self.kernel_cycle_length, self.experiment_repetitions)
 
     def get_heralded_calibration_acquisition_indices(self, qubit_id: IQubitID, state: StateKey) -> NDArray[np.int_]:
@@ -238,7 +238,7 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         elif state == StateKey.STATE_2:
             single_cycle_indices: List[int] = self._calibration_kernel.get_heralded_state_2_measurement_index(element=qubit_id)
         else:
-            raise NotImplemented(f"Calibration conditional indices for state: {state}, is not implemented.")
+            raise NotImplementedError(f"Calibration conditional indices for state: {state}, is not implemented.")
         return self.create_sliced_array(single_cycle_indices, self.kernel_cycle_length, self.experiment_repetitions)
 
     def get_heralded_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:

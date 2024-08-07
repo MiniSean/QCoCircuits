@@ -2,6 +2,7 @@
 # Module containing visualization for ISurfaceCodeLayer.
 # -------------------------------------------
 from dataclasses import dataclass, field
+from collections.abc import Iterable
 from typing import Dict, List
 import numpy as np
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
@@ -24,6 +25,7 @@ from qce_circuit.visualization.visualize_layout.plaquette_components import (
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
     ParkingComponent,
+    TextComponent,
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
@@ -112,18 +114,18 @@ class VisualConnectivityDescription:
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
-        return [
-            # HexagonComponent(
-            #     rotation=self.identifier_to_rotation(qubit_id),
-            #     pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-            #     alignment=TransformAlignment.MID_CENTER,
-            # )
-            DotComponent(
+        result: List[IDrawComponent] = []
+        for qubit_id in self.connectivity.qubit_ids:
+            result.append(DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
-            )
-            for qubit_id in self.connectivity.qubit_ids
-        ]
+            ))
+            result.append(TextComponent(
+                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                text=qubit_id.id,
+                alignment=TransformAlignment.MID_CENTER,
+            ))
+        return result
 
     def get_line_components(self) -> List[IDrawComponent]:
         return [
@@ -243,6 +245,8 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     sequence_count: int = description.gate_sequence_count
     kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
     fig, axes = construct_subplot(ncols=sequence_count, **kwargs)
+    if not isinstance(axes, Iterable):
+        axes = [axes]
 
     for i, ax in enumerate(axes):
         descriptor: VisualConnectivityDescription = VisualConnectivityDescription(

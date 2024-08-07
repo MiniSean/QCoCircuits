@@ -226,13 +226,14 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     # endregion
 
     # region ISurfaceCodeLayer Interface Methods
-    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> IParityGroup:
-        """:return: Parity group of which element (edge- or qubit-ID) is part of."""
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
         # Assumes element is part of only a single parity group
         for parity_group in self.parity_group_x + self.parity_group_z:
             if parity_group.contains(element=element):
-                return parity_group
-        raise ElementNotIncludedException(f"Element: {element} is not included in any parity group.")
+                result.append(parity_group)
+        return result
     
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""
@@ -300,7 +301,7 @@ def get_neighbors(element: Union[IQubitID, IEdgeID], connectivity: IConnectivity
         for qubit_id in element.qubit_ids:
             combined_neighbors.extend(connectivity.get_neighbors(qubit_id, order=order))
         return unique_in_order(combined_neighbors)
-    raise NotImplemented(f"Finding the neighbor qubits of element with type {type(element)} is not supported. Try {type(IQubitID)} or {type(IEdgeID)}.")
+    raise NotImplementedError(f"Finding the neighbor qubits of element with type {type(element)} is not supported. Try {IQubitID} or {IEdgeID}.")
 
 
 def on_moving_side(qubit_id: IQubitID, edge_id: IEdgeID, connectivity: ISurfaceCodeLayer) -> bool:
@@ -339,3 +340,19 @@ def get_requires_parking(element: IQubitID, edge_ids: List[IEdgeID], connectivit
         neighbor_frequency_group.is_higher_than(frequency_group) and on_moving_side(neighbor_qubit_id, neighbor_edge_id, connectivity)
         for neighbor_qubit_id, neighbor_frequency_group, neighbor_edge_id in zip(involved_neighbors, involved_frequency_groups, involved_neighbor_edges)
     ])
+
+
+def get_higher_frequency_qubit_id(edge_id: IEdgeID, connectivity: ISurfaceCodeLayer) -> IQubitID:
+    """:return: Higher frequency qubit-ID based on which qubit is on the 'moving' side of the gate (edge)."""
+    potential_qubit_id: IQubitID = edge_id.qubit_ids[0]
+    if on_moving_side(qubit_id=potential_qubit_id, edge_id=edge_id, connectivity=connectivity):
+        return potential_qubit_id
+    return edge_id.get_connected_qubit_id(potential_qubit_id)
+
+
+def get_lower_frequency_qubit_id(edge_id: IEdgeID, connectivity: ISurfaceCodeLayer) -> IQubitID:
+    """:return: Lower frequency qubit-ID based on which qubit is NOT on the 'moving' side of the gate (edge)."""
+    potential_qubit_id: IQubitID = edge_id.qubit_ids[0]
+    if not on_moving_side(qubit_id=potential_qubit_id, edge_id=edge_id, connectivity=connectivity):
+        return potential_qubit_id
+    return edge_id.get_connected_qubit_id(potential_qubit_id)

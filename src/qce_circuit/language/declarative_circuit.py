@@ -124,6 +124,20 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         result._added_operations = self._added_operations
         return result
 
+    def flatten(self) -> 'DeclarativeCircuit':
+        """
+        WARNING: Applies modifiers inplace.
+        Iterates over composite operations and flattens them.
+        If any operation is still pointing to a composite-operation, remove relation link and add to circuit.
+        :return: Modified self.
+        """
+        result: DeclarativeCircuit = DeclarativeCircuit(
+            nr_qubits=self.nr_qubits,
+        )
+        result._structure = self._structure.apply_flatten_to_self()
+        result._added_operations = self._added_operations
+        return result
+
     def set_qubit_initial_state(self, channel_index: int, state: InitialStateEnum) -> 'DeclarativeCircuit':
         """
         Currently only used for visualization.

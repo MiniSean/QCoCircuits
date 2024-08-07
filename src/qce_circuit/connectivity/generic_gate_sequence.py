@@ -4,6 +4,7 @@
 from abc import ABCMeta
 from typing import List, Union
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.connectivity.intrf_channel_identifier import (
     IQubitID,
     IEdgeID,
@@ -35,6 +36,12 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     def gate_sequence_count(self) -> int:
         """:return: Number of gate-sequences in layer."""
         return len(self._gate_sequences)
+
+    @property
+    def involved_qubit_ids(self) -> List[IQubitID]:
+        """:return: (Only) involved qubit-ID's in gate sequence."""
+        gate_sequence_layers: List[GateSequenceLayer] = [self.get_gate_sequence_at_index(layer_index) for layer_index in range(self.gate_sequence_count)]
+        return unique_in_order([qubit_id for gate_sequence_layer in gate_sequence_layers for qubit_id in gate_sequence_layer.qubit_ids])
     # endregion
 
     # region ISurfaceCodeLayer Interface Properties
@@ -51,12 +58,12 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     @property
     def data_qubit_ids(self) -> List[IQubitID]:
         """:return: (Data) qubit-ID's in device layer."""
-        return [data_id for parity_group in self.parity_group_x + self.parity_group_z for data_id in parity_group.data_ids]
+        return unique_in_order([data_id for parity_group in self.parity_group_x + self.parity_group_z for data_id in parity_group.data_ids])
 
     @property
     def ancilla_qubit_ids(self) -> List[IQubitID]:
         """:return: (Ancilla) qubit-ID's in device layer."""
-        return [parity_group.ancilla_id for parity_group in self.parity_group_x + self.parity_group_z]
+        return unique_in_order([parity_group.ancilla_id for parity_group in self.parity_group_x + self.parity_group_z])
     # endregion
 
     # region IDeviceLayer Interface Properties
@@ -106,13 +113,14 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     # endregion
 
     # region ISurfaceCodeLayer Interface Methods
-    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> IParityGroup:
-        """:return: Parity group of which element (edge- or qubit-ID) is part of."""
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
         # Assumes element is part of only a single parity group
         for parity_group in self.parity_group_x + self.parity_group_z:
             if parity_group.contains(element=element):
-                return parity_group
-        raise ElementNotIncludedException(f"Element: {element} is not included in any parity group.")
+                result.append(parity_group)
+        return result
 
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""

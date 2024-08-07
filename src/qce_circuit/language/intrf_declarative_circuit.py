@@ -189,7 +189,7 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
             return self.add_sub_circuit(operation=operation)
         if isinstance(operation, ICircuitOperation):
             return self.add_operation(operation=operation)
-        raise InterfaceMethodException
+        raise NotImplementedError(f"Unsupported operation: {type(operation)}")
 
     def add_declarative_circuit(self, circuit: 'IDeclarativeCircuit') -> 'ICircuitOperation':
         """:return: Added operation. Adds declarative-circuit to circuit."""
@@ -215,6 +215,15 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
         """
         WARNING: Applies modifiers inplace.
         Applies modifiers such as repetition and state-control.
+        :return: Modified self.
+        """
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def flatten(self) -> 'IDeclarativeCircuit':
+        """
+        WARNING: Applies modification inplace.
+        Iterates over composite operations and flattens them.
         :return: Modified self.
         """
         raise InterfaceMethodException

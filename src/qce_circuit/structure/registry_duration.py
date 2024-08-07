@@ -3,6 +3,7 @@
 # A registry can be used to manage and access the variable durations.
 # -------------------------------------------
 import os
+import contextlib
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import Dict, Callable, Optional
@@ -38,10 +39,10 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
     Behaviour class, describing a global singleton registry.
     """
     _global_registry: Dict[str, float] = field(default_factory=lambda: {
-        GlobalRegistryKey.READOUT.value: 500,
-        GlobalRegistryKey.MICROWAVE.value: 20,
-        GlobalRegistryKey.FLUX.value: 60,
-        GlobalRegistryKey.RESET.value: 200000,
+        GlobalRegistryKey.READOUT.value: 2.0,
+        GlobalRegistryKey.MICROWAVE.value: 1.0,
+        GlobalRegistryKey.FLUX.value: 1.0,
+        GlobalRegistryKey.RESET.value: 2.0,
     })
 
     # region Class Methods
@@ -82,6 +83,26 @@ class GlobalDurationRegistryManager(metaclass=Singleton):
             )
         return GlobalDurationRegistry(**read_yaml(filename=cls.CONFIG_NAME))
     # endregion
+
+
+@contextlib.contextmanager
+def temporary_override_get_registry_at(temp_registry: Dict[GlobalRegistryKey, float]):
+    """
+    Context manager to temporarily override the get_registry_at method of
+    GlobalDurationRegistry to use a predefined GlobalDurationRegistry instance.
+    :param temp_registry:  (GlobalDurationRegistry) The temporary GlobalDurationRegistry instance to return.
+    :yields: None
+    """
+    original_method = GlobalDurationRegistry.get_registry_at
+
+    def temp_get_registry_at(self, key: GlobalRegistryKey) -> Optional[float]:
+        return temp_registry.get(key, None)
+
+    try:
+        GlobalDurationRegistry.get_registry_at = temp_get_registry_at
+        yield
+    finally:
+        GlobalDurationRegistry.get_registry_at = original_method
 
 
 class DurationRegistry(IRegistry[TRegistryKey, float]):
@@ -139,24 +160,19 @@ class RegistryDurationStrategy(IDurationStrategy):
     Forces fixed duration.
     """
     registry: DurationRegistry = field(init=True, repr=False)
-    _variable_key: TRegistryKey = field(init=False, repr=True)
+    registry_key: TRegistryKey = field(init=True, repr=True)
 
     # region Class Properties
     @property
     def unique_key(self) -> TRegistryKey:
         """:return: Unique duration registry key."""
-        return self._variable_key
+        return self.registry_key
     # endregion
 
     # region Interface Properties
     def get_variable_duration(self, task: ICircuitOperation) -> float:
         """:return: Duration [ns]."""
         return self.registry.get_registry_at(key=self.unique_key)
-    # endregion
-
-    # region Class Methods
-    def __post_init__(self):
-        object.__setattr__(self, '_variable_key', self.registry.generate_unique_key())
     # endregion
 
 

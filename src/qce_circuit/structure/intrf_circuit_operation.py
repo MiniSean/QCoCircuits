@@ -145,8 +145,12 @@ class RelationLink(IRelationLink[TDurationComponent], Generic[TDurationComponent
     """
     Data class, implementing IRelationLink interface.
     """
-    _reference_node: Optional[TDurationComponent]
-    _relation_type: RelationType = field(default=RelationType.FOLLOWED_BY)
+    _reference_node: Optional[TDurationComponent] = field(init=True, repr=True, compare=True)
+    _relation_type: RelationType = field(init=True, repr=True, compare=True, default=RelationType.FOLLOWED_BY)
+    _identifier: int = field(init=False, repr=True, compare=True, default_factory=lambda: RelationLink._id_counter)
+    """Automatically populated (instance) identifier."""
+    _id_counter: int = field(init=False, repr=False, compare=False, default=0)
+    """Class level counter. Used to populate unique identifier."""
 
     # region Interface Properties
     @property
@@ -191,6 +195,12 @@ class RelationLink(IRelationLink[TDurationComponent], Generic[TDurationComponent
     # endregion
 
     # region Class Methods
+    def __post_init__(self):
+        RelationLink._id_counter += 1
+
+    def __repr__(self):
+        return f"<RelationLink>{self.reference_node.__class__.__name__}[{self._relation_type.name}]"
+
     @classmethod
     def no_relation(cls) -> 'RelationLink':
         """:return: Class method constructor for generating no-relation link (default)."""
@@ -308,6 +318,14 @@ class ICircuitOperation(ICircuitNode, IRelationComponent['ICircuitOperation'], I
         :return: Array-like of decomposed operations.
         """
         raise InterfaceMethodException
+
+    @abstractmethod
+    def apply_flatten_to_self(self) -> 'ICircuitOperation':
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        raise InterfaceMethodException
     # endregion
 
     # region Class Methods
@@ -326,9 +344,13 @@ class MultiRelationLink(IRelationLink[TCircuitOperation], Generic[TCircuitOperat
     Data class, implementing IRelationLink interface.
     References multiple reference nodes and links to 'latest'.
     """
-    _reference_nodes: List[TCircuitOperation] = field(compare=False)
-    _relation_to_group: MultiRelationType = field(default=MultiRelationType.LATEST)
-    _relation_type: RelationType = field(default=RelationType.FOLLOWED_BY)
+    _reference_nodes: List[TCircuitOperation] = field(init=True, repr=True, compare=False)
+    _relation_to_group: MultiRelationType = field(init=True, repr=True, compare=True, default=MultiRelationType.LATEST)
+    _relation_type: RelationType = field(init=True, repr=True, compare=True, default=RelationType.FOLLOWED_BY)
+    _identifier: int = field(init=False, repr=True, compare=True, default_factory=lambda: MultiRelationLink._id_counter)
+    """Automatically populated (instance) identifier."""
+    _id_counter: int = field(init=False, repr=False, compare=False, default=0)
+    """Class level counter. Used to populate unique identifier."""
 
     # region Interface Properties
     @property
@@ -385,4 +407,10 @@ class MultiRelationLink(IRelationLink[TCircuitOperation], Generic[TCircuitOperat
         )
     # endregion
 
+    # region Class Methods
+    def __post_init__(self):
+        MultiRelationLink._id_counter += 1
 
+    def __repr__(self):
+        return f"<RelationLinks>{[node.__class__.__name__ for node in self._reference_nodes]}[{self._relation_type.name}, {self._relation_to_group.name}]"
+    # endregion
