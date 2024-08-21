@@ -26,6 +26,10 @@ class IIndexingKernel(ABC):
         """:return: End index."""
         raise InterfaceMethodException
 
+    @property
+    def kernel_length(self) -> int:
+        """:return: Length of indexing kernel."""
+        return self.stop_index - self.start_index + 1  # +1 used to make sure all other indices are INCLUSIVE.
     # endregion
 
     # region Interface Methods
