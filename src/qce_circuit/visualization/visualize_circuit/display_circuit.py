@@ -563,9 +563,18 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
 
 def plot_circuit_description(description: VisualCircuitDescription, **kwargs) -> IFigureAxesPair:
     # Data allocation
-    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = CircuitAxesFormat()
-    kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
-    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, description.figure_size)
+    kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(
+        SubplotKeywordEnum.AXES_FORMAT.value,
+        CircuitAxesFormat(),
+    )
+    kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = kwargs.get(
+        SubplotKeywordEnum.LABEL_FORMAT.value,
+        LabelFormat(x_label='', y_label=''),
+    )
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(
+        SubplotKeywordEnum.FIGURE_SIZE.value,
+        description.figure_size,
+    )
     fig, ax = construct_subplot(**kwargs)
 
     for i, channel_index in enumerate(description.channel_indices):
