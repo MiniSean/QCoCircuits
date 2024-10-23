@@ -129,6 +129,15 @@ class IRepetitionCodeDescription(ABC):
         raise InterfaceMethodException
 
     @property
+    @abstractmethod
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
+        raise InterfaceMethodException
+
+    @property
     def qubit_indices(self) -> List[int]:
         """:return: (All) qubit-indices."""
         return [self.map_qubit_id_to_circuit_index(qubit_id) for qubit_id in self.qubit_ids]
@@ -405,6 +414,8 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     _gate_sequences: List[GateSequenceLayer]
     _qubit_index_map: Dict[IQubitID, int]
     """Mapping from Qubit-ID to circuit channel index."""
+    _qubit_refocusing: bool = field(default=True)
+    """Boolean describing qubit refocusing operation each QEC-cycle."""
 
     # region Interface Properties
     @property
@@ -478,6 +489,14 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
         return self._gate_sequences
+
+    @property
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
+        return self._qubit_refocusing
     # endregion
 
     # region Interface Methods
@@ -514,7 +533,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         )
 
     @classmethod
-    def from_chain(cls, length: int) -> 'RepetitionCodeDescription':
+    def from_chain(cls, length: int, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on chain length."""
         qubit_ids: List[IQubitID] = [QubitIDObj(f'D{i}') for i in range(length)]
         data_qubit_ids: List[IQubitID] = qubit_ids[::2]
@@ -533,17 +552,18 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             _ancilla_qubit_ids=ancilla_qubit_ids,
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
+            _qubit_refocusing=qubit_refocusing,
         )
 
     @classmethod
-    def from_initial_state(cls, initial_state: InitialStateContainer) -> 'RepetitionCodeDescription':
+    def from_initial_state(cls, initial_state: InitialStateContainer, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on initial data-qubit state."""
         code_distance: int = initial_state.distance
         chain_distance: int = 2 * code_distance - 1
-        return RepetitionCodeDescription.from_chain(length=chain_distance)
+        return RepetitionCodeDescription.from_chain(length=chain_distance, qubit_refocusing=qubit_refocusing)
 
     @classmethod
-    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, qubit_index_map: Optional[Dict[IQubitID, int]] = None) -> 'RepetitionCodeDescription':
+    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, qubit_index_map: Optional[Dict[IQubitID, int]] = None, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on pre-defined connectivity and involved qubit-ID's."""
         data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.data_qubit_ids]
         ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
@@ -575,6 +595,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             _ancilla_qubit_ids=ancilla_qubit_ids,
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
+            _qubit_refocusing=qubit_refocusing,
         )
     # endregion
 
@@ -727,6 +748,14 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
                 _gate_operations=filtered_gate_operations,
             ))
         return result
+
+    @property
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
+        return self._base_description.contains_qubit_refocusing
     # endregion
 
     # region Interface Methods
