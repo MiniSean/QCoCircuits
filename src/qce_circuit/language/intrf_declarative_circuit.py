@@ -3,9 +3,9 @@
 # This code exposes intuitive methods to construct a declarative (circuit) structure.
 # -------------------------------------------
 from abc import ABC, abstractmethod, ABCMeta
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from multipledispatch import dispatch
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional
 from enum import Enum, unique
 import numpy as np
 from numpy.typing import NDArray
@@ -53,6 +53,8 @@ class InitialStateContainer:
     """
     initial_states: Dict[int, InitialStateEnum]
     """Index pointers to data qubits only."""
+    ancilla_initial_states: Dict[int, InitialStateEnum] = field(default_factory=dict)
+    """Index pointers to ancilla qubits only."""
 
     # region Class Properties
     @property
@@ -78,7 +80,7 @@ class InitialStateContainer:
     def get_initial_state(self, qubit_index: int) -> InitialStateEnum:
         return self.initial_states[qubit_index]
 
-    def get_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
+    def get_data_qubit_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
         """
         :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
         :param initial_state_index: Index corresponding to qubit-ID in initial state container.
@@ -91,35 +93,71 @@ class InitialStateContainer:
         if initial_state_index in self.initial_states:
             state = self.get_initial_state(qubit_index=initial_state_index)
 
-        if state == InitialStateEnum.ZERO:
+        return self.get_operation(
+            qubit_index=qubit_index,
+            initial_state=state,
+            **kwargs,
+        )
+
+    def get_ancilla_qubit_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
+        """
+        :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
+        :param initial_state_index: Index corresponding to qubit-ID in initial state container.
+            Will be used to fetch corresponding initial state.
+        :return: Circuit operation corresponding to initial state preparation.
+        """
+        # Data allocation
+        state: InitialStateEnum = InitialStateEnum.ZERO
+
+        if initial_state_index in self.initial_states:
+            state = self.ancilla_initial_states[initial_state_index]
+
+        return self.get_operation(
+            qubit_index=qubit_index,
+            initial_state=state,
+            **kwargs,
+        )
+
+    def get_operation(self, qubit_index: int, initial_state: InitialStateEnum, **kwargs) -> ICircuitOperation:
+        """
+        :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
+        :param initial_state: Initial state enum.
+        :return: Circuit operation corresponding to initial state preparation.
+        """
+        # Data allocation
+        if initial_state == InitialStateEnum.ZERO:
             return Identity(qubit_index, **kwargs)
-        if state == InitialStateEnum.ONE:
+        if initial_state == InitialStateEnum.ONE:
             return Rx180(qubit_index, **kwargs)
-        if state == InitialStateEnum.PLUS:
+        if initial_state == InitialStateEnum.PLUS:
             return Ry90(qubit_index, **kwargs)
-        if state == InitialStateEnum.MINUS:
+        if initial_state == InitialStateEnum.MINUS:
             return Rym90(qubit_index, **kwargs)
-        if state == InitialStateEnum.PLUS_I:
+        if initial_state == InitialStateEnum.PLUS_I:
             return Rxm90(qubit_index, **kwargs)
-        if state == InitialStateEnum.MINUS_I:
+        if initial_state == InitialStateEnum.MINUS_I:
             return Rx90(qubit_index, **kwargs)
 
-        raise NotImplementedError(f"Initial state {state} is not supported.")
+        raise NotImplementedError(f"Initial state {initial_state} is not supported.")
 
     @classmethod
-    def from_ordered_list(cls, initial_states: List[InitialStateEnum]) -> 'InitialStateContainer':
+    def from_ordered_list(cls, initial_states: List[InitialStateEnum], ancilla_initial_states: Optional[List[InitialStateEnum]] = None) -> 'InitialStateContainer':
         """
         :return: Class method constructor based on ordered array of initial state.
         Where each element index corresponds to qubit index.
         """
+        if ancilla_initial_states is None:
+            ancilla_initial_states = []
+
         return InitialStateContainer(
-            initial_states={i: state for i, state in enumerate(initial_states)}
+            initial_states={i: state for i, state in enumerate(initial_states)},
+            ancilla_initial_states={i: state for i, state in enumerate(ancilla_initial_states)},
         )
 
     @classmethod
     def empty(cls) -> 'InitialStateContainer':
         """:return: Class method constructor with no initial states defined."""
-        return InitialStateContainer(initial_states={})
+        return InitialStateContainer(initial_states={}, ancilla_initial_states={})
     # endregion
 
 
