@@ -818,10 +818,24 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
         :param initial_state: Container with qubit-index to initial state enum mapping.
         :return: Array-like of circuit operations, corresponding to initial state preparation.
         """
+        interpret_initial_state_for_only_data_qubits: bool = len(initial_state.initial_states) == len(self.data_qubit_ids)
+        if interpret_initial_state_for_only_data_qubits:
+            return [
+                initial_state.get_operation(
+                    qubit_index=self.map_qubit_id_to_circuit_index(
+                        qubit_id=self.data_qubit_ids[initial_state_index],
+                    ),
+                    initial_state_index=initial_state_index,
+                    **kwargs,
+                )
+                for initial_state_index in initial_state.initial_states.keys()
+            ]
+
+        # Default initial state for all qubits
         return [
             initial_state.get_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
-                    qubit_id=self.data_qubit_ids[initial_state_index],
+                    qubit_id=self.qubit_ids[initial_state_index],
                 ),
                 initial_state_index=initial_state_index,
                 **kwargs,
