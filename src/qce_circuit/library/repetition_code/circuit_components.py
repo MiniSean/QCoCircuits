@@ -1027,11 +1027,13 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
             acquisition_tag='parity',
         ))
-    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in connectivity.rotation_data_qubit_indices:
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
-        result.add(Rx180(data_index))
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    # Add refocusing pulses on data qubits
+    if connectivity.contains_qubit_refocusing:
+        dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
+        for data_index in connectivity.rotation_data_qubit_indices:
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+            result.add(Rx180(data_index))
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
     result.add(Barrier(all_indices))
     return result
 
@@ -1094,11 +1096,13 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
             acquisition_tag='parity',
             relation=relation,
         ))
-    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in connectivity.rotation_data_qubit_indices:
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
-        result.add(Rx180(data_index))
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    # Add refocusing pulses on data qubits
+    if connectivity.contains_qubit_refocusing:
+        dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
+        for data_index in connectivity.rotation_data_qubit_indices:
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
+            result.add(Rx180(data_index))
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
     return result
 
 
