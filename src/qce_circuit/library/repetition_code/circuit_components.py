@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Callable
+from typing import List, Tuple, Optional, Dict, Callable, Union
 import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
@@ -27,7 +27,12 @@ from qce_circuit.connectivity.generic_gate_sequence import (
     IGenericSurfaceCodeLayer,
     GenericSurfaceCode,
 )
-from qce_circuit.connectivity.connectivity_surface_code import get_requires_parking
+from qce_circuit.connectivity.intrf_connectivity_surface_code import IParityGroup
+from qce_circuit.connectivity.connectivity_surface_code import (
+    ParityGroup,
+    ParityType,
+    get_requires_parking,
+)
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -317,6 +322,11 @@ class IRepetitionCodeDescription(ABC):
         """
         raise InterfaceMethodException
 
+    @abstractmethod
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        raise InterfaceMethodException
+
     def get_element(self, index: int) -> IQubitID:
         """:return: Qubit-ID element corresponding to index."""
         for qubit_id in self.qubit_ids:
@@ -411,6 +421,8 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     """
     _data_qubit_ids: List[IQubitID]
     _ancilla_qubit_ids: List[IQubitID]
+    _parity_groups: List[IParityGroup]
+    """Array-like of parity groups, describing data-ancilla parity plaques."""
     _gate_sequences: List[GateSequenceLayer]
     _qubit_index_map: Dict[IQubitID, int]
     """Mapping from Qubit-ID to circuit channel index."""
@@ -522,6 +534,15 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
             )
             for initial_state_index in initial_state.initial_states.keys()
         ]
+
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
+        # Assumes element is part of only a single parity group
+        for parity_group in self._parity_groups:
+            if parity_group.contains(element=element):
+                result.append(parity_group)
+        return result
     # endregion
 
     # region Class Methods
@@ -533,7 +554,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         )
 
     @classmethod
-    def from_chain(cls, length: int, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
+    def from_chain(cls, length: int, qubit_refocusing: bool = True, parity_type: ParityType = ParityType.STABILIZER_Z) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on chain length."""
         qubit_ids: List[IQubitID] = [QubitIDObj(f'D{i}') for i in range(length)]
         data_qubit_ids: List[IQubitID] = qubit_ids[::2]
@@ -550,6 +571,14 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return RepetitionCodeDescription(
             _data_qubit_ids=data_qubit_ids,
             _ancilla_qubit_ids=ancilla_qubit_ids,
+            _parity_groups=[
+                ParityGroup(
+                    _parity_type=parity_type,
+                    _ancilla_qubit=_ancilla_qubit_id,
+                    _data_qubits=[data_qubit_ids[i * 2], data_qubit_ids[i * 2 + 2]],
+                )
+                for i, _ancilla_qubit_id in enumerate(ancilla_qubit_ids)
+            ],
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
             _qubit_refocusing=qubit_refocusing,
@@ -593,6 +622,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return RepetitionCodeDescription(
             _data_qubit_ids=data_qubit_ids,
             _ancilla_qubit_ids=ancilla_qubit_ids,
+            _parity_groups=connectivity.parity_group_x + connectivity.parity_group_z,
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
             _qubit_refocusing=qubit_refocusing,
@@ -781,6 +811,15 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
             )
             for initial_state_index in initial_state.initial_states.keys()
         ]
+
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
+        # Assumes element is part of only a single parity group
+        for parity_group in self._connectivity.parity_group_x + self._connectivity.parity_group_z:
+            if parity_group.contains(element=element):
+                result.append(parity_group)
+        return result
 
     def get_active_ancilla_indices(self, sequence_index: int) -> Optional[List[int]]:
         """
