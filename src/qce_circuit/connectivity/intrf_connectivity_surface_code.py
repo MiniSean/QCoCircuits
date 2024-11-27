@@ -14,7 +14,7 @@ from qce_circuit.connectivity.intrf_connectivity import IDeviceLayer
 
 
 @unique
-class ParityType(Enum):
+class StabilizerType(Enum):
     STABILIZER_X = 0
     STABILIZER_Z = 1
 
@@ -27,7 +27,7 @@ class IParityGroup(ABC):
     # region Interface Properties
     @property
     @abstractmethod
-    def parity_type(self) -> ParityType:
+    def parity_type(self) -> StabilizerType:
         """:return: Parity type (X or Z type stabilizer)."""
         raise InterfaceMethodException
 
