@@ -2,6 +2,7 @@
 # Module containing Singleton circuit noise factory manager.
 # Extends existing stim circuit with circuit level noise based on preset.
 # -------------------------------------------
+from dataclasses import dataclass
 from typing import List, Dict, Optional
 import stim
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
@@ -19,6 +20,7 @@ from qce_circuit.addon_stim.noise_factories.factory_measurement_noise import Mea
 from qce_circuit.addon_stim.noise_factories.factory_pauli_noise import PauliAdditiveCircuitNoiseFactory
 
 
+@dataclass(frozen=True)
 class NoiseFactoryManager(IStimNoiseDresserFactory, metaclass=SingletonABCMeta):
     """
     Behaviour Class, describing default noise dressing of stim-circuit.

@@ -1,6 +1,7 @@
 # -------------------------------------------
 # Module containing Singleton (default) stim factory manager.
 # -------------------------------------------
+from dataclasses import dataclass
 from typing import List, Type, Union
 import stim
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
@@ -39,6 +40,7 @@ from qce_circuit.addon_stim.operation_factories.factory_detector_operations impo
 )
 
 
+@dataclass(frozen=True)
 class StimFactoryManager(IStimCircuitFactory, metaclass=SingletonABCMeta):
     """
     Behaviour Class, describing default declarative to stim circuit conversion.

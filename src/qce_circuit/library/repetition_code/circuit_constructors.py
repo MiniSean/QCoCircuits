@@ -2,6 +2,9 @@
 # Module containing arbitrary length repetition-code circuit.
 # -------------------------------------------
 from typing import Optional, List, Dict
+from qce_circuit.connectivity.intrf_connectivity_surface_code import (
+    IParityGroup,
+)
 from qce_circuit.library.repetition_code.circuit_components import (
     IRepetitionCodeDescription,
     RepetitionCodeDescription,
@@ -62,9 +65,10 @@ def construct_repetition_code_circuit(qec_cycles: int, description: Optional[IRe
     # Add detector operations
     for ancilla in description.detector_qubit_indices:
         ancilla_element: IQubitID = description.get_element(index=ancilla)
-        involved_edges: List[IEdgeID] = description.get_edges(qubit_id=ancilla_element)
-        neighbor_a: IQubitID = involved_edges[0].get_connected_qubit_id(element=ancilla_element)
-        neighbor_b: IQubitID = involved_edges[1].get_connected_qubit_id(element=ancilla_element)
+        parity_group: IParityGroup = description.get_parity_group(element=ancilla_element)[0]  # Assumes single group
+        parity_data_qubit_ids: List[IQubitID] = parity_group.data_ids
+        neighbor_a: IQubitID = parity_data_qubit_ids[0]
+        neighbor_b: IQubitID = parity_data_qubit_ids[1]
         if qec_cycles > 0:
             ancilla_reference_offset: int = (get_last_acquisition_operation(
                 circuit_qec_with_detectors).circuit_level_acquisition_index + 1) - get_last_acquisition_operation(
