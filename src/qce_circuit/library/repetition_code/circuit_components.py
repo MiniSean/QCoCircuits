@@ -590,7 +590,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
                 ParityGroup(
                     _parity_type=parity_type,
                     _ancilla_qubit=_ancilla_qubit_id,
-                    _data_qubits=[data_qubit_ids[i * 2], data_qubit_ids[i * 2 + 2]],
+                    _data_qubits=[qubit_ids[i * 2], qubit_ids[i * 2 + 2]],
                 )
                 for i, _ancilla_qubit_id in enumerate(ancilla_qubit_ids)
             ],
