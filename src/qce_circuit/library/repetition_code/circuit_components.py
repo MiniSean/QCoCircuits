@@ -30,7 +30,7 @@ from qce_circuit.connectivity.generic_gate_sequence import (
 from qce_circuit.connectivity.intrf_connectivity_surface_code import IParityGroup
 from qce_circuit.connectivity.connectivity_surface_code import (
     ParityGroup,
-    ParityType,
+    StabilizerType,
     get_requires_parking,
 )
 from qce_circuit.utilities.array_manipulation import unique_in_order
@@ -569,7 +569,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         )
 
     @classmethod
-    def from_chain(cls, length: int, qubit_refocusing: bool = True, parity_type: ParityType = ParityType.STABILIZER_Z) -> 'RepetitionCodeDescription':
+    def from_chain(cls, length: int, qubit_refocusing: bool = True, parity_type: StabilizerType = StabilizerType.STABILIZER_Z) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on chain length."""
         qubit_ids: List[IQubitID] = [QubitIDObj(f'D{i}') for i in range(length)]
         data_qubit_ids: List[IQubitID] = qubit_ids[::2]
