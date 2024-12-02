@@ -168,7 +168,7 @@ class StimFactoryRepCodeTestCase(unittest.TestCase):
             I 4
             TICK
             M 1 3 0 2 4
-            DETECTOR(1, 0) rec[-3] rec[-2]
+            DETECTOR(1, 0) rec[-2] rec[-3]
             DETECTOR(3, 0) rec[-1] rec[-2]
             OBSERVABLE_INCLUDE(0) rec[-3]
             OBSERVABLE_INCLUDE(0) rec[-2]
