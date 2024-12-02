@@ -154,12 +154,6 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
     # endregion
 
     # region Class Properties
-    # @property
-    # def indexing_kernels(self) -> List[IIndexingKernel]:
-    #     """:return: Array-like of ordered indexing kernels that describe self."""
-    #     result: List[IIndexingKernel] = self._repetition_kernels
-    #     result += [self._calibration_kernel]
-    #     return result
     @property
     def indexing_kernels(self) -> List[IIndexingKernel]:
         """:return: Array-like of ordered indexing kernels that describe self."""

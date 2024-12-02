@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
-from typing import List, Tuple, Optional, Dict, Callable
+from typing import List, Tuple, Optional, Dict, Callable, Union
 import numpy as np
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException, NoReferenceOperationException
 from qce_circuit import (
@@ -27,7 +27,12 @@ from qce_circuit.connectivity.generic_gate_sequence import (
     IGenericSurfaceCodeLayer,
     GenericSurfaceCode,
 )
-from qce_circuit.connectivity.connectivity_surface_code import get_requires_parking
+from qce_circuit.connectivity.intrf_connectivity_surface_code import IParityGroup
+from qce_circuit.connectivity.connectivity_surface_code import (
+    ParityGroup,
+    StabilizerType,
+    get_requires_parking,
+)
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -126,6 +131,15 @@ class IRepetitionCodeDescription(ABC):
     @abstractmethod
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
         raise InterfaceMethodException
 
     @property
@@ -308,6 +322,11 @@ class IRepetitionCodeDescription(ABC):
         """
         raise InterfaceMethodException
 
+    @abstractmethod
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        raise InterfaceMethodException
+
     def get_element(self, index: int) -> IQubitID:
         """:return: Qubit-ID element corresponding to index."""
         for qubit_id in self.qubit_ids:
@@ -402,9 +421,13 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     """
     _data_qubit_ids: List[IQubitID]
     _ancilla_qubit_ids: List[IQubitID]
+    _parity_groups: List[IParityGroup]
+    """Array-like of parity groups, describing data-ancilla parity plaques."""
     _gate_sequences: List[GateSequenceLayer]
     _qubit_index_map: Dict[IQubitID, int]
     """Mapping from Qubit-ID to circuit channel index."""
+    _qubit_refocusing: bool = field(default=True)
+    """Boolean describing qubit refocusing operation each QEC-cycle."""
 
     # region Interface Properties
     @property
@@ -478,6 +501,14 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
     def gate_sequences(self) -> List[GateSequenceLayer]:
         """:return: Array-like of gate sequences."""
         return self._gate_sequences
+
+    @property
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
+        return self._qubit_refocusing
     # endregion
 
     # region Interface Methods
@@ -490,11 +521,15 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
 
     def get_operations(self, initial_state: InitialStateContainer, **kwargs) -> List[ICircuitOperation]:
         """
+        WARNING: Depending on the size of the initial state container, circuit operations are constructed for only
+        data qubits OR data + ancilla qubits.
         :param initial_state: Container with qubit-index to initial state enum mapping.
         :return: Array-like of circuit operations, corresponding to initial state preparation.
         """
-        return [
-            initial_state.get_operation(
+
+        result: List[ICircuitOperation] = []
+        result.extend([
+            initial_state.get_data_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
                     qubit_id=self.data_qubit_ids[initial_state_index],
                 ),
@@ -502,7 +537,27 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
                 **kwargs,
             )
             for initial_state_index in initial_state.initial_states.keys()
-        ]
+        ])
+        result.extend([
+            initial_state.get_data_qubit_operation(
+                qubit_index=self.map_qubit_id_to_circuit_index(
+                    qubit_id=self.ancilla_qubit_ids[initial_state_index],
+                ),
+                initial_state_index=initial_state_index,
+                **kwargs,
+            )
+            for initial_state_index in initial_state.ancilla_initial_states.keys()
+        ])
+        return result
+
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
+        # Assumes element is part of only a single parity group
+        for parity_group in self._parity_groups:
+            if parity_group.contains(element=element):
+                result.append(parity_group)
+        return result
     # endregion
 
     # region Class Methods
@@ -514,7 +569,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         )
 
     @classmethod
-    def from_chain(cls, length: int) -> 'RepetitionCodeDescription':
+    def from_chain(cls, length: int, qubit_refocusing: bool = True, parity_type: StabilizerType = StabilizerType.STABILIZER_Z) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on chain length."""
         qubit_ids: List[IQubitID] = [QubitIDObj(f'D{i}') for i in range(length)]
         data_qubit_ids: List[IQubitID] = qubit_ids[::2]
@@ -531,19 +586,28 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return RepetitionCodeDescription(
             _data_qubit_ids=data_qubit_ids,
             _ancilla_qubit_ids=ancilla_qubit_ids,
+            _parity_groups=[
+                ParityGroup(
+                    _parity_type=parity_type,
+                    _ancilla_qubit=_ancilla_qubit_id,
+                    _data_qubits=[qubit_ids[i * 2], qubit_ids[i * 2 + 2]],
+                )
+                for i, _ancilla_qubit_id in enumerate(ancilla_qubit_ids)
+            ],
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
+            _qubit_refocusing=qubit_refocusing,
         )
 
     @classmethod
-    def from_initial_state(cls, initial_state: InitialStateContainer) -> 'RepetitionCodeDescription':
+    def from_initial_state(cls, initial_state: InitialStateContainer, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on initial data-qubit state."""
         code_distance: int = initial_state.distance
         chain_distance: int = 2 * code_distance - 1
-        return RepetitionCodeDescription.from_chain(length=chain_distance)
+        return RepetitionCodeDescription.from_chain(length=chain_distance, qubit_refocusing=qubit_refocusing)
 
     @classmethod
-    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, qubit_index_map: Optional[Dict[IQubitID, int]] = None) -> 'RepetitionCodeDescription':
+    def from_connectivity(cls, involved_qubit_ids: List[IQubitID], connectivity: IGenericSurfaceCodeLayer, qubit_index_map: Optional[Dict[IQubitID, int]] = None, qubit_refocusing: bool = True) -> 'RepetitionCodeDescription':
         """:return: Class method constructor based on pre-defined connectivity and involved qubit-ID's."""
         data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.data_qubit_ids]
         ancilla_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in involved_qubit_ids if qubit_id in connectivity.ancilla_qubit_ids]
@@ -573,8 +637,10 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         return RepetitionCodeDescription(
             _data_qubit_ids=data_qubit_ids,
             _ancilla_qubit_ids=ancilla_qubit_ids,
+            _parity_groups=connectivity.parity_group_x + connectivity.parity_group_z,
             _gate_sequences=gate_sequences,
             _qubit_index_map=qubit_index_map,
+            _qubit_refocusing=qubit_refocusing,
         )
     # endregion
 
@@ -727,6 +793,14 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
                 _gate_operations=filtered_gate_operations,
             ))
         return result
+
+    @property
+    def contains_qubit_refocusing(self) -> bool:
+        """
+        :return: Boolean, whether QEC-cycle contains qubit refocusing gates.
+        (X-gates during Ancilla measurement block).
+        """
+        return self._base_description.contains_qubit_refocusing
     # endregion
 
     # region Interface Methods
@@ -742,8 +816,10 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
         :param initial_state: Container with qubit-index to initial state enum mapping.
         :return: Array-like of circuit operations, corresponding to initial state preparation.
         """
-        return [
-            initial_state.get_operation(
+
+        result: List[ICircuitOperation] = []
+        result.extend([
+            initial_state.get_data_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
                     qubit_id=self.data_qubit_ids[initial_state_index],
                 ),
@@ -751,7 +827,27 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
                 **kwargs,
             )
             for initial_state_index in initial_state.initial_states.keys()
-        ]
+        ])
+        result.extend([
+            initial_state.get_ancilla_qubit_operation(
+                qubit_index=self.map_qubit_id_to_circuit_index(
+                    qubit_id=self.ancilla_qubit_ids[initial_state_index],
+                ),
+                initial_state_index=initial_state_index,
+                **kwargs,
+            )
+            for initial_state_index in initial_state.ancilla_initial_states.keys()
+        ])
+        return result
+
+    def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
+        """:return: Parity group(s) of which element (edge- or qubit-ID) is part of."""
+        result: List[IParityGroup] = []
+        # Assumes element is part of only a single parity group
+        for parity_group in self._connectivity.parity_group_x + self._connectivity.parity_group_z:
+            if parity_group.contains(element=element):
+                result.append(parity_group)
+        return result
 
     def get_active_ancilla_indices(self, sequence_index: int) -> Optional[List[int]]:
         """
@@ -998,11 +1094,13 @@ def get_circuit_qec_round_with_dynamical_decoupling(connectivity: IRepetitionCod
             acquisition_strategy=RegistryAcquisitionStrategy(registry),
             acquisition_tag='parity',
         ))
-    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in connectivity.rotation_data_qubit_indices:
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
-        result.add(Rx180(data_index))
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    # Add refocusing pulses on data qubits
+    if connectivity.contains_qubit_refocusing:
+        dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
+        for data_index in connectivity.rotation_data_qubit_indices:
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+            result.add(Rx180(data_index))
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
     result.add(Barrier(all_indices))
     return result
 
@@ -1065,11 +1163,13 @@ def get_circuit_qec_round_with_dynamical_decoupling_simplified(connectivity: IRe
             acquisition_tag='parity',
             relation=relation,
         ))
-    dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
-    for data_index in connectivity.rotation_data_qubit_indices:
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
-        result.add(Rx180(data_index))
-        result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
+    # Add refocusing pulses on data qubits
+    if connectivity.contains_qubit_refocusing:
+        dynamical_decoupling_wait = GlobalDecouplingWaitDurationStrategy()
+        for data_index in connectivity.rotation_data_qubit_indices:
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait, relation=relation))
+            result.add(Rx180(data_index))
+            result.add(Wait(data_index, duration_strategy=dynamical_decoupling_wait))
     return result
 
 
