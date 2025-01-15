@@ -477,6 +477,8 @@ class VirtualPark(SingleQubitOperation, ICircuitOperation):
     Usually only interesting when working with frequency-tunable qubits.
     """
     duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.FLUX))
+    net_zero: bool = field(init=True, default=False)
+    """Boolean describing the net-zero behaviour of the virtual parking. - Mainly useful for visualization."""
 
     # region Interface Properties
     @property

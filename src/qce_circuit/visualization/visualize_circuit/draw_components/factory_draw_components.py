@@ -49,6 +49,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
     RotationAxis,
     RotationAngle,
     SquareParkBlock,
+    SquareNetZeroParkBlock,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
@@ -318,6 +319,14 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if operation.net_zero:
+            return SquareNetZeroParkBlock(
+                pivot=transform.pivot,
+                height=transform.height,
+                width=transform.width,
+                alignment=transform.parent_alignment,
+            )
+
         return SquareParkBlock(
             pivot=transform.pivot,
             height=transform.height,
