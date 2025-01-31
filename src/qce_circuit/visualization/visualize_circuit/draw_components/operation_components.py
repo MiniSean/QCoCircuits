@@ -64,7 +64,7 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Interface Properties
     @property
@@ -86,6 +86,7 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
             width=self.rectilinear_transform.width,
             height=self.rectilinear_transform.height,
             linewidth=self.style_settings.border_width,
+            linestyle=self.style_settings.border_line_style,
             edgecolor=self.style_settings.border_color,
             facecolor=self.style_settings.background_color,
             zorder=-1,
@@ -173,7 +174,7 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
     pivot: Vec2D
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
 
     # region Interface Properties

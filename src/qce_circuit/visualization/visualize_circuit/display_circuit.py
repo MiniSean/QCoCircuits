@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from typing import List, Optional, TypeVar, Dict, Any, Tuple
+from copy import deepcopy
 from qce_circuit.structure.intrf_circuit_operation import RelationLink
 from qce_circuit.structure.circuit_operations import (
     Reset,
@@ -28,6 +29,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualVacant,
     VirtualTwoQubitVacant,
     VirtualEmpty,
+    VirtualOptional,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -103,6 +105,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     VirtualVacantFactory,
     VirtualTwoQubitVacantFactory,
     VirtualEmptyFactory,
+    VirtualOptionalFactory,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
     MultiTwoQubitBlockFactory
@@ -186,32 +189,37 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
+        individual_component_factory = DrawComponentFactoryManager(
+            default_factory=DefaultFactory(),
+            factory_lookup={
+                CPhase: TwoQubitBlockFactory(),
+                DispersiveMeasure: MeasureFactory(),
+                Reset: ResetFactory(),
+                Wait: WaitFactory(),
+                Rx180: Rx180Factory(),
+                Rx90: Rx90Factory(),
+                Rxm90: Rxm90Factory(),
+                Ry180: Ry180Factory(),
+                Ry90: Ry90Factory(),
+                Rym90: Rym90Factory(),
+                Rx180ef: Rx180efFactory(),
+                Rphi90: Rphi90Factory(),
+                VirtualPhase: ZPhaseFactory(),
+                Identity: IdentityFactory(),
+                Hadamard: HadamardFactory(),
+                Barrier: BarrierFactory(),
+                VirtualPark: VirtualParkFactory(),
+                VirtualVacant: VirtualVacantFactory(),
+                VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
+                VirtualEmpty: VirtualEmptyFactory(),
+            }
+        )
+        individual_component_factory.factory_lookup.update({
+            VirtualOptional: VirtualOptionalFactory(callback_draw_manager=deepcopy(individual_component_factory))
+        })
+
         factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
-            individual_component_factory=DrawComponentFactoryManager(
-                default_factory=DefaultFactory(),
-                factory_lookup={
-                    CPhase: TwoQubitBlockFactory(),
-                    DispersiveMeasure: MeasureFactory(),
-                    Reset: ResetFactory(),
-                    Wait: WaitFactory(),
-                    Rx180: Rx180Factory(),
-                    Rx90: Rx90Factory(),
-                    Rxm90: Rxm90Factory(),
-                    Ry180: Ry180Factory(),
-                    Ry90: Ry90Factory(),
-                    Rym90: Rym90Factory(),
-                    Rx180ef: Rx180efFactory(),
-                    Rphi90: Rphi90Factory(),
-                    VirtualPhase: ZPhaseFactory(),
-                    Identity: IdentityFactory(),
-                    Hadamard: HadamardFactory(),
-                    Barrier: BarrierFactory(),
-                    VirtualPark: VirtualParkFactory(),
-                    VirtualVacant: VirtualVacantFactory(),
-                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
-                    VirtualEmpty: VirtualEmptyFactory(),
-                }
-            ),
+            individual_component_factory=individual_component_factory,
             factory_lookup={
                 TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
                     CPhase: TwoQubitBlockFactory(),

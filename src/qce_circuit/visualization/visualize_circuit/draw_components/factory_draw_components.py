@@ -29,9 +29,11 @@ from qce_circuit.structure.circuit_operations import (
     VirtualVacant,
     VirtualTwoQubitVacant,
     VirtualEmpty,
+    VirtualOptional,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
+    IOperationDrawComponentFactoryManager,
     IOperationDrawComponentFactory,
     ITransformConstructor,
 )
@@ -494,4 +496,26 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
             alignment=transform.parent_alignment,
             text_string=f'x{operation.nr_of_repetitions}'
         )
+    # endregion
+
+
+class VirtualOptionalFactory(IOperationDrawComponentFactory[VirtualOptional, IDrawComponent]):
+    """
+    Behaviour class, implementing construction of draw component with additional requirements.
+    """
+
+    # region Class Constructor
+    def __init__(self, callback_draw_manager: IOperationDrawComponentFactoryManager):
+        self._factory_manager: IOperationDrawComponentFactoryManager = callback_draw_manager
+    # endregion
+
+    # region Interface Methods
+    def construct(self, operation: VirtualOptional, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        with StyleManager.temporary_override(**dict(line_style_border='--')):
+            draw_component: IDrawComponent = self._factory_manager.construct(
+                operation=operation.operation,
+                transform_constructor=transform_constructor,
+            )
+        return draw_component
     # endregion
