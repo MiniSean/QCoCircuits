@@ -1023,14 +1023,16 @@ class VirtualOptional(ICircuitOperation):
     # endregion
 
     # region Interface Methods
-    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'SingleQubitOperation':
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualOptional':
         """
         Creates a copy from self. Excluding any relation details.
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return self.operation.copy(
-            relation_transfer_lookup=relation_transfer_lookup,
+        return VirtualOptional(
+            operation=self.operation.copy(
+                relation_transfer_lookup=relation_transfer_lookup,
+            )
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
