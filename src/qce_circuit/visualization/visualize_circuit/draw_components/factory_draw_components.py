@@ -16,9 +16,11 @@ from qce_circuit.structure.circuit_operations import (
     Rx180,
     Rx90,
     Rxm90,
+    RxTheta,
     Ry180,
     Ry90,
     Rym90,
+    RyTheta,
     VirtualPhase,
     Reset,
     Wait,
@@ -30,6 +32,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualTwoQubitVacant,
     VirtualEmpty,
     VirtualOptional,
+    VirtualInjectedError,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -160,6 +163,25 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
     # endregion
 
 
+class RxThetaFactory(IOperationDrawComponentFactory[RxTheta, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: RxTheta, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.X,
+            rotation_angle=RotationAngle.THETA,
+        )
+    # endregion
+
+
 class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
 
     # region Interface Methods
@@ -213,6 +235,25 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
             rotation_angle=RotationAngle.RAD90M,
+        )
+    # endregion
+
+
+class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: RyTheta, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.Y,
+            rotation_angle=RotationAngle.THETA,
         )
     # endregion
 
@@ -513,6 +554,28 @@ class VirtualOptionalFactory(IOperationDrawComponentFactory[VirtualOptional, IDr
     def construct(self, operation: VirtualOptional, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
         with StyleManager.temporary_override(**dict(line_style_border='--')):
+            draw_component: IDrawComponent = self._factory_manager.construct(
+                operation=operation.operation,
+                transform_constructor=transform_constructor,
+            )
+        return draw_component
+    # endregion
+
+
+class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjectedError, IDrawComponent]):
+    """
+    Behaviour class, implementing construction of draw component with additional requirements.
+    """
+
+    # region Class Constructor
+    def __init__(self, callback_draw_manager: IOperationDrawComponentFactoryManager):
+        self._factory_manager: IOperationDrawComponentFactoryManager = callback_draw_manager
+    # endregion
+
+    # region Interface Methods
+    def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        with StyleManager.temporary_override(**dict(line_style_border='--', color_background="#ff9999")):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.operation,
                 transform_constructor=transform_constructor,

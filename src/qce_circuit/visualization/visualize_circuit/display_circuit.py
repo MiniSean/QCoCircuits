@@ -13,9 +13,11 @@ from qce_circuit.structure.circuit_operations import (
     Rx180,
     Rx90,
     Rxm90,
+    RxTheta,
     Ry180,
     Ry90,
     Rym90,
+    RyTheta,
     Rx180ef,
     VirtualPhase,
     Rphi90,
@@ -30,6 +32,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualTwoQubitVacant,
     VirtualEmpty,
     VirtualOptional,
+    VirtualInjectedError,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -89,9 +92,11 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     Rx180Factory,
     Rx90Factory,
     Rxm90Factory,
+    RxThetaFactory,
     Ry180Factory,
     Ry90Factory,
     Rym90Factory,
+    RyThetaFactory,
     Rx180efFactory,
     ZPhaseFactory,
     Rphi90Factory,
@@ -106,6 +111,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     VirtualTwoQubitVacantFactory,
     VirtualEmptyFactory,
     VirtualOptionalFactory,
+    VirtualInjectedErrorFactory,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
     MultiTwoQubitBlockFactory
@@ -199,9 +205,11 @@ class VisualCircuitDescription:
                 Rx180: Rx180Factory(),
                 Rx90: Rx90Factory(),
                 Rxm90: Rxm90Factory(),
+                RxTheta: RxThetaFactory(),
                 Ry180: Ry180Factory(),
                 Ry90: Ry90Factory(),
                 Rym90: Rym90Factory(),
+                RyTheta: RyThetaFactory(),
                 Rx180ef: Rx180efFactory(),
                 Rphi90: Rphi90Factory(),
                 VirtualPhase: ZPhaseFactory(),
@@ -214,8 +222,10 @@ class VisualCircuitDescription:
                 VirtualEmpty: VirtualEmptyFactory(),
             }
         )
+        callback_draw_manager = deepcopy(individual_component_factory)
         individual_component_factory.factory_lookup.update({
-            VirtualOptional: VirtualOptionalFactory(callback_draw_manager=deepcopy(individual_component_factory))
+            VirtualOptional: VirtualOptionalFactory(callback_draw_manager=callback_draw_manager),
+            VirtualInjectedError: VirtualInjectedErrorFactory(callback_draw_manager=callback_draw_manager),
         })
 
         factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
