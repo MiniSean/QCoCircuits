@@ -217,22 +217,22 @@ class Repetition9Round6Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metacl
             ],
             parity_group_z=[
                 ParityGroup(
-                    _parity_type=StabilizerType.STABILIZER_X,
+                    _parity_type=StabilizerType.STABILIZER_Z,
                     _ancilla_qubit=QubitIDObj('X1'),
                     _data_qubits=[QubitIDObj('D1'), QubitIDObj('D2')]
                 ),
                 ParityGroup(
-                    _parity_type=StabilizerType.STABILIZER_X,
+                    _parity_type=StabilizerType.STABILIZER_Z,
                     _ancilla_qubit=QubitIDObj('X2'),
                     _data_qubits=[QubitIDObj('D2'), QubitIDObj('D3')]
                 ),
                 ParityGroup(
-                    _parity_type=StabilizerType.STABILIZER_X,
+                    _parity_type=StabilizerType.STABILIZER_Z,
                     _ancilla_qubit=QubitIDObj('X3'),
                     _data_qubits=[QubitIDObj('D7'), QubitIDObj('D8')]
                 ),
                 ParityGroup(
-                    _parity_type=StabilizerType.STABILIZER_X,
+                    _parity_type=StabilizerType.STABILIZER_Z,
                     _ancilla_qubit=QubitIDObj('X4'),
                     _data_qubits=[QubitIDObj('D8'), QubitIDObj('D9')]
                 ),
