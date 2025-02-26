@@ -307,14 +307,17 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
         style_setting: StyleSettings = StyleManager.read_config()
 
         for qubit_id in self.connectivity.qubit_ids:
-            is_ancilla_qubit: bool = qubit_id in self.connectivity.ancilla_qubit_ids
-            print(qubit_id, is_ancilla_qubit)
+            background_color = self.element_color_overwrite
+            if qubit_id in [parity_group.ancilla_id for parity_group in self.connectivity.parity_group_z]:
+                background_color = style_setting.color_background_z
+            if qubit_id in [parity_group.ancilla_id for parity_group in self.connectivity.parity_group_x]:
+                background_color = style_setting.color_background_x
 
             result.append(DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
                 style_settings=ElementStyleSettings(
-                    background_color=self.element_color_overwrite if not is_ancilla_qubit else style_setting.color_background_z,
+                    background_color=background_color,
                     line_color=style_setting.color_element,
                     element_radius=style_setting.radius_dot,
                     zorder=style_setting.zorder_element,
@@ -338,7 +341,8 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
             QubitIDObj('X4'): self.rotation + rotation_offset + 270,
             QubitIDObj('Z4'): self.rotation + rotation_offset - 90,
             QubitIDObj('X3'): self.rotation + rotation_offset + 180,
-            QubitIDObj('X2'): self.rotation + rotation_offset,
+            QubitIDObj('X3'): self.rotation + rotation_offset + 90,
+            QubitIDObj('X2'): self.rotation + rotation_offset - 90,
             QubitIDObj('Z1'): self.rotation + rotation_offset + 90,
             QubitIDObj('X1'): self.rotation + rotation_offset + 90,
             QubitIDObj('Z2'): self.rotation + rotation_offset + 180,
