@@ -3,6 +3,8 @@
 # -------------------------------------------
 import os
 from dataclasses import dataclass, field
+import threading
+from contextlib import contextmanager
 from qce_circuit.utilities.singleton_base import Singleton
 from qce_circuit.utilities.readwrite_yaml import (
     get_yaml_file_path,
@@ -32,6 +34,7 @@ class OperationStyleSettings:
     text_color: str
     border_width: float
     line_width: float
+    border_line_style: str
     dot_radius: float
     font_size: float
 
@@ -96,6 +99,9 @@ class StyleSettings:
     font_size: float = field(default=16.0)
     font_size_small: float = field(default=10.0)
 
+    # Line styles
+    line_style_border: str = field(default='-')
+
     # region Class Properties
     @property
     def channel_style(self) -> ChannelStyleSettings:
@@ -114,6 +120,7 @@ class StyleSettings:
             text_color=self.color_text,
             border_width=self.width_border,
             line_width=self.width_line,
+            border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
         )
@@ -126,6 +133,7 @@ class StyleSettings:
             text_color=self.color_text,
             border_width=self.width_border,
             line_width=self.width_line,
+            border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
         )
@@ -138,6 +146,7 @@ class StyleSettings:
             text_color=self.color_text,
             border_width=self.width_border,
             line_width=self.width_line,
+            border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
         )
@@ -176,6 +185,7 @@ class StyleManager(metaclass=Singleton):
     Behaviour Class, manages import of circuit-visualization style file.
     """
     CONFIG_NAME: str = 'config_circuit_style.yaml'
+    _override_stack = threading.local()  # Thread-safe storage for overrides
 
     # region Class Methods
     @classmethod
@@ -185,7 +195,11 @@ class StyleManager(metaclass=Singleton):
 
     @classmethod
     def read_config(cls) -> StyleSettings:
-        """:return: File-manager config file."""
+        """:return: File-manager config file or overridden settings."""
+        # Check for temporary override
+        if hasattr(cls._override_stack, "current_override") and cls._override_stack.current_override:
+            return cls._override_stack.current_override
+
         path = get_yaml_file_path(filename=cls.CONFIG_NAME)
         if not os.path.exists(path):
             # Construct config dict
@@ -196,4 +210,23 @@ class StyleManager(metaclass=Singleton):
                 make_file=True,
             )
         return StyleSettings(**read_yaml(filename=cls.CONFIG_NAME))
+
+    @classmethod
+    @contextmanager
+    def temporary_override(cls, **overrides):
+        """
+        Temporarily override specific style settings in memory.
+        Ensures that changes do not persist beyond the 'with' block.
+        """
+        try:
+            # Store the original settings
+            original_config = cls.read_config()
+            new_config_dict = original_config.__dict__.copy()
+            new_config_dict.update(overrides)  # Apply overrides
+
+            # Set thread-local override
+            cls._override_stack.current_override = StyleSettings(**new_config_dict)
+            yield  # Execute block within overridden context
+        finally:
+            cls._override_stack.current_override = None  # Restore original settings
     # endregion

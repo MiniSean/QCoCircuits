@@ -64,7 +64,7 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Interface Properties
     @property
@@ -86,6 +86,7 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
             width=self.rectilinear_transform.width,
             height=self.rectilinear_transform.height,
             linewidth=self.style_settings.border_width,
+            linestyle=self.style_settings.border_line_style,
             edgecolor=self.style_settings.border_color,
             facecolor=self.style_settings.background_color,
             zorder=-1,
@@ -173,7 +174,7 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
     pivot: Vec2D
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
 
     # region Interface Properties
@@ -373,6 +374,90 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
             transform.left_pivot.y,
             transform.bot_pivot.y,
             transform.bot_pivot.y,
+            transform.right_pivot.y,
+            transform.right_pivot.y,
+        ])
+        axes.plot(
+            arc_xcoords,
+            arc_ycoords,
+            linestyle='-',
+            linewidth=self.style_settings.line_width,
+            color=self.style_settings.line_color,
+            zorder=-15,
+        )
+
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class SquareNetZeroParkBlock(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing (net-zero) square (flux) parking block.
+    """
+    pivot: Vec2D
+    height: float
+    width: float
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.width),
+            _height_strategy=FixedLength(self.height),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        transform: IRectTransform = self.rectilinear_transform
+        horizontal_extension: float = 0.1 * transform.width
+        width_ratio: float = 0.8
+        width: float = width_ratio * (transform.right_pivot.x - transform.left_pivot.x)
+        half_width: float = 0.5 * width
+
+        # Temporary to cover the background header bar
+        cover_arc_xcoords: np.ndarray = np.asarray([
+            transform.left_pivot.x,
+            transform.right_pivot.x,
+        ])
+        cover_arc_ycoords: np.ndarray = np.asarray([
+            transform.left_pivot.y,
+            transform.right_pivot.y,
+        ])
+        axes.plot(
+            cover_arc_xcoords,
+            cover_arc_ycoords,
+            linestyle='-',
+            linewidth=self.style_settings.line_width * 2,
+            color='white',  #
+            zorder=-16,
+        )
+
+        # Parking line
+        arc_xcoords: np.ndarray = np.asarray([
+            transform.left_pivot.x - horizontal_extension,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x - half_width,
+            transform.center_pivot.x,
+            transform.center_pivot.x,
+            transform.center_pivot.x + half_width,
+            transform.center_pivot.x + half_width,
+            transform.right_pivot.x + horizontal_extension,
+        ])
+        arc_ycoords: np.ndarray = np.asarray([
+            transform.left_pivot.y,
+            transform.left_pivot.y,
+            transform.bot_pivot.y,
+            transform.bot_pivot.y,
+            transform.top_pivot.y,
+            transform.top_pivot.y,
             transform.right_pivot.y,
             transform.right_pivot.y,
         ])
