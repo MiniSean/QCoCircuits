@@ -31,6 +31,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualVacant,
     VirtualTwoQubitVacant,
     VirtualEmpty,
+    VirtualWait,
     VirtualOptional,
     VirtualInjectedError,
 )
@@ -110,6 +111,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     VirtualVacantFactory,
     VirtualTwoQubitVacantFactory,
     VirtualEmptyFactory,
+    VirtualWaitFactory,
     VirtualOptionalFactory,
     VirtualInjectedErrorFactory,
 )
@@ -220,6 +222,7 @@ class VisualCircuitDescription:
                 VirtualVacant: VirtualVacantFactory(),
                 VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
                 VirtualEmpty: VirtualEmptyFactory(),
+                VirtualWait: VirtualWaitFactory(),
             }
         )
         callback_draw_manager = deepcopy(individual_component_factory)

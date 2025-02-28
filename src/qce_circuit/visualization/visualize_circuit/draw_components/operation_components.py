@@ -290,6 +290,37 @@ class BlockRotation(SquareTextBlock, IRectTransformComponent, IDrawComponent):
 
 
 @dataclass(frozen=True)
+class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing schedule block.
+    """
+    header_text: str = field(default="")
+    body_text: str = field(default="")
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        axes = self._base_block.draw(axes=axes)
+        axes.text(
+            x=self.text_center.x,
+            y=self.text_center.y,
+            s=self.header_text,
+            fontsize=self.style_settings.font_size,
+            ha='center',
+            va='center',
+        )
+        axes.text(
+            x=self.text_center.x,
+            y=(self.text_center.y + self.rectilinear_transform.bot_pivot.y) / 2,
+            s=self.body_text,
+            fontsize=self.style_settings.subtext_font_size,
+            ha='center',
+            va='center',
+        )
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
 class BlockGate(SquareTextBlock, IRectTransformComponent, IDrawComponent):
     """
     Data class, containing dimension data for drawing schedule block.

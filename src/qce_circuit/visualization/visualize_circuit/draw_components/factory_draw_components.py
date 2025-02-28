@@ -33,6 +33,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualEmpty,
     VirtualOptional,
     VirtualInjectedError,
+    VirtualWait,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -50,6 +51,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
     RectangleTextBlock,
     RectangleVacantBlock,
     BlockRotation,
+    BlockHeaderBody,
     BlockMeasure,
     RotationAxis,
     RotationAngle,
@@ -435,6 +437,25 @@ class VirtualEmptyFactory(IOperationDrawComponentFactory[VirtualEmpty, IDrawComp
             width=transform.width,
             alignment=transform.parent_alignment,
             style_settings=StyleManager.read_config().empty_operation_style,
+        )
+    # endregion
+
+
+class VirtualWaitFactory(IOperationDrawComponentFactory[VirtualWait, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualWait, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockHeaderBody(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            header_text=operation.header_text,
+            body_text=operation.body_text,
         )
     # endregion
 
