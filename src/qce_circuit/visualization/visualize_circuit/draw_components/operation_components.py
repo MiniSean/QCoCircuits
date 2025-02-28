@@ -70,10 +70,12 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
     @property
     def rectilinear_transform(self) -> IRectTransform:
         """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        margin: float = self.style_settings.rectilinear_margin
+        margin_pivot_shift: Vec2D = Vec2D(x=margin/2, y=0.0)
         return RectTransform(
-            _pivot_strategy=FixedPivot(self.pivot),
-            _width_strategy=FixedLength(self.width),
-            _height_strategy=FixedLength(self.height),
+            _pivot_strategy=FixedPivot(self.pivot + margin_pivot_shift),
+            _width_strategy=FixedLength(self.width - margin),
+            _height_strategy=FixedLength(self.height - margin),
             _parent_alignment=self.alignment,
         )
     # endregion
@@ -118,6 +120,7 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
             y=self.text_center.y,
             s=self.text_string,
             fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
@@ -280,6 +283,40 @@ class BlockRotation(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             y=self.text_center.y,
             s=rf'$\mathtt{{R_{{{self.rotation_axes.value}}}^{{{self.rotation_angle.value}}}}}$',
             fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='center',
+            va='center',
+        )
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing schedule block.
+    """
+    header_text: str = field(default="")
+    body_text: str = field(default="")
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        axes = self._base_block.draw(axes=axes)
+        axes.text(
+            x=self.text_center.x,
+            y=self.text_center.y,
+            s=self.header_text,
+            fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='center',
+            va='center',
+        )
+        axes.text(
+            x=self.text_center.x,
+            y=(self.text_center.y + self.rectilinear_transform.bot_pivot.y) / 2,
+            s=self.body_text,
+            fontsize=self.style_settings.subtext_font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
