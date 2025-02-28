@@ -106,7 +106,7 @@ class StyleSettings:
     line_style_border: str = field(default='-')
 
     # Spacing
-    rectilinear_margin: float = field(default=0.0)
+    rectilinear_margin: float = field(default=0.1)
 
     # region Class Properties
     @property
