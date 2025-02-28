@@ -37,6 +37,8 @@ class OperationStyleSettings:
     border_line_style: str
     dot_radius: float
     font_size: float
+    rectilinear_margin: float
+    """Margin variable used to shrink the drawn rectangle to allow for 'white-space'."""
 
 
 @dataclass(frozen=True)
@@ -102,6 +104,9 @@ class StyleSettings:
     # Line styles
     line_style_border: str = field(default='-')
 
+    # Spacing
+    rectilinear_margin: float = field(default=0.0)
+
     # region Class Properties
     @property
     def channel_style(self) -> ChannelStyleSettings:
@@ -123,6 +128,7 @@ class StyleSettings:
             border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
+            rectilinear_margin=self.rectilinear_margin,
         )
 
     @property
@@ -136,6 +142,7 @@ class StyleSettings:
             border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
+            rectilinear_margin=self.rectilinear_margin,
         )
 
     @property
@@ -149,6 +156,7 @@ class StyleSettings:
             border_line_style=self.line_style_border,
             dot_radius=self.radius_dot,
             font_size=self.font_size,
+            rectilinear_margin=self.rectilinear_margin,
         )
 
     @property
