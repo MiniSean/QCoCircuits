@@ -1236,6 +1236,85 @@ class VirtualWait(SingleQubitOperation, ICircuitOperation):
     # endregion
 
 
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualColorOverwrite(ICircuitOperation):
+    """
+    Data class, containing single-qubit operation.
+    Acts as a visualization wrapper for coloring visualization.
+    """
+    operation: SingleQubitOperation
+    color_overwrite: str = field(init=True, default="k")
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return self.operation.channel_identifiers
+
+    @property
+    def nr_of_repetitions(self) -> int:
+        """:return: Number of repetitions for this object."""
+        return self.operation.nr_of_repetitions
+
+    @property
+    def relation_link(self) -> IRelationLink[ICircuitOperation]:
+        """:return: Description of relation to other circuit node."""
+        return self.operation.relation
+
+    @relation_link.setter
+    def relation_link(self, link: IRelationLink[ICircuitOperation]):
+        """:sets: Description of relation to other circuit node."""
+        self.operation.relation = link
+
+    @property
+    def start_time(self) -> float:
+        """:return: Start time [a.u.]."""
+        return self.operation.start_time
+
+    @property
+    def duration(self) -> float:
+        """:return: Duration [ns]."""
+        return self.operation.duration
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualColorOverwrite':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualColorOverwrite(
+            operation=self.operation.copy(
+                relation_transfer_lookup=relation_transfer_lookup,
+            )
+        )
+
+    def apply_modifiers_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies modifiers inplace.
+        Applies modifiers such as repetition and state-control.
+        :return: Modified self.
+        """
+        return self
+
+    def decomposed_operations(self) -> List[ICircuitOperation]:
+        """
+        Functions similar to a 'flatten' operation.
+        Mostly intended for composite-operations such that they can apply repetition and state-dependent registries.
+        :return: Array-like of decomposed operations.
+        """
+        return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
+    # endregion
+
+
 if __name__ == '__main__':
     from qce_circuit.structure.registry_duration import (
         DurationRegistry,

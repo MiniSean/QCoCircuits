@@ -34,6 +34,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualWait,
     VirtualOptional,
     VirtualInjectedError,
+    VirtualColorOverwrite,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -114,6 +115,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     VirtualWaitFactory,
     VirtualOptionalFactory,
     VirtualInjectedErrorFactory,
+    VirtualColorOverwriteFactory,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
     MultiTwoQubitBlockFactory
@@ -229,6 +231,7 @@ class VisualCircuitDescription:
         individual_component_factory.factory_lookup.update({
             VirtualOptional: VirtualOptionalFactory(callback_draw_manager=callback_draw_manager),
             VirtualInjectedError: VirtualInjectedErrorFactory(callback_draw_manager=callback_draw_manager),
+            VirtualColorOverwrite: VirtualColorOverwriteFactory(callback_draw_manager=callback_draw_manager),
         })
 
         factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(

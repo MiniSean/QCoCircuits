@@ -120,6 +120,7 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
             y=self.text_center.y,
             s=self.text_string,
             fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
@@ -282,6 +283,7 @@ class BlockRotation(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             y=self.text_center.y,
             s=rf'$\mathtt{{R_{{{self.rotation_axes.value}}}^{{{self.rotation_angle.value}}}}}$',
             fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
@@ -305,6 +307,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             y=self.text_center.y,
             s=self.header_text,
             fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
@@ -313,6 +316,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             y=(self.text_center.y + self.rectilinear_transform.bot_pivot.y) / 2,
             s=self.body_text,
             fontsize=self.style_settings.subtext_font_size,
+            color=self.style_settings.text_color,
             ha='center',
             va='center',
         )
