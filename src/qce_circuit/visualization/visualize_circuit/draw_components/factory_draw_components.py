@@ -12,6 +12,7 @@ from qce_circuit.structure.intrf_circuit_operation_composite import (
 )
 from qce_circuit.structure.circuit_operations import (
     CPhase,
+    CNOT,
     DispersiveMeasure,
     Rx180,
     Rx90,
@@ -61,6 +62,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
+    BlockTwoQubitCNOTGate,
     BlockVerticalBarrier,
     BlockTwoQubitVacant,
 )
@@ -512,6 +514,29 @@ class TwoQubitBlockFactory(IOperationDrawComponentFactory[CPhase, IDrawComponent
             time_component=operation,
         )
         return BlockTwoQubitGate(
+            main_pivot=DynamicPivot(lambda: main_transform.pivot),
+            vertical_pivot=DynamicPivot(lambda: second_transform.pivot),
+            single_block_height=DynamicLength(lambda: main_transform.height),
+            single_block_width=DynamicLength(lambda: main_transform.width),
+            alignment=main_transform.parent_alignment,
+        )
+    # endregion
+
+
+class TwoQubitCNOTBlockFactory(IOperationDrawComponentFactory[CNOT, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: CPhase, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        main_transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=ChannelIdentifier(_id=operation.control_qubit_index, _channel=QubitChannel.FLUX),
+            time_component=operation,
+        )
+        second_transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=ChannelIdentifier(_id=operation.target_qubit_index, _channel=QubitChannel.FLUX),
+            time_component=operation,
+        )
+        return BlockTwoQubitCNOTGate(
             main_pivot=DynamicPivot(lambda: main_transform.pivot),
             vertical_pivot=DynamicPivot(lambda: second_transform.pivot),
             single_block_height=DynamicLength(lambda: main_transform.height),

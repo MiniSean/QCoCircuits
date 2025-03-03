@@ -239,6 +239,122 @@ class BlockTwoQubitGate(IRectTransformComponent, IDrawComponent):
 
 
 @dataclass(frozen=True)
+class BlockTwoQubitCNOTGate(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing information to draw a two-qubit gate block
+    that uses two pivots to comply with vertical alignment.
+    """
+    main_pivot: IPivotStrategy
+    vertical_pivot: IPivotStrategy
+    """Second pivot. Only y-value is used."""
+    single_block_height: ILengthStrategy
+    single_block_width: ILengthStrategy
+    alignment: TransformAlignmentSubset = field(default=TransformAlignment.MID_LEFT)
+    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        origin_pivot: Vec2D = self.combined_origin_pivot
+        opposite_origin_pivot: Vec2D = self.combined_opposite_origin_pivot
+        return RectTransform(
+            _pivot_strategy=DynamicPivot(lambda: origin_pivot),
+            _width_strategy=DynamicLength(lambda: abs(origin_pivot.x - opposite_origin_pivot.x)),
+            _height_strategy=DynamicLength(lambda: abs(origin_pivot.y - opposite_origin_pivot.y)),
+            _parent_alignment=TransformAlignment.BOT_LEFT,
+        )
+    # endregion
+
+    # region Class Properties
+    @property
+    def main_transform_block(self) -> IRectTransform:
+        """:return: Transform block around main pivot."""
+        return RectTransform(
+            _pivot_strategy=self.main_pivot,
+            _width_strategy=self.single_block_width,
+            _height_strategy=self.single_block_height,
+            _parent_alignment=self.alignment,
+        )
+
+    @property
+    def second_transform_block(self) -> IRectTransform:
+        """:return: Transform block around second (vertical) pivot."""
+        return RectTransform(
+            _pivot_strategy=self.vertical_pivot,
+            _width_strategy=self.single_block_width,
+            _height_strategy=self.single_block_height,
+            _parent_alignment=self.alignment,
+        )
+
+    @property
+    def combined_origin_pivot(self) -> Vec2D:
+        """:return: Origin (bot-left) pivot of the combined main- and secondary transform block."""
+        main_origin: Vec2D = self.main_transform_block.origin_pivot
+        second_origin: Vec2D = self.second_transform_block.origin_pivot
+        return Vec2D(
+            x=min(main_origin.x, second_origin.x),
+            y=min(main_origin.y, second_origin.y),
+        )
+
+    @property
+    def combined_opposite_origin_pivot(self) -> Vec2D:
+        """:return: Origin (top-right) pivot of the combined main- and secondary transform block."""
+        main_origin_opposite: Vec2D = self.main_transform_block.origin_opposite_pivot
+        second_origin_opposite: Vec2D = self.second_transform_block.origin_opposite_pivot
+        return Vec2D(
+            x=max(main_origin_opposite.x, second_origin_opposite.x),
+            y=max(main_origin_opposite.y, second_origin_opposite.y),
+        )
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        # TODO: Add logic based on attributes
+        DotComponent(
+            base_transform=self.main_transform_block,
+        ).draw(axes=axes)
+
+        cnot_radius: float = 0.2
+        dot = patches.Circle(
+            xy=self.second_transform_block.center_pivot.to_tuple(),
+            radius=cnot_radius,
+            color=self.style_settings.border_color,
+            fill=False,
+            linewidth=self.style_settings.line_width,
+        )
+        axes.add_patch(dot)
+        axes.plot(
+            [self.second_transform_block.center_pivot.x - cnot_radius, self.second_transform_block.center_pivot.x + cnot_radius],
+            [self.second_transform_block.center_pivot.y, self.second_transform_block.center_pivot.y],
+            linestyle='-',
+            linewidth=self.style_settings.line_width,
+            color=self.style_settings.border_color,
+            zorder=-10,
+        )
+        axes.plot(
+            [self.second_transform_block.center_pivot.x, self.second_transform_block.center_pivot.x],
+            [self.second_transform_block.center_pivot.y - cnot_radius, self.second_transform_block.center_pivot.y + cnot_radius],
+            linestyle='-',
+            linewidth=self.style_settings.line_width,
+            color=self.style_settings.border_color,
+            zorder=-10,
+        )
+
+        axes.plot(
+            [self.main_transform_block.center_pivot.x, self.second_transform_block.center_pivot.x],
+            [self.main_transform_block.center_pivot.y, self.second_transform_block.center_pivot.y],
+            linestyle='-',
+            linewidth=self.style_settings.line_width,
+            color=self.style_settings.border_color,
+            zorder=-10,
+        )
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
 class BlockTwoQubitVacant(BlockTwoQubitGate, IRectTransformComponent, IDrawComponent):
     """
     Data class, containing information to draw a two-qubit gate block

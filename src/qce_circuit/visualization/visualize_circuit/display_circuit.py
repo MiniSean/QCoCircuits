@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualPhase,
     Rphi90,
     CPhase,
+    CNOT,
     TwoQubitOperation,
     DispersiveMeasure,
     Identity,
@@ -91,6 +92,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     DefaultFactory,
     MeasureFactory,
     TwoQubitBlockFactory,
+    TwoQubitCNOTBlockFactory,
     Rx180Factory,
     Rx90Factory,
     Rxm90Factory,
@@ -202,7 +204,6 @@ class VisualCircuitDescription:
         individual_component_factory = DrawComponentFactoryManager(
             default_factory=DefaultFactory(),
             factory_lookup={
-                CPhase: TwoQubitBlockFactory(),
                 DispersiveMeasure: MeasureFactory(),
                 Reset: ResetFactory(),
                 Wait: WaitFactory(),
@@ -239,6 +240,7 @@ class VisualCircuitDescription:
             factory_lookup={
                 TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
                     CPhase: TwoQubitBlockFactory(),
+                    CNOT: TwoQubitCNOTBlockFactory(),
                     VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory()
                 }),
             }
