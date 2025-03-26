@@ -30,7 +30,7 @@ class DotComponent(IRectTransformComponent, IDrawComponent):
     """
     pivot: Vec2D
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ElementStyleSettings = field(default=StyleManager.read_config().dot_style)
+    style_settings: ElementStyleSettings = field(default_factory=lambda: StyleManager.read_config().dot_style)
 
     # region Interface Properties
     @property
@@ -67,7 +67,7 @@ class HexagonComponent(IRectTransformComponent, IDrawComponent):
     pivot: Vec2D
     rotation: float = field(default=0)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ElementStyleSettings = field(default=StyleManager.read_config().hexagon_style)
+    style_settings: ElementStyleSettings = field(default_factory=lambda: StyleManager.read_config().hexagon_style)
 
     # region Interface Properties
     @property
@@ -124,7 +124,7 @@ class ParkingComponent(IRectTransformComponent, IDrawComponent):
     """
     pivot: Vec2D
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ParkOperationStyleSettings = field(default=StyleManager.read_config().park_operation_style)
+    style_settings: ParkOperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().park_operation_style)
 
     # region Interface Properties
     @property
@@ -163,9 +163,9 @@ class TextComponent(IRectTransformComponent, IDrawComponent):
     """
     pivot: Vec2D
     text: str
-    color: str = field(default=StyleManager.read_config().element_text_style.font_color)
+    color: str = field(default_factory=lambda: StyleManager.read_config().element_text_style.font_color)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ElementTextStyleSettings = field(default=StyleManager.read_config().element_text_style)
+    style_settings: ElementTextStyleSettings = field(default_factory=lambda: StyleManager.read_config().element_text_style)
 
     # region Interface Properties
     @property

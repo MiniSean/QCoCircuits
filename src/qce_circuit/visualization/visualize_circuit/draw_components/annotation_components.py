@@ -30,7 +30,7 @@ class HorizontalVariableIndicator(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: IndicatorStyleSettings = field(default=StyleManager.read_config().indicator_style)
+    style_settings: IndicatorStyleSettings = field(default_factory=lambda: StyleManager.read_config().indicator_style)
     text_string: str = field(default=r'$\mathtt{{\delta}}$')
 
     # region Interface Properties
@@ -140,7 +140,7 @@ class RoundedRectangleHighlight(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: HighlightStyleSettings = field(default=StyleManager.read_config().highlight_style)
+    style_settings: HighlightStyleSettings = field(default_factory=lambda: StyleManager.read_config().highlight_style)
     text_string: str = field(default='x1')
 
     # region Interface Properties

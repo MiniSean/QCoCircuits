@@ -22,6 +22,10 @@ class ChannelStyleSettings:
     text_color: str
     line_width: float
     font_size: float
+    divider_width: float
+    state_description_width: float
+    enable_state_description: bool
+    enable_label_description: bool
 
 
 @dataclass(frozen=True)
@@ -94,6 +98,8 @@ class StyleSettings:
     width_line_small: float = field(default=1.0)
     width_line_icon: float = field(default=6.0)
     width_border: float = field(default=2.0)
+    width_divider: float = field(default=0.4)
+    width_state_description: float = field(default=0.7)
 
     # Radius
     radius_dot: float = field(default=0.1)
@@ -108,6 +114,10 @@ class StyleSettings:
     # Spacing
     rectilinear_margin: float = field(default=0.1)
 
+    # Header
+    enable_state_description: bool = field(default=True)
+    enable_label_description: bool = field(default=True)
+
     # region Class Properties
     @property
     def channel_style(self) -> ChannelStyleSettings:
@@ -116,6 +126,10 @@ class StyleSettings:
             text_color=self.color_text,
             line_width=self.width_line,
             font_size=self.font_size,
+            divider_width=self.width_divider,
+            state_description_width=self.width_state_description,
+            enable_state_description=self.enable_state_description,
+            enable_label_description=self.enable_label_description,
         )
 
     @property

@@ -436,7 +436,7 @@ class SquareNetZeroParkBlock(IRectTransformComponent, IDrawComponent):
     height: float
     width: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+    style_settings: ChannelStyleSettings = field(default_factory=lambda: StyleManager.read_config().channel_style)
 
     # region Interface Properties
     @property

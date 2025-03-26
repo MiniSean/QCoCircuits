@@ -27,7 +27,7 @@ class PolylineComponent(IDrawComponent):
     """
     vertices: List[Vec2D]
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: LineSettings = field(default=StyleManager.read_config().line_style)
+    style_settings: LineSettings = field(default_factory=lambda: StyleManager.read_config().line_style)
 
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
@@ -54,7 +54,7 @@ class GateOperationComponent(IDrawComponent):
     pivot0: Vec2D
     pivot1: Vec2D
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: GateOperationStyleSettings = field(default=StyleManager.read_config().gate_operation_style)
+    style_settings: GateOperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().gate_operation_style)
 
     # region Class Properties
     @property

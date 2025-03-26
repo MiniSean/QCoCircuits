@@ -338,7 +338,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
             end_time = operation.end_time
 
     return VisualCircuitDescription(
-        channel_width=end_time + 1.0,
+        channel_width=end_time,
         channel_height=1.0,
         channel_indices=channel_indices,
         channel_label_map=custom_channel_map,

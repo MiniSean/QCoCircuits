@@ -35,7 +35,7 @@ TransformAlignmentSubset = {TransformAlignment.MID_LEFT, TransformAlignment.MID_
 @dataclass(frozen=True)
 class DotComponent(IDrawComponent):
     base_transform: IRectTransform
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
@@ -54,7 +54,7 @@ class DotComponent(IDrawComponent):
 @dataclass(frozen=True)
 class CrossComponent(IDrawComponent):
     base_transform: IRectTransform
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Class Properties
     @property
@@ -117,7 +117,7 @@ class BlockRotationComponent(IDrawComponent):
     """
     base_transform: IRectTransform
     rotation_angle: RotationAngle = field(default=RotationAngle.THETA)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Class Properties
     @property
@@ -150,7 +150,7 @@ class BlockTwoQubitGate(IRectTransformComponent, IDrawComponent):
     single_block_height: ILengthStrategy
     single_block_width: ILengthStrategy
     alignment: TransformAlignmentSubset = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
 
     # region Interface Properties
     @property
@@ -244,7 +244,7 @@ class BlockTwoQubitVacant(BlockTwoQubitGate, IRectTransformComponent, IDrawCompo
     Data class, containing information to draw a two-qubit gate block
     that uses two pivots to comply with vertical alignment.
     """
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().vacant_operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().vacant_operation_style)
 
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
@@ -276,7 +276,7 @@ class BlockVerticalBarrier(IRectTransformComponent, IDrawComponent):
     that uses multiple pivots to comply with vertical alignment.
     """
     multiple_transforms: List[IRectTransform]
-    style_settings: IndicatorStyleSettings = field(default=StyleManager.read_config().indicator_style)
+    style_settings: IndicatorStyleSettings = field(default_factory=lambda: StyleManager.read_config().indicator_style)
 
     # region Interface Properties
     @property
