@@ -199,6 +199,7 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
+        minimalist: bool = True
         individual_component_factory = DrawComponentFactoryManager(
             default_factory=DefaultFactory(),
             factory_lookup={
@@ -206,13 +207,13 @@ class VisualCircuitDescription:
                 DispersiveMeasure: MeasureFactory(),
                 Reset: ResetFactory(),
                 Wait: WaitFactory(),
-                Rx180: Rx180Factory(),
-                Rx90: Rx90Factory(),
-                Rxm90: Rxm90Factory(),
+                Rx180: Rx180Factory(minimalist=minimalist),
+                Rx90: Rx90Factory(minimalist=minimalist),
+                Rxm90: Rxm90Factory(minimalist=minimalist),
                 RxTheta: RxThetaFactory(),
-                Ry180: Ry180Factory(),
-                Ry90: Ry90Factory(),
-                Rym90: Rym90Factory(),
+                Ry180: Ry180Factory(minimalist=minimalist),
+                Ry90: Ry90Factory(minimalist=minimalist),
+                Rym90: Rym90Factory(minimalist=minimalist),
                 RyTheta: RyThetaFactory(),
                 Rx180ef: Rx180efFactory(),
                 Rphi90: Rphi90Factory(),

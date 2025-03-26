@@ -1,6 +1,7 @@
 # -------------------------------------------
 # Module containing functionality for constructing draw components from operation class types.
 # -------------------------------------------
+from dataclasses import dataclass, field
 from typing import List
 from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
@@ -109,7 +110,9 @@ class ResetFactory(IOperationDrawComponentFactory[Reset, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Rx180, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -118,6 +121,14 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"{RotationAxis.X.value}",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
@@ -128,7 +139,9 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Rx90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -137,6 +150,14 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"+{RotationAxis.X.value}/2",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
@@ -147,7 +168,9 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Rxm90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -156,6 +179,14 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"-{RotationAxis.X.value}/2",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
@@ -185,7 +216,9 @@ class RxThetaFactory(IOperationDrawComponentFactory[RxTheta, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Ry180, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -194,6 +227,14 @@ class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"{RotationAxis.Y.value}",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
@@ -204,7 +245,9 @@ class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Ry90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -213,6 +256,14 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"+{RotationAxis.Y.value}/2",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
@@ -223,7 +274,9 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Rym90, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -232,6 +285,14 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"-{RotationAxis.Y.value}/2",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,
