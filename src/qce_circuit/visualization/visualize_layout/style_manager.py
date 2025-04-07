@@ -213,14 +213,18 @@ class StyleManager(metaclass=Singleton):
 
     @classmethod
     def read_config(cls) -> StyleSettings:
-        """:return: File-manager config file."""
-        # Check for temporary override
-        if hasattr(cls._override_stack, "current_override") and cls._override_stack.current_override:
-            return cls._override_stack.current_override
+        """
+        Reads the configuration settings, applying any temporary overrides if present.
+        It checks if there is a stack of overrides; if so, returns the most recent override.
+
+        :return: The effective StyleSettings, either from file or from temporary overrides.
+        """
+        if hasattr(cls._override_stack, "stack") and cls._override_stack.stack:
+            # Return the latest override if present
+            return cls._override_stack.stack[-1]
 
         path = get_yaml_file_path(filename=cls.CONFIG_NAME)
         if not os.path.exists(path):
-            # Construct config dict
             default_dict: dict = cls._default_config_object()
             write_yaml(
                 filename=cls.CONFIG_NAME,
@@ -233,18 +237,28 @@ class StyleManager(metaclass=Singleton):
     @contextmanager
     def temporary_override(cls, **overrides):
         """
-        Temporarily override specific style settings in memory.
-        Ensures that changes do not persist beyond the 'with' block.
-        """
-        try:
-            # Store the original settings
-            original_config = cls.read_config()
-            new_config_dict = original_config.__dict__.copy()
-            new_config_dict.update(overrides)  # Apply overrides
+        Temporarily override specific style settings in memory, supporting nested overrides.
+        The new override is based on the current configuration, which may already have been overridden.
 
-            # Set thread-local override
-            cls._override_stack.current_override = StyleSettings(**new_config_dict)
-            yield  # Execute block within overridden context
+        :param overrides: Keyword arguments for the configuration values to override.
+        :return: A context manager that yields control with the overridden configuration.
+        """
+        # Get the current configuration, which is either the top override or the default configuration.
+        current_config = cls.read_config()
+        new_config_dict = current_config.__dict__.copy()
+        new_config_dict.update(overrides)  # Apply new overrides
+
+        new_override = StyleSettings(**new_config_dict)
+
+        # Initialize the override stack if it doesn't exist.
+        if not hasattr(cls._override_stack, "stack"):
+            cls._override_stack.stack = []
+        # Push the new override onto the stack.
+        cls._override_stack.stack.append(new_override)
+
+        try:
+            yield
         finally:
-            cls._override_stack.current_override = None  # Restore original settings
+            # Pop the override from the stack to restore the previous configuration.
+            cls._override_stack.stack.pop()
     # endregion
