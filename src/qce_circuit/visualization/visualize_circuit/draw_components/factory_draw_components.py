@@ -322,7 +322,9 @@ class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
     # endregion
 
 
+@dataclass(frozen=True)
 class Rx180efFactory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
+    minimalist: bool = field(default=False)
 
     # region Interface Methods
     def construct(self, operation: Rx180, transform_constructor: ITransformConstructor) -> IDrawComponent:
@@ -331,6 +333,14 @@ class Rx180efFactory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        if self.minimalist:
+            return BlockHeaderBody(
+                pivot=transform.pivot,
+                height=transform.height,
+                alignment=transform.parent_alignment,
+                header_text=f"${RotationAxis.X.value}_{{12}}$",
+            )
+
         return BlockRotation(
             pivot=transform.pivot,
             height=transform.height,

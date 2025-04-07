@@ -1048,7 +1048,7 @@ class VirtualOptional(ICircuitOperation):
     Data class, containing single-qubit operation.
     Acts as a visualization wrapper.
     """
-    operation: SingleQubitOperation
+    operation: ICircuitOperation
 
     # region Interface Properties
     @property
@@ -1064,12 +1064,12 @@ class VirtualOptional(ICircuitOperation):
     @property
     def relation_link(self) -> IRelationLink[ICircuitOperation]:
         """:return: Description of relation to other circuit node."""
-        return self.operation.relation
+        return self.operation.relation_link
 
     @relation_link.setter
     def relation_link(self, link: IRelationLink[ICircuitOperation]):
         """:sets: Description of relation to other circuit node."""
-        self.operation.relation = link
+        self.operation.relation_link = link
 
     @property
     def start_time(self) -> float:

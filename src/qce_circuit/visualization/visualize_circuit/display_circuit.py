@@ -215,7 +215,7 @@ class VisualCircuitDescription:
                 Ry90: Ry90Factory(minimalist=minimalist),
                 Rym90: Rym90Factory(minimalist=minimalist),
                 RyTheta: RyThetaFactory(),
-                Rx180ef: Rx180efFactory(),
+                Rx180ef: Rx180efFactory(minimalist=minimalist),
                 Rphi90: Rphi90Factory(),
                 VirtualPhase: ZPhaseFactory(),
                 Identity: IdentityFactory(),
