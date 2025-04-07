@@ -1,5 +1,5 @@
 # -------------------------------------------
-# Module containing Stim noise-dresser factories for measurement operations.
+# Module containing Stim noise-dresser factories for additive pauli noise.
 # -------------------------------------------
 from typing import List, Tuple, Iterator
 import numpy as np
