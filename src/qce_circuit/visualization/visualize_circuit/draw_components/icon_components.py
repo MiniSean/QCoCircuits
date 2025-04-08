@@ -19,7 +19,7 @@ class IconMeasure(IDrawComponent):
     """
     center: Vec2D
     radius: float
-    style_settings: IconStyleSettings = field(default=StyleManager.read_config().icon_style)
+    style_settings: IconStyleSettings = field(default_factory=lambda: StyleManager.read_config().icon_style)
 
     # region Class Properties
     @property
@@ -89,11 +89,13 @@ class IconMeasure(IDrawComponent):
                 tail_width=self.arrow_thickness,
             ),
             color=self.style_settings.icon_color,
+            linewidth=self.circle_thickness,
         )
         arrow_base = patches.Circle(
             xy=self.circle_center.to_tuple(),
             radius=self.arrow_base_radius,
             color=self.style_settings.icon_color,
+            linewidth=self.circle_thickness,
         )
         # Apply patches
         axes.add_patch(arc)

@@ -39,7 +39,7 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
     rotation: float = field(default=0)
     background_type: BackgroundType = field(default=BackgroundType.X)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style_x)
+    style_settings: PlaquetteStyleSettings = field(default_factory=lambda: StyleManager.read_config().plaquette_style_x)
 
     # region Interface Properties
     @property
@@ -82,7 +82,7 @@ class TrianglePlaquette(IRectTransformComponent, IDrawComponent):
     rotation: float = field(default=0)
     background_type: BackgroundType = field(default=BackgroundType.X)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: PlaquetteStyleSettings = field(default=StyleManager.read_config().plaquette_style_x)
+    style_settings: PlaquetteStyleSettings = field(default_factory=lambda: StyleManager.read_config().plaquette_style_x)
 
     # region Interface Properties
     @property

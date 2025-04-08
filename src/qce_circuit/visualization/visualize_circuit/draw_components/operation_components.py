@@ -137,7 +137,7 @@ class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().vacant_operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().vacant_operation_style)
 
     # region Interface Properties
     @property
@@ -225,7 +225,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: OperationStyleSettings = field(default=StyleManager.read_config().operation_style)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
 
     # region Interface Properties
@@ -356,7 +356,7 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
     height: float
     width: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+    style_settings: ChannelStyleSettings = field(default_factory=lambda: StyleManager.read_config().channel_style)
 
     # region Interface Properties
     @property
@@ -436,7 +436,7 @@ class SquareNetZeroParkBlock(IRectTransformComponent, IDrawComponent):
     height: float
     width: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+    style_settings: ChannelStyleSettings = field(default_factory=lambda: StyleManager.read_config().channel_style)
 
     # region Interface Properties
     @property

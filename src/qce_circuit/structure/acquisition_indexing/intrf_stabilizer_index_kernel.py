@@ -16,6 +16,13 @@ class StateKey(Enum):
     STATE_1 = 1
     STATE_2 = 2
 
+    # region Class Methods
+    def __lt__(self, other):  # Add comparison for sorting if needed
+        if self.__class__ is other.__class__:
+            return self.value < other.value
+        return NotImplemented
+    # endregion
+
 
 class IStabilizerIndexingKernel(IIndexingKernel, metaclass=ABCMeta):
     """

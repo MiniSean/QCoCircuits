@@ -74,15 +74,20 @@ class ChannelHeader(IRectTransformComponent, IDrawComponent):
     height: ILengthStrategy
     channel_name: str
     state_description: str
-    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+    style_settings: ChannelStyleSettings = field(default_factory=lambda: StyleManager.read_config().channel_style)
 
     # region Interface Properties
     @property
     def rectilinear_transform(self) -> IRectTransform:
         """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        width: float = 0.0
+        if self.style_settings.enable_label_description:
+            width += self.channel_name_width + self.divider_width
+        if self.style_settings.enable_state_description:
+            width += self.state_description_width + self.divider_width
         return RectTransform(
             _pivot_strategy=DynamicPivot(lambda: self.pivot),
-            _width_strategy=DynamicLength(lambda: self.channel_name_width + self.state_description_width + 2 * self.divider_width),
+            _width_strategy=DynamicLength(lambda: width),
             _height_strategy=self.height,
             _parent_alignment=TransformAlignment.MID_RIGHT,
         )
@@ -91,7 +96,7 @@ class ChannelHeader(IRectTransformComponent, IDrawComponent):
     # region Class Properties
     @property
     def divider_width(self) -> float:
-        return 0.4
+        return self.style_settings.divider_width
 
     @property
     def channel_name_width(self) -> float:
@@ -99,7 +104,7 @@ class ChannelHeader(IRectTransformComponent, IDrawComponent):
 
     @property
     def state_description_width(self) -> float:
-        return 0.7
+        return self.style_settings.state_description_width
 
     @property
     def channel_name_pivot(self) -> Vec2D:
@@ -129,31 +134,35 @@ class ChannelHeader(IRectTransformComponent, IDrawComponent):
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
-        axes.text(
-            x=self.channel_name_pivot.x,
-            y=self.channel_name_pivot.y,
-            s=self.channel_name,
-            fontsize=self.style_settings.font_size,
-            color=self.style_settings.text_color,
-            ha='left',
-            va='center',
-        )
-        axes.text(
-            x=self.state_description_pivot.x,
-            y=self.state_description_pivot.y,
-            s=self.state_description,
-            fontsize=self.style_settings.font_size,
-            color=self.style_settings.text_color,
-            ha='center',
-            va='center',
-        )
-        axes.plot(
-            [self.center_divider.start.x, self.center_divider.end.x],
-            [self.center_divider.start.y, self.center_divider.end.y],
-            linestyle='-',
-            linewidth=self.style_settings.line_width,
-            color=self.style_settings.line_color,
-        )
+        if self.style_settings.enable_label_description:
+            axes.text(
+                x=self.channel_name_pivot.x,
+                y=self.channel_name_pivot.y,
+                s=self.channel_name,
+                fontsize=self.style_settings.font_size,
+                color=self.style_settings.text_color,
+                ha='right',
+                va='center',
+            )
+            axes.plot(
+                [self.center_divider.start.x, self.center_divider.end.x],
+                [self.center_divider.start.y, self.center_divider.end.y],
+                linestyle='-',
+                linewidth=self.style_settings.line_width,
+                color=self.style_settings.line_color,
+            )
+
+        if self.style_settings.enable_state_description:
+            axes.text(
+                x=self.state_description_pivot.x,
+                y=self.state_description_pivot.y,
+                s=self.state_description,
+                fontsize=self.style_settings.font_size,
+                color=self.style_settings.text_color,
+                ha='center',
+                va='center',
+            )
+
         axes.plot(
             [self.right_divider.start.x, self.right_divider.end.x],
             [self.right_divider.start.y, self.right_divider.end.y],
@@ -174,7 +183,7 @@ class ChannelBar(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(init=False, default=TransformAlignment.MID_LEFT)
-    style_settings: ChannelStyleSettings = field(default=StyleManager.read_config().channel_style)
+    style_settings: ChannelStyleSettings = field(default_factory=lambda: StyleManager.read_config().channel_style)
 
     # region Class Properties
     @property
