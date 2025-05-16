@@ -20,7 +20,7 @@ from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
 )
 
 
-class Surface13ARound8Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
+class Surface13ARound4Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
 
     # region Class Constructor
     def __init__(self):
@@ -103,7 +103,7 @@ class Surface13ARound8Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metacla
     # endregion
 
 
-class Surface13BRound8Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
+class Surface13BRound4Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
 
     # region Class Constructor
     def __init__(self):
@@ -353,10 +353,10 @@ if __name__ == '__main__':
     import matplotlib.pyplot as plt
 
     plot_stabilizer_specific_gate_sequences(
-        description=Surface13ARound8Code(),
+        description=Surface13ARound4Code(),
     )
     plot_stabilizer_specific_gate_sequences(
-        description=Surface13BRound8Code(),
+        description=Surface13BRound4Code(),
     )
     plot_stabilizer_specific_gate_sequences(
         description=Surface17Round8Code(),
