@@ -70,26 +70,27 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     @property
     def feedline_ids(self) -> List[IFeedlineID]:
         """:return: All feedline-ID's in device layer."""
-        return Surface17Layer().feedline_ids
+        return self._surface_code_layer.feedline_ids
     # endregion
 
     # region IConnectivityLayer Interface Properties
     @property
     def qubit_ids(self) -> List[IQubitID]:
         """:return: (All) qubit-ID's in device layer."""
-        return Surface17Layer().qubit_ids
+        return self._surface_code_layer.qubit_ids
 
     @property
     def edge_ids(self) -> List[IEdgeID]:
         """:return: (All) edge-ID's in device layer."""
-        return Surface17Layer().edge_ids
+        return self._surface_code_layer.edge_ids
     # endregion
 
     # region Class Constructor
-    def __init__(self, gate_sequences: List[GateSequenceLayer], parity_group_z: List[IParityGroup], parity_group_x: List[IParityGroup]):
+    def __init__(self, gate_sequences: List[GateSequenceLayer], parity_group_z: List[IParityGroup], parity_group_x: List[IParityGroup], surface_code_layer: ISurfaceCodeLayer = Surface17Layer()):
         self._gate_sequences: List[GateSequenceLayer] = gate_sequences
         self._parity_group_z: List[IParityGroup] = parity_group_z
         self._parity_group_x: List[IParityGroup] = parity_group_x
+        self._surface_code_layer: ISurfaceCodeLayer = surface_code_layer
     # endregion
 
     # region IGateSequenceLayer Interface Methods
@@ -124,21 +125,21 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
 
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""
-        return Surface17Layer().get_frequency_group_identifier(element=element)
+        return self._surface_code_layer.get_frequency_group_identifier(element=element)
     # endregion
 
     # region IDeviceLayer Interface Methods
     def get_connected_qubits(self, feedline: IFeedlineID) -> List[IQubitID]:
         """:return: Qubit-ID's connected to feedline-ID."""
-        return Surface17Layer().get_connected_qubits(feedline=feedline)
+        return self._surface_code_layer.get_connected_qubits(feedline=feedline)
 
     def get_connected_feedline(self, qubit: IQubitID) -> IFeedlineID:
         """:return: Feedline-ID's connected to qubit-ID."""
-        return Surface17Layer().get_connected_feedline(qubit=qubit)
+        return self._surface_code_layer.get_connected_feedline(qubit=qubit)
 
     def contains(self, element: Union[IFeedlineID, IQubitID, IEdgeID]) -> bool:
         """:return: Boolean, whether element is part of device layer or not."""
-        return Surface17Layer().contains(element=element)
+        return self._surface_code_layer.contains(element=element)
     # endregion
 
     # region IConnectivityLayer Interface Methods
@@ -147,9 +148,9 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
         Requires :param order: to be higher or equal to 1.
         :return: qubit neighbors separated by order. (order=1, nearest neighbors).
         """
-        return Surface17Layer().get_neighbors(qubit=qubit, order=order)
+        return self._surface_code_layer.get_neighbors(qubit=qubit, order=order)
 
     def get_edges(self, qubit: IQubitID) -> List[IEdgeID]:
         """:return: All qubit-to-qubit edges from qubit-ID."""
-        return Surface17Layer().get_edges(qubit=qubit)
+        return self._surface_code_layer.get_edges(qubit=qubit)
     # endregion
