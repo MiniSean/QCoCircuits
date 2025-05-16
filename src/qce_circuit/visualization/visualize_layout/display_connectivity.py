@@ -357,7 +357,6 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
             QubitIDObj('D9'): self.rotation + rotation_offset + hexagon_rotation,
         }
         if identifier in map_qubits:
-            print(identifier, map_qubits[identifier])
             return map_qubits[identifier]
         return self.rotation  # default
 
