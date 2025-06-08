@@ -143,7 +143,6 @@ class VisualConnectivityDescription:
                 )
             if len(parity_group.data_ids) == 2:
                 if mean_center:
-                    print(self.identifier_to_rotation(parity_group))
                     result.append(
                         DiagonalPlaquette(
                             pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
