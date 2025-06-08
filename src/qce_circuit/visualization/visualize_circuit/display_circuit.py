@@ -199,7 +199,7 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
-        minimalist: bool = True
+        minimalist: bool = False
         individual_component_factory = DrawComponentFactoryManager(
             default_factory=DefaultFactory(),
             factory_lookup={
@@ -319,7 +319,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
     # Construct custom channel map
     if custom_channel_map is None:
         custom_channel_map = {
-            channel_index: channel_index
+            channel_index: str(channel_index)
             for channel_index in channel_indices
         }
     channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
