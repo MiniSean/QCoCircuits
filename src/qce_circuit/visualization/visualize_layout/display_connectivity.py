@@ -3,10 +3,10 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from collections.abc import Iterable
-from typing import Dict, List
+from typing import Dict, List, Union
 import numpy as np
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
-from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer
+from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer, IParityGroup
 from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     GateSequenceLayer,
@@ -15,6 +15,7 @@ from qce_circuit.connectivity.generic_gate_sequence import IGenericSurfaceCodeLa
 from qce_circuit.utilities.geometric_definitions import (
     TransformAlignment,
     Vec2D,
+    Line2D,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_layout.style_manager import (
@@ -26,6 +27,7 @@ from qce_circuit.visualization.visualize_layout.style_manager import (
 from qce_circuit.visualization.visualize_layout.plaquette_components import (
     RectanglePlaquette,
     TrianglePlaquette,
+    DiagonalPlaquette,
 )
 from qce_circuit.visualization.visualize_layout.element_components import (
     DotComponent,
@@ -71,51 +73,97 @@ class VisualConnectivityDescription:
         diagonal_spacing: float = self.layout_spacing * np.sqrt(2)
 
         for parity_group in self.connectivity.parity_group_x:
+            ancilla_coordinates: Vec2D = self.identifier_to_pivot(identifier=parity_group.ancilla_id)
+            relative_coordinates: List[Vec2D] = [
+                self.identifier_to_pivot(identifier=qubit_id) - ancilla_coordinates
+                for qubit_id in parity_group.data_ids
+            ]
+            mean_relative_coordinates: Vec2D = Vec2D(
+                x=np.mean([v.x for v in relative_coordinates]),
+                y=np.mean([v.y for v in relative_coordinates]),
+            )
+            mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
+
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=StyleManager.read_config().plaquette_style_x,
                     )
                 )
             if len(parity_group.data_ids) == 2:
-                result.append(
-                    TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
-                        width=diagonal_spacing,
-                        height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
-                        alignment=TransformAlignment.MID_CENTER,
-                        style_settings=StyleManager.read_config().plaquette_style_x,
+                if mean_center:
+                    result.append(
+                        DiagonalPlaquette(
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=diagonal_spacing,
+                            height=diagonal_spacing,
+                            rotation=self.identifier_to_rotation(parity_group),
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_x,
+                        )
                     )
-                )
+                else:
+                    result.append(
+                        TrianglePlaquette(
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=diagonal_spacing,
+                            height=diagonal_spacing,
+                            rotation=self.identifier_to_rotation(parity_group),
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_x,
+                        )
+                    )
         for parity_group in self.connectivity.parity_group_z:
+            ancilla_coordinates: Vec2D = self.identifier_to_pivot(identifier=parity_group.ancilla_id)
+            relative_coordinates: List[Vec2D] = [
+                self.identifier_to_pivot(identifier=qubit_id) - ancilla_coordinates
+                for qubit_id in parity_group.data_ids
+            ]
+            mean_relative_coordinates: Vec2D = Vec2D(
+                x=np.mean([v.x for v in relative_coordinates]),
+                y=np.mean([v.y for v in relative_coordinates]),
+            )
+            mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
+
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=StyleManager.read_config().plaquette_style_z,
                     )
                 )
             if len(parity_group.data_ids) == 2:
-                result.append(
-                    TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
-                        width=diagonal_spacing,
-                        height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
-                        alignment=TransformAlignment.MID_CENTER,
-                        style_settings=StyleManager.read_config().plaquette_style_z,
+                if mean_center:
+                    result.append(
+                        DiagonalPlaquette(
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=diagonal_spacing,
+                            height=diagonal_spacing,
+                            rotation=self.identifier_to_rotation(parity_group),
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_z,
+                        )
                     )
-                )
+                else:
+                    result.append(
+                        TrianglePlaquette(
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=diagonal_spacing,
+                            height=diagonal_spacing,
+                            rotation=self.identifier_to_rotation(parity_group),
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_z,
+                        )
+                    )
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
@@ -193,33 +241,52 @@ class VisualConnectivityDescription:
             return map_qubits[identifier].rotate(np.deg2rad(self.rotation)) + self.pivot
         return self.pivot  # Default
 
-    def identifier_to_rotation(self, identifier: IQubitID) -> float:
+    def identifier_to_rotation(self, identifier: Union[IQubitID, IParityGroup]) -> float:
         """:return: Rotation based on (parity group) ancilla identifier."""
         rotation_offset: float = -45
         hexagon_rotation: float = 30
+        # Guard clause, if identifier is data qubit or not present in ancilla group
+        is_single_qubit_id: bool = isinstance(identifier, IQubitID)
+        if is_single_qubit_id:
+            if identifier in self.connectivity.data_qubit_ids:
+                return self.rotation + rotation_offset + hexagon_rotation
+            return self.rotation + rotation_offset
+        identifier: IParityGroup
 
-        # Surface-17 layout
-        map_qubits: Dict[IQubitID, float] = {
-            QubitIDObj('Z3'): self.rotation + rotation_offset + 0,
-            QubitIDObj('X4'): self.rotation + rotation_offset + 270,
-            QubitIDObj('Z4'): self.rotation + rotation_offset,
-            QubitIDObj('X3'): self.rotation + rotation_offset,
-            QubitIDObj('X2'): self.rotation + rotation_offset,
-            QubitIDObj('Z1'): self.rotation + rotation_offset,
-            QubitIDObj('X1'): self.rotation + rotation_offset + 90,
-            QubitIDObj('Z2'): self.rotation + rotation_offset + 180,
-            QubitIDObj('D1'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D2'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D3'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D4'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D5'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D6'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D7'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D8'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D9'): self.rotation + rotation_offset + hexagon_rotation,
-        }
-        if identifier in map_qubits:
-            return map_qubits[identifier]
+        # Guard clause, if weight-4 plaquette, return default
+        if len(identifier.data_ids) == 4:
+            return self.rotation + rotation_offset
+
+        ancilla_coordinates: Vec2D = self.identifier_to_pivot(identifier=identifier.ancilla_id)
+        relative_coordinates: List[Vec2D] = [
+            self.identifier_to_pivot(identifier=qubit_id) - ancilla_coordinates
+            for qubit_id in identifier.data_ids
+        ]
+        mean_relative_coordinates: Vec2D = Vec2D(
+            x=np.mean([v.x for v in relative_coordinates]),
+            y=np.mean([v.y for v in relative_coordinates]),
+        )
+        mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
+
+        if mean_center:  # Weight-2 diagonal
+            line = Line2D(start=relative_coordinates[0], end=relative_coordinates[1])
+            slope = (line.end.y - line.start.y) / (line.end.x - line.start.x)
+            if slope == +1.0:
+                pass
+            elif slope == -1.0:
+                rotation_offset += 90
+        else:  # Weight-2 triangle
+            if mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y > 0.0:
+                rotation_offset += 90
+            elif mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y < 0.0:
+                rotation_offset += 270
+            elif mean_relative_coordinates.x > 0.0 and mean_relative_coordinates.y == 0.0:
+                rotation_offset += 0
+            elif mean_relative_coordinates.x < 0.0 and mean_relative_coordinates.y == 0.0:
+                rotation_offset += 180
+
+        if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
+            return self.rotation + rotation_offset
         return self.rotation  # default
     # endregion
 
@@ -251,7 +318,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=style_settings,
                     )
@@ -262,7 +329,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=style_settings,
                     )
@@ -274,7 +341,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=style_settings,
                     )
@@ -285,7 +352,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
                         pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
                         width=diagonal_spacing,
                         height=diagonal_spacing,
-                        rotation=self.identifier_to_rotation(parity_group.ancilla_id),
+                        rotation=self.identifier_to_rotation(parity_group),
                         alignment=TransformAlignment.MID_CENTER,
                         style_settings=style_settings,
                     )
@@ -329,38 +396,6 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                 alignment=TransformAlignment.MID_CENTER,
             ))
         return result
-
-    def identifier_to_rotation(self, identifier: IQubitID) -> float:
-        """:return: Rotation based on (parity group) ancilla identifier."""
-        rotation_offset: float = -45
-        hexagon_rotation: float = 30
-
-        # Surface-17 layout
-        map_qubits: Dict[IQubitID, float] = {
-            QubitIDObj('Z3'): self.rotation + rotation_offset + 0,
-            QubitIDObj('X4'): self.rotation + rotation_offset + 270,
-            QubitIDObj('Z4'): self.rotation + rotation_offset - 90,
-            QubitIDObj('X3'): self.rotation + rotation_offset + 180,
-            QubitIDObj('X3'): self.rotation + rotation_offset + 90,
-            QubitIDObj('X2'): self.rotation + rotation_offset - 90,
-            QubitIDObj('Z1'): self.rotation + rotation_offset + 90,
-            QubitIDObj('X1'): self.rotation + rotation_offset + 90,
-            QubitIDObj('Z2'): self.rotation + rotation_offset + 180,
-            QubitIDObj('D1'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D2'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D3'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D4'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D5'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D6'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D7'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D8'): self.rotation + rotation_offset + hexagon_rotation,
-            QubitIDObj('D9'): self.rotation + rotation_offset + hexagon_rotation,
-        }
-        if identifier in map_qubits:
-            print(identifier, map_qubits[identifier])
-            return map_qubits[identifier]
-        return self.rotation  # default
-
     # endregion
 
 
