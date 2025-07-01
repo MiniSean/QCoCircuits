@@ -321,3 +321,46 @@ class EdgeIDObj(IEdgeID):
             qubit_id1=QubitIDObj(_id=qubit_id1),
         )
     # endregion
+
+
+@dataclass(frozen=True)
+class DirectedEdgeIDObj(EdgeIDObj, IEdgeID):
+    """
+    Data class, implementing (directed) IEdgeID interface.
+    """
+
+    # region Class Properties
+    @property
+    def from_qubit(self) -> IQubitID:
+        return self.qubit_id0
+
+    @property
+    def to_qubit(self) -> IQubitID:
+        return self.qubit_id1
+    # endregion
+
+    # region Class Methods
+    def __hash__(self):
+        """
+        Sorts individual qubit hashes such that the order is NOT maintained.
+        Making hash comparison independent of order.
+        """
+        return hash((self.qubit_id0.__hash__(), self.qubit_id1.__hash__()))
+
+    def __eq__(self, other):
+        if isinstance(other, IEdgeID):
+            # Edge is equal if they share the same qubit identifiers, order does not matter
+            return other.__hash__() == self.__hash__()
+        return False
+
+    def __repr__(self):
+        return f'<Directed-Edge-ID>{self.id}'
+
+    @classmethod
+    def from_qubit_ids(cls, qubit_id0: QID, qubit_id1: QID) -> 'DirectedEdgeIDObj':
+        """:return: Class method constructor based on qubit-IDs."""
+        return DirectedEdgeIDObj(
+            qubit_id0=QubitIDObj(_id=qubit_id0),
+            qubit_id1=QubitIDObj(_id=qubit_id1),
+        )
+    # endregion
