@@ -126,6 +126,12 @@ class IGateSequenceLayer(ABC):
 
     @property
     @abstractmethod
+    def gate_sequences(self) -> List[GateSequenceLayer]:
+        """:return: Array-like of gate sequences."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
     def involved_qubit_ids(self) -> List[IQubitID]:
         """:return: (Only) involved qubit-ID's in gate sequence."""
         raise InterfaceMethodException
