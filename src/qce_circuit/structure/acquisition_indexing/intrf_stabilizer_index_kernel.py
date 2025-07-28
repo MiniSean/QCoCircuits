@@ -41,6 +41,18 @@ class IStabilizerIndexingKernel(IIndexingKernel, metaclass=ABCMeta):
     def experiment_repetitions(self) -> int:
         """Number of repetitions for this experiment."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def include_heralded_initialization(self) -> bool:
+        """:return: Boolean whether, heralded initialization indices are included."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def include_qutrit_calibration_points(self) -> bool:
+        """:return: Boolean whether, qutrit (Default qubit) calibration point indices are included."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods

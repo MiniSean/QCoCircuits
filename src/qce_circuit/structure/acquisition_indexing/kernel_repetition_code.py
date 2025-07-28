@@ -151,6 +151,16 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
     def experiment_repetitions(self) -> int:
         """Number of repetitions for this experiment."""
         return self._repetitions
+
+    @property
+    def include_heralded_initialization(self) -> bool:
+        """:return: Boolean whether, heralded initialization indices are included."""
+        return self._heralded_initialization
+
+    @property
+    def include_qutrit_calibration_points(self) -> bool:
+        """:return: Boolean whether, qutrit (Default qubit) calibration point indices are included."""
+        return self._qutrit_calibration_points
     # endregion
 
     # region Class Properties
