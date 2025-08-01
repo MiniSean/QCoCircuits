@@ -38,6 +38,11 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
         return len(self._gate_sequences)
 
     @property
+    def gate_sequences(self) -> List[GateSequenceLayer]:
+        """:return: Array-like of gate sequences."""
+        return self._gate_sequences
+
+    @property
     def involved_qubit_ids(self) -> List[IQubitID]:
         """:return: (Only) involved qubit-ID's in gate sequence."""
         gate_sequence_layers: List[GateSequenceLayer] = [self.get_gate_sequence_at_index(layer_index) for layer_index in range(self.gate_sequence_count)]
