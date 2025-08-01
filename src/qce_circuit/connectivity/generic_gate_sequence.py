@@ -1,9 +1,9 @@
 # -------------------------------------------
 # Module containing interface and implementation of generic (Surface17) gate sequences.
 # -------------------------------------------
-from abc import ABCMeta
+from abc import ABCMeta, abstractmethod
 from typing import List, Union
-from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
+from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException, InterfaceMethodException
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.connectivity.intrf_channel_identifier import (
     IQubitID,
@@ -26,7 +26,16 @@ class IGenericSurfaceCodeLayer(ISurfaceCodeLayer, IGateSequenceLayer, metaclass=
     """
     Interface class, combining ISurfaceCodeLayer and IGateSequenceLayer.
     """
-    pass
+
+    # region Interface Methods
+    @abstractmethod
+    def get_gate_sequence_indices(self, parity_group: IParityGroup) -> List[int]:
+        """
+        :return: Array-like of gate-sequence indices corresponding to parity-group edge-ID's.
+        Returns an empty list if parity-group is not present.
+        """
+        raise InterfaceMethodException
+    # endregion
 
 
 class GenericSurfaceCode(IGenericSurfaceCodeLayer):
@@ -96,6 +105,26 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
         self._parity_group_z: List[IParityGroup] = parity_group_z
         self._parity_group_x: List[IParityGroup] = parity_group_x
         self._surface_code_layer: ISurfaceCodeLayer = surface_code_layer
+    # endregion
+
+    # region IGenericSurfaceCodeLayer Methods
+    def get_gate_sequence_indices(self, parity_group: IParityGroup) -> List[int]:
+        """
+        :return: Array-like of gate-sequence indices corresponding to parity-group edge-ID's.
+        Returns an empty list if parity-group is not present.
+        """
+        # Guard clause, if parity-group is not present, return empty list
+        if parity_group not in self.parity_group_x + self.parity_group_z:
+            return []
+        edge_ids: List[IEdgeID] = parity_group.edge_ids
+        result: List[int] = []
+        for gate_sequence_index, gate_sequence in enumerate(self.gate_sequences):
+            contains_any_edge: bool = any([edge_id in gate_sequence.edge_ids for edge_id in edge_ids])
+            if contains_any_edge:
+                result.append(gate_sequence_index)
+                continue
+
+        return result
     # endregion
 
     # region IGateSequenceLayer Interface Methods
