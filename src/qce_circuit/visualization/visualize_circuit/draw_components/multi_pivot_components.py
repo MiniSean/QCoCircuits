@@ -214,9 +214,11 @@ class BlockTwoQubitGate(IRectTransformComponent, IDrawComponent):
         # TODO: Add logic based on attributes
         DotComponent(
             base_transform=self.main_transform_block,
+            style_settings=self.style_settings,
         ).draw(axes=axes)
         DotComponent(
             base_transform=self.second_transform_block,
+            style_settings=self.style_settings,
         ).draw(axes=axes)
         # CrossComponent(
         #     base_transform=self.second_transform_block,
