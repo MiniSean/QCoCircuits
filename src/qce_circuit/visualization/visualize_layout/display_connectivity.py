@@ -200,15 +200,15 @@ class VisualConnectivityDescription:
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
             ParkingComponent(
-                pivot=self.identifier_to_pivot(identifier=operation.identifier),
+                pivot=self.identifier_to_pivot(identifier=operation.identifier) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.park_operations
         ]
         gate_components: List[IDrawComponent] = [
             GateOperationComponent(
-                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
-                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]) + self.pivot,
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.gate_operations
