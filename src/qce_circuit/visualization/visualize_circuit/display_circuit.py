@@ -154,6 +154,8 @@ class VisualCircuitDescription:
     composite_operations: List[ICircuitCompositeOperation]
     """Array of composite operations."""
     channel_label_map: Dict[int, str] = field(default_factory=dict)
+    minimalist: bool = field(default=False)
+    """Minimalist drawing style, passed to factories"""
 
     # region Class Properties
     @property
@@ -199,7 +201,7 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
-        minimalist: bool = False
+        minimalist: bool = self.minimalist
         individual_component_factory = DrawComponentFactoryManager(
             default_factory=DefaultFactory(),
             factory_lookup={
@@ -310,7 +312,7 @@ def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T
     return result
 
 
-def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None) -> VisualCircuitDescription:
+def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, minimalist: bool = False) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
     # Apply custom channel order
@@ -346,6 +348,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         channel_states=channel_states,
         operations=operations,
         composite_operations=circuit.composite_operations,
+        minimalist=minimalist,
     )
 
 
@@ -561,7 +564,7 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, **kwargs) -> IFigureAxesPair:
     if compact_visualization:
         with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
             with clear_lru_cache(RelationLink.get_start_time):
@@ -570,6 +573,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
                         circuit=circuit,
                         custom_channel_order=channel_order,
                         custom_channel_map=channel_map,
+                        minimalist=minimalist_visualization,
                     ),
                     **kwargs
                 )
@@ -580,6 +584,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
             circuit=circuit,
             custom_channel_order=channel_order,
             custom_channel_map=channel_map,
+            minimalist=minimalist_visualization,
         ),
         **kwargs
     )
