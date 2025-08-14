@@ -66,6 +66,7 @@ class VisualConnectivityDescription:
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
     rotation: float = field(default=-45)
+    include_element_labels: bool = field(default=True)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
@@ -173,11 +174,12 @@ class VisualConnectivityDescription:
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             ))
-            result.append(TextComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-                text=qubit_id.id,
-                alignment=TransformAlignment.MID_CENTER,
-            ))
+            if self.include_element_labels:
+                result.append(TextComponent(
+                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    text=qubit_id.id,
+                    alignment=TransformAlignment.MID_CENTER,
+                ))
         return result
 
     def get_line_components(self) -> List[IDrawComponent]:
@@ -390,11 +392,12 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                     zorder=style_setting.zorder_element,
                 ),
             ))
-            result.append(TextComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-                text=qubit_id.id,
-                alignment=TransformAlignment.MID_CENTER,
-            ))
+            if self.include_element_labels:
+                result.append(TextComponent(
+                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    text=qubit_id.id,
+                    alignment=TransformAlignment.MID_CENTER,
+                ))
         return result
     # endregion
 
@@ -439,7 +442,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -447,6 +450,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     Allowing for extra flexibility.
     :param description: Generic surface code layer definition including parity-groups and gate sequence.
     :param kwargs: Keyword arguments passed to figure constructor.
+    :param include_element_labels: Boolean to enable or disable element label text.
     :return: Figure and Axes pair.
     """
     sequence_count: int = description.gate_sequence_count
@@ -459,7 +463,8 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
         descriptor: AllGreyVisualConnectivityDescription = AllGreyVisualConnectivityDescription(
             connectivity=Surface17Layer(),
             gate_sequence=description.get_gate_sequence_at_index(i),
-            layout_spacing=1.0
+            layout_spacing=1.0,
+            include_element_labels=include_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         fig, ax = plot_layout_description(descriptor, **kwargs)
@@ -467,7 +472,8 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
         descriptor: StabilizerGroupVisualConnectivityDescription = StabilizerGroupVisualConnectivityDescription(
             connectivity=description,
             gate_sequence=description.get_gate_sequence_at_index(i),
-            layout_spacing=1.0
+            layout_spacing=1.0,
+            include_element_labels=include_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         plot_layout_description(descriptor, **kwargs)
