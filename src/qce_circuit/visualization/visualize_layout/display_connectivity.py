@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from collections.abc import Iterable
 from typing import Dict, List, Union
 import numpy as np
+import math
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer, IParityGroup
 from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
@@ -270,21 +271,22 @@ class VisualConnectivityDescription:
         )
         mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
 
+        absolute_tolerance: float = 1e-9
         if mean_center:  # Weight-2 diagonal
             line = Line2D(start=relative_coordinates[0], end=relative_coordinates[1])
             slope = (line.end.y - line.start.y) / (line.end.x - line.start.x)
-            if slope == +1.0:
+            if math.isclose(slope, +1.0, abs_tol=absolute_tolerance):
                 pass
-            elif slope == -1.0:
+            elif math.isclose(slope, -1.0, abs_tol=absolute_tolerance):
                 rotation_offset += 90
         else:  # Weight-2 triangle
-            if mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y > 0.0:
+            if math.isclose(mean_relative_coordinates.x, 0.0, abs_tol=absolute_tolerance) and mean_relative_coordinates.y > 0.0:
                 rotation_offset += 90
-            elif mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y < 0.0:
+            elif math.isclose(mean_relative_coordinates.x, 0.0, abs_tol=absolute_tolerance) and mean_relative_coordinates.y < 0.0:
                 rotation_offset += 270
-            elif mean_relative_coordinates.x > 0.0 and mean_relative_coordinates.y == 0.0:
+            elif mean_relative_coordinates.x > 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 0
-            elif mean_relative_coordinates.x < 0.0 and mean_relative_coordinates.y == 0.0:
+            elif mean_relative_coordinates.x < 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 180
 
         if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
