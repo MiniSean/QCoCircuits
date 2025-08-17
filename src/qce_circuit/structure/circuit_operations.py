@@ -943,7 +943,7 @@ class Barrier(ICircuitOperation):
     # endregion
 
 
-@dataclass(frozen=False, unsafe_hash=True)
+@dataclass(frozen=False)
 class VirtualQECOperation(ICircuitOperation):
     """
     Virtual QEC-block operation.
@@ -1022,6 +1022,12 @@ class VirtualQECOperation(ICircuitOperation):
         :return: Modified self.
         """
         return self
+    # endregion
+
+    # region Class Methods
+    def __hash__(self):
+        """Overwrites @dataclass behaviour. Circuit operation requires hash based on instance identity."""
+        return id(self)
     # endregion
 
 
