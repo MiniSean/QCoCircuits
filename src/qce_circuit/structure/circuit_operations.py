@@ -864,7 +864,7 @@ class Barrier(ICircuitOperation):
     """
     qubit_indices: List[int] = field(init=True)
     relation: IRelationLink[ICircuitOperation] = field(init=False, default_factory=RelationLink.no_relation)
-    duration_strategy: IDurationStrategy = field(init=False, default=FixedDurationStrategy(duration=0.5))
+    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.BARRIER))
 
     # region Interface Properties
     @property

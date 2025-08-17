@@ -32,6 +32,7 @@ class GlobalRegistryKey(Enum):
     FLUX = 'default_allocated_flux_duration'
     RESET = 'default_allocated_reset_duration'
     QEC_BLOCK = 'default_allocated_qec_duration'
+    BARRIER = 'default_allocated_barrier_duration'
 
 
 @dataclass(frozen=True)
@@ -45,6 +46,7 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
         GlobalRegistryKey.FLUX.value: 1.0,
         GlobalRegistryKey.RESET.value: 2.0,
         GlobalRegistryKey.QEC_BLOCK.value: 2.0,
+        GlobalRegistryKey.BARRIER.value: 0.5,
     })
 
     # region Class Methods
