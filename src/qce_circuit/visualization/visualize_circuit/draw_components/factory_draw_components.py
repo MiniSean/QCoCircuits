@@ -35,7 +35,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualOptional,
     VirtualInjectedError,
     VirtualWait,
-    VirtualColorOverwrite,
+    IColorOverwrite,
     VirtualQECOperation,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
@@ -700,7 +700,7 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # endregion
 
 
-class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOverwrite, IDrawComponent]):
+class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[IColorOverwrite, IDrawComponent]):
     """
     Behaviour class, implementing construction of draw component with additional requirements.
     """
@@ -711,7 +711,7 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOv
     # endregion
 
     # region Interface Methods
-    def construct(self, operation: VirtualColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
+    def construct(self, operation: IColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
         with StyleManager.temporary_override(**dict(
             color_text=operation.color_overwrite,
@@ -720,7 +720,7 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOv
             color_outline_dim=operation.color_overwrite,
         )):
             draw_component: IDrawComponent = self._factory_manager.construct(
-                operation=operation.operation,
+                operation=operation.wrapped_operation,
                 transform_constructor=transform_constructor,
             )
         return draw_component

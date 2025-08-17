@@ -41,8 +41,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=2,
         ))
         circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=2,
+            _control_qubit_index=8,
+            _target_qubit_index=2,
         ))
         circuit.add(VirtualPhase(
             qubit_index=2,
@@ -85,8 +85,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=8,
         ))
         circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=2,
+            _control_qubit_index=8,
+            _target_qubit_index=2,
         ))
         # Park
         circuit.add(VirtualPhase(
@@ -97,8 +97,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         ))
 
         circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=0,
+            _control_qubit_index=8,
+            _target_qubit_index=0,
         ))
         # Park
         circuit.add(VirtualPhase(
@@ -149,8 +149,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=0,
         ))
         circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=2,
+            _control_qubit_index=8,
+            _target_qubit_index=2,
         ))
         # Park
         circuit.add(VirtualPhase(
@@ -161,8 +161,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         ))
 
         circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=0,
+            _control_qubit_index=8,
+            _target_qubit_index=0,
         ))
         # Park
         circuit.add(VirtualPhase(
@@ -215,8 +215,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=0,
         ))
         sub_circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=2,
+            _control_qubit_index=8,
+            _target_qubit_index=2,
         ))
         # Park
         sub_circuit.add(VirtualPhase(
@@ -227,8 +227,8 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
         ))
 
         sub_circuit.add(CPhase(
-            control_qubit_index=8,
-            target_qubit_index=0,
+            _control_qubit_index=8,
+            _target_qubit_index=0,
         ))
         # Park
         sub_circuit.add(VirtualPhase(
@@ -324,12 +324,12 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=qubit_ancilla_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla_index,
-            target_qubit_index=qubit_data1_index,
+            _control_qubit_index=qubit_ancilla_index,
+            _target_qubit_index=qubit_data1_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla_index,
-            target_qubit_index=qubit_data2_index,
+            _control_qubit_index=qubit_ancilla_index,
+            _target_qubit_index=qubit_data2_index,
         ))
         relation: RelationLink = RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         individual_parity_circuit.add(Rym90(
@@ -405,25 +405,25 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             qubit_index=qubit_ancilla1_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla1_index,
-            target_qubit_index=qubit_data2_index,
+            _control_qubit_index=qubit_ancilla1_index,
+            _target_qubit_index=qubit_data2_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla1_index,
-            target_qubit_index=qubit_data1_index,
+            _control_qubit_index=qubit_ancilla1_index,
+            _target_qubit_index=qubit_data1_index,
         ))
         individual_parity_circuit.add(Rym90(
             qubit_index=qubit_ancilla1_index,
         ))
         relation: RelationLink = RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla2_index,
-            target_qubit_index=qubit_data3_index,
+            _control_qubit_index=qubit_ancilla2_index,
+            _target_qubit_index=qubit_data3_index,
             relation=relation,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla2_index,
-            target_qubit_index=qubit_data2_index,
+            _control_qubit_index=qubit_ancilla2_index,
+            _target_qubit_index=qubit_data2_index,
         ))
 
         repeated_parity_circuit: DeclarativeCircuit = DeclarativeCircuit(
@@ -746,22 +746,22 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.JOINED_START)
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla1_index,
-            target_qubit_index=qubit_data2_index,
+            _control_qubit_index=qubit_ancilla1_index,
+            _target_qubit_index=qubit_data2_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla3_index,
-            target_qubit_index=qubit_data4_index,
+            _control_qubit_index=qubit_ancilla3_index,
+            _target_qubit_index=qubit_data4_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla1_index,
-            target_qubit_index=qubit_data1_index,
+            _control_qubit_index=qubit_ancilla1_index,
+            _target_qubit_index=qubit_data1_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla3_index,
-            target_qubit_index=qubit_data5_index,
+            _control_qubit_index=qubit_ancilla3_index,
+            _target_qubit_index=qubit_data5_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(Rym90(
@@ -782,22 +782,22 @@ class DeclarativeCircuitTestCase(unittest.TestCase):
             relation=relation
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla2_index,
-            target_qubit_index=qubit_data3_index,
+            _control_qubit_index=qubit_ancilla2_index,
+            _target_qubit_index=qubit_data3_index,
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla4_index,
-            target_qubit_index=qubit_data1_index,
+            _control_qubit_index=qubit_ancilla4_index,
+            _target_qubit_index=qubit_data1_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla2_index,
-            target_qubit_index=qubit_data2_index,
+            _control_qubit_index=qubit_ancilla2_index,
+            _target_qubit_index=qubit_data2_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(CPhase(
-            control_qubit_index=qubit_ancilla4_index,
-            target_qubit_index=qubit_data4_index,
+            _control_qubit_index=qubit_ancilla4_index,
+            _target_qubit_index=qubit_data4_index,
             relation=RelationLink(individual_parity_circuit.get_last_entry(), RelationType.FOLLOWED_BY)
         ))
         individual_parity_circuit.add(Rym90(

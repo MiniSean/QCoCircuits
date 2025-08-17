@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualPhase,
     Rphi90,
     CPhase,
+    ITwoQubitOperation,
     TwoQubitOperation,
     DispersiveMeasure,
     Identity,
@@ -35,6 +36,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualOptional,
     VirtualInjectedError,
     VirtualColorOverwrite,
+    VirtualTwoQubitColorOverwrite,
     VirtualQECOperation,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
@@ -243,9 +245,10 @@ class VisualCircuitDescription:
         factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
             individual_component_factory=individual_component_factory,
             factory_lookup={
-                TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
+                ITwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
                     CPhase: TwoQubitBlockFactory(),
-                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory()
+                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
+                    VirtualTwoQubitColorOverwrite: VirtualColorOverwriteFactory(callback_draw_manager=callback_draw_manager),
                 }),
             }
         )
@@ -665,8 +668,8 @@ if __name__ == '__main__':
         qubit_index=0,
     ))
     sub_circuit.add(CPhase(
-        control_qubit_index=0,
-        target_qubit_index=1,
+        _control_qubit_index=0,
+        _target_qubit_index=1,
     ))
     sub_circuit.add(Rx180(
         qubit_index=0,
