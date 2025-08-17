@@ -1413,6 +1413,23 @@ class VirtualColorOverwrite(ICircuitOperation, IColorOverwrite):
         return self._color_overwrite
     # endregion
 
+    # region Class Constructor
+    def __new__(cls, operation: ICircuitOperation, _color_overwrite: str = "k"):
+        """
+        Factory method to select the correct wrapper class at instantiation.
+        """
+        # Check if the operation is a two-qubit operation.
+        if isinstance(operation, ITwoQubitOperation):
+            # If so, instantiate and return the specialized two-qubit wrapper.
+            return VirtualTwoQubitColorOverwrite(
+                operation=operation,
+                _color_overwrite=_color_overwrite
+            )
+        else:
+            # Otherwise, proceed with the standard instantiation of this class.
+            return super().__new__(cls)
+    # endregion
+
     # region Interface Methods
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualColorOverwrite':
         """
