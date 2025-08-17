@@ -1375,7 +1375,8 @@ class VirtualColorOverwrite(ICircuitOperation):
         return VirtualColorOverwrite(
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            )
+            ),
+            color_overwrite=self.color_overwrite,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
