@@ -688,7 +688,10 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # region Interface Methods
     def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(line_style_border='--', color_background="#ff9999")):
+        with StyleManager.temporary_override(**dict(
+                line_style_border=operation.line_style_border_overwrite,
+                color_background=operation.color_background_overwrite,
+        )):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.operation,
                 transform_constructor=transform_constructor,

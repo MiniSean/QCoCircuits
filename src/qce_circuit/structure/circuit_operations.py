@@ -1215,6 +1215,8 @@ class VirtualInjectedError(ICircuitOperation):
     Acts as a visualization wrapper for injected errors.
     """
     operation: SingleQubitOperation
+    line_style_border_overwrite: str = field(default="--")
+    color_background_overwrite: str = field(default="#ff9999")
 
     # region Interface Properties
     @property
@@ -1258,7 +1260,9 @@ class VirtualInjectedError(ICircuitOperation):
         return VirtualInjectedError(
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            )
+            ),
+            line_style_border_overwrite=self.line_style_border_overwrite,
+            color_background_overwrite=self.color_background_overwrite,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
