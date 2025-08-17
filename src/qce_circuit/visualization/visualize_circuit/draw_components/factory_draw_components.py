@@ -714,6 +714,7 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOv
             color_text=operation.color_overwrite,
             color_icon=operation.color_overwrite,
             color_outline=operation.color_overwrite,
+            color_outline_dim=operation.color_overwrite,
         )):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.operation,
