@@ -31,6 +31,7 @@ class GlobalRegistryKey(Enum):
     MICROWAVE = 'default_allocated_microwave_duration'
     FLUX = 'default_allocated_flux_duration'
     RESET = 'default_allocated_reset_duration'
+    QEC_BLOCK = 'default_allocated_qec_duration'
 
 
 @dataclass(frozen=True)
@@ -43,6 +44,7 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
         GlobalRegistryKey.MICROWAVE.value: 1.0,
         GlobalRegistryKey.FLUX.value: 1.0,
         GlobalRegistryKey.RESET.value: 2.0,
+        GlobalRegistryKey.QEC_BLOCK.value: 2.0,
     })
 
     # region Class Methods

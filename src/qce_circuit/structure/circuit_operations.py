@@ -944,6 +944,88 @@ class Barrier(ICircuitOperation):
 
 
 @dataclass(frozen=False, unsafe_hash=True)
+class VirtualQECOperation(ICircuitOperation):
+    """
+    Virtual QEC-block operation.
+    """
+    qubit_indices: List[int] = field(init=True)
+    relation: IRelationLink[ICircuitOperation] = field(default_factory=RelationLink.no_relation)
+    duration_strategy: IDurationStrategy = field(default=GlobalDurationStrategy(GlobalRegistryKey.QEC_BLOCK))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=qubit_index, _channel=QubitChannel.ALL)
+            for qubit_index in self.qubit_indices
+        ]
+
+    @property
+    def nr_of_repetitions(self) -> int:
+        """:return: Number of repetitions for this object."""
+        return 1
+
+    @property
+    def relation_link(self) -> IRelationLink[ICircuitOperation]:
+        """:return: Description of relation to other circuit node."""
+        return self.relation
+
+    @relation_link.setter
+    def relation_link(self, link: IRelationLink[ICircuitOperation]):
+        """:sets: Description of relation to other circuit node."""
+        self.relation = link
+
+    @property
+    def start_time(self) -> float:
+        """:return: Start time [a.u.]."""
+        return self.relation_link.get_start_time(duration=self.duration)
+
+    @property
+    def duration(self) -> float:
+        """:return: Duration [ns]."""
+        return self.duration_strategy.get_variable_duration(task=self)
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualQECOperation':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualQECOperation(
+            qubit_indices=self.qubit_indices,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            duration_strategy=self.duration_strategy,
+        )
+
+    def apply_modifiers_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies modifiers inplace.
+        Applies modifiers such as repetition and state-control.
+        :return: Modified self.
+        """
+        return self
+
+    def decomposed_operations(self) -> List[ICircuitOperation]:
+        """
+        Functions similar to a 'flatten' operation.
+        Mostly intended for composite-operations such that they can apply repetition and state-dependent registries.
+        :return: Array-like of decomposed operations.
+        """
+        return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
 class VirtualVacant(SingleQubitOperation, ICircuitOperation):
     """
     Virtual vacant operation (behaves as Wait).

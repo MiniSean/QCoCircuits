@@ -36,6 +36,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualInjectedError,
     VirtualWait,
     VirtualColorOverwrite,
+    VirtualQECOperation,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -64,6 +65,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_com
     BlockTwoQubitGate,
     BlockVerticalBarrier,
     BlockTwoQubitVacant,
+    BlockQEC,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -629,6 +631,24 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
             height=transform.height,
             alignment=transform.parent_alignment,
             text_string=f'x{operation.nr_of_repetitions}'
+        )
+    # endregion
+
+
+class VirtualQECBlockFactory(IOperationDrawComponentFactory[VirtualQECOperation, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualQECOperation, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transforms: List[IRectTransform] = [
+            transform_constructor.construct_transform(
+                identifier=ChannelIdentifier(_id=qubit_index, _channel=QubitChannel.ALL),
+                time_component=operation,
+            )
+            for qubit_index in operation.qubit_indices
+        ]
+        return BlockQEC(
+            multiple_transforms=transforms,
         )
     # endregion
 

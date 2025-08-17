@@ -327,3 +327,57 @@ class BlockVerticalBarrier(IRectTransformComponent, IDrawComponent):
         )
         return axes
     # endregion
+
+
+@dataclass(frozen=True)
+class BlockQEC(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing information to draw a vertical barrier block
+    that uses multiple pivots to comply with vertical alignment.
+    """
+    multiple_transforms: List[IRectTransform]
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return ITransformConstructor.combine_transforms(self.rectilinear_transforms)
+    # endregion
+
+    # region Class Properties
+    @property
+    def rectilinear_transforms(self) -> List[IRectTransform]:
+        return self.multiple_transforms
+
+    @property
+    def text_center(self) -> Vec2D:
+        return self.rectilinear_transform.center_pivot
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+
+        rectangle = patches.Rectangle(
+            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+            width=self.rectilinear_transform.width,
+            height=self.rectilinear_transform.height,
+            linewidth=self.style_settings.border_width,
+            linestyle=self.style_settings.border_line_style,
+            edgecolor=self.style_settings.border_color,
+            facecolor=self.style_settings.background_color,
+            zorder=-1,
+        )
+        axes.add_patch(rectangle)
+        axes.text(
+            x=self.text_center.x,
+            y=self.text_center.y,
+            s="QEC",
+            fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='center',
+            va='center',
+        )
+        return axes
+    # endregion
