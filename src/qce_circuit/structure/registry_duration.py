@@ -31,6 +31,8 @@ class GlobalRegistryKey(Enum):
     MICROWAVE = 'default_allocated_microwave_duration'
     FLUX = 'default_allocated_flux_duration'
     RESET = 'default_allocated_reset_duration'
+    QEC_BLOCK = 'default_allocated_qec_duration'
+    BARRIER = 'default_allocated_barrier_duration'
 
 
 @dataclass(frozen=True)
@@ -43,6 +45,8 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
         GlobalRegistryKey.MICROWAVE.value: 1.0,
         GlobalRegistryKey.FLUX.value: 1.0,
         GlobalRegistryKey.RESET.value: 2.0,
+        GlobalRegistryKey.QEC_BLOCK.value: 2.0,
+        GlobalRegistryKey.BARRIER.value: 0.5,
     })
 
     # region Class Methods
@@ -96,7 +100,12 @@ def temporary_override_get_registry_at(temp_registry: Dict[GlobalRegistryKey, fl
     original_method = GlobalDurationRegistry.get_registry_at
 
     def temp_get_registry_at(self, key: GlobalRegistryKey) -> Optional[float]:
-        return temp_registry.get(key, None)
+        extended_lookup: Dict[str, float] = GlobalDurationRegistry()._global_registry
+        # Update
+        for _key, _value in temp_registry.items():
+            extended_lookup[_key.value] = _value
+
+        return extended_lookup.get(key.value, None)
 
     try:
         GlobalDurationRegistry.get_registry_at = temp_get_registry_at

@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     VirtualPhase,
     Rphi90,
     CPhase,
+    ITwoQubitOperation,
     TwoQubitOperation,
     DispersiveMeasure,
     Identity,
@@ -35,6 +36,8 @@ from qce_circuit.structure.circuit_operations import (
     VirtualOptional,
     VirtualInjectedError,
     VirtualColorOverwrite,
+    VirtualTwoQubitColorOverwrite,
+    VirtualQECOperation,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -116,6 +119,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     VirtualOptionalFactory,
     VirtualInjectedErrorFactory,
     VirtualColorOverwriteFactory,
+    VirtualQECBlockFactory,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.factory_multi_draw_components import \
     MultiTwoQubitBlockFactory
@@ -154,6 +158,8 @@ class VisualCircuitDescription:
     composite_operations: List[ICircuitCompositeOperation]
     """Array of composite operations."""
     channel_label_map: Dict[int, str] = field(default_factory=dict)
+    minimalist: bool = field(default=False)
+    """Minimalist drawing style, passed to factories"""
 
     # region Class Properties
     @property
@@ -199,7 +205,7 @@ class VisualCircuitDescription:
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
-        minimalist: bool = False
+        minimalist: bool = self.minimalist
         individual_component_factory = DrawComponentFactoryManager(
             default_factory=DefaultFactory(),
             factory_lookup={
@@ -226,6 +232,7 @@ class VisualCircuitDescription:
                 VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
                 VirtualEmpty: VirtualEmptyFactory(),
                 VirtualWait: VirtualWaitFactory(),
+                VirtualQECOperation: VirtualQECBlockFactory(),
             }
         )
         callback_draw_manager = deepcopy(individual_component_factory)
@@ -238,9 +245,10 @@ class VisualCircuitDescription:
         factory_manager: BulkDrawComponentFactoryManager = BulkDrawComponentFactoryManager(
             individual_component_factory=individual_component_factory,
             factory_lookup={
-                TwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
+                ITwoQubitOperation: MultiTwoQubitBlockFactory(factory_lookup={
                     CPhase: TwoQubitBlockFactory(),
-                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory()
+                    VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
+                    VirtualTwoQubitColorOverwrite: VirtualColorOverwriteFactory(callback_draw_manager=callback_draw_manager),
                 }),
             }
         )
@@ -310,7 +318,7 @@ def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T
     return result
 
 
-def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None) -> VisualCircuitDescription:
+def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, minimalist: bool = False) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
     # Apply custom channel order
@@ -346,6 +354,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         channel_states=channel_states,
         operations=operations,
         composite_operations=circuit.composite_operations,
+        minimalist=minimalist,
     )
 
 
@@ -561,7 +570,7 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, **kwargs) -> IFigureAxesPair:
     if compact_visualization:
         with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
             with clear_lru_cache(RelationLink.get_start_time):
@@ -570,6 +579,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
                         circuit=circuit,
                         custom_channel_order=channel_order,
                         custom_channel_map=channel_map,
+                        minimalist=minimalist_visualization,
                     ),
                     **kwargs
                 )
@@ -580,6 +590,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
             circuit=circuit,
             custom_channel_order=channel_order,
             custom_channel_map=channel_map,
+            minimalist=minimalist_visualization,
         ),
         **kwargs
     )
@@ -657,8 +668,8 @@ if __name__ == '__main__':
         qubit_index=0,
     ))
     sub_circuit.add(CPhase(
-        control_qubit_index=0,
-        target_qubit_index=1,
+        _control_qubit_index=0,
+        _target_qubit_index=1,
     ))
     sub_circuit.add(Rx180(
         qubit_index=0,

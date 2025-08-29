@@ -21,6 +21,7 @@ from qce_circuit.utilities.geometric_definitions import (
 from qce_circuit.visualization.visualize_circuit.style_manager import (
     StyleManager,
     OperationStyleSettings,
+    IconStyleSettings,
     ChannelStyleSettings,
 )
 
@@ -226,6 +227,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
+    icon_style_settings: IconStyleSettings = field(default_factory=lambda: StyleManager.read_config().icon_style)
     _base_block: RectangleBlock = field(init=False)
 
     # region Interface Properties
@@ -246,6 +248,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
         return IconMeasure(
             center=icon_center,
             radius=icon_radius,
+            style_settings=self.icon_style_settings
         )
     # endregion
 

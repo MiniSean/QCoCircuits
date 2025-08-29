@@ -183,8 +183,8 @@ class ChannelTwoQubitVacantMask(IOperationMask[TMaskedTwoQubitOperation, Virtual
     def construct_operation_mask(self, masked_operation: TMaskedTwoQubitOperation) -> VirtualTwoQubitVacant:
         """:return: Newly constructed 'mask'-operation based on masked-operation."""
         return VirtualTwoQubitVacant(
-            control_qubit_index=masked_operation.control_qubit_index,
-            target_qubit_index=masked_operation.target_qubit_index,
+            _control_qubit_index=masked_operation.control_qubit_index,
+            _target_qubit_index=masked_operation.target_qubit_index,
             relation=masked_operation.relation_link,
             duration_strategy=masked_operation.duration_strategy,
         )

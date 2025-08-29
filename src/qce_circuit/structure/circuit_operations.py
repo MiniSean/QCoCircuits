@@ -1,14 +1,17 @@
 # -------------------------------------------
 # Module describing the declarative operations.
 # -------------------------------------------
+from abc import ABC, abstractmethod
 from dataclasses import dataclass, field
 from typing import List, Optional, Dict
+from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.structure.intrf_circuit_operation import (
     QubitChannel,
     IRelationLink,
     RelationLink,
     ChannelIdentifier,
     ICircuitOperation,
+    ITwoQubitOperation,
 )
 from qce_circuit.structure.intrf_acquisition_operation import (
     IAcquisitionOperation,
@@ -594,16 +597,16 @@ class Rphi90(SingleQubitOperation, ICircuitOperation):
 
 
 @dataclass(frozen=False, unsafe_hash=True)
-class TwoQubitOperation(ICircuitOperation):
+class TwoQubitOperation(ITwoQubitOperation):
     """
     Minimal operation describes two-qubit implementation of ICircuitOperation.
     """
-    control_qubit_index: int = field(init=True)
-    target_qubit_index: int = field(init=True)
+    _control_qubit_index: int = field(init=True)
+    _target_qubit_index: int = field(init=True)
     relation: IRelationLink[ICircuitOperation] = field(default_factory=RelationLink.no_relation)
     duration_strategy: IDurationStrategy = field(default=FixedDurationStrategy(duration=0.0))
 
-    # region Interface Properties
+    # region ICircuitOperation Properties
     @property
     def channel_identifiers(self) -> List[ChannelIdentifier]:
         """:return: Array-like of channel identifiers to which this operation applies to."""
@@ -638,6 +641,18 @@ class TwoQubitOperation(ICircuitOperation):
         return self.duration_strategy.get_variable_duration(task=self)
     # endregion
 
+    # region ITwoQubitOperation Properties
+    @property
+    def control_qubit_index(self) -> int:
+        """:return: Index of control qubit."""
+        return self._control_qubit_index
+
+    @property
+    def target_qubit_index(self) -> int:
+        """:return: Index of target qubit."""
+        return self._target_qubit_index
+    # endregion
+
     # region Interface Methods
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'TwoQubitOperation':
         """
@@ -646,8 +661,8 @@ class TwoQubitOperation(ICircuitOperation):
         :return: Copy of self with updated relation link.
         """
         return TwoQubitOperation(
-            control_qubit_index=self.control_qubit_index,
-            target_qubit_index=self.target_qubit_index,
+            _control_qubit_index=self.control_qubit_index,
+            _target_qubit_index=self.target_qubit_index,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
             duration_strategy=self.duration_strategy,
         )
@@ -704,8 +719,8 @@ class CPhase(TwoQubitOperation, ICircuitOperation):
         :return: Copy of self with updated relation link.
         """
         return CPhase(
-            control_qubit_index=self.control_qubit_index,
-            target_qubit_index=self.target_qubit_index,
+            _control_qubit_index=self.control_qubit_index,
+            _target_qubit_index=self.target_qubit_index,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
@@ -736,8 +751,8 @@ class TwoQubitVirtualPhase(TwoQubitOperation, ICircuitOperation):
         :return: Copy of self with updated relation link.
         """
         return TwoQubitVirtualPhase(
-            control_qubit_index=self.control_qubit_index,
-            target_qubit_index=self.target_qubit_index,
+            _control_qubit_index=self.control_qubit_index,
+            _target_qubit_index=self.target_qubit_index,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
@@ -864,7 +879,7 @@ class Barrier(ICircuitOperation):
     """
     qubit_indices: List[int] = field(init=True)
     relation: IRelationLink[ICircuitOperation] = field(init=False, default_factory=RelationLink.no_relation)
-    duration_strategy: IDurationStrategy = field(init=False, default=FixedDurationStrategy(duration=0.5))
+    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.BARRIER))
 
     # region Interface Properties
     @property
@@ -910,6 +925,94 @@ class Barrier(ICircuitOperation):
         """
         return Barrier(
             qubit_indices=self.qubit_indices,
+        )
+
+    def apply_modifiers_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies modifiers inplace.
+        Applies modifiers such as repetition and state-control.
+        :return: Modified self.
+        """
+        return self
+
+    def decomposed_operations(self) -> List[ICircuitOperation]:
+        """
+        Functions similar to a 'flatten' operation.
+        Mostly intended for composite-operations such that they can apply repetition and state-dependent registries.
+        :return: Array-like of decomposed operations.
+        """
+        return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
+    # endregion
+
+    # region Class Methods
+    def __hash__(self):
+        """Overwrites @dataclass behaviour. Circuit operation requires hash based on instance identity."""
+        return id(self)
+    # endregion
+
+
+@dataclass(frozen=False)
+class VirtualQECOperation(ICircuitOperation):
+    """
+    Virtual QEC-block operation.
+    """
+    qubit_indices: List[int] = field(init=True)
+    relation: IRelationLink[ICircuitOperation] = field(default_factory=RelationLink.no_relation)
+    duration_strategy: IDurationStrategy = field(default=GlobalDurationStrategy(GlobalRegistryKey.QEC_BLOCK))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=qubit_index, _channel=QubitChannel.ALL)
+            for qubit_index in self.qubit_indices
+        ]
+
+    @property
+    def nr_of_repetitions(self) -> int:
+        """:return: Number of repetitions for this object."""
+        return 1
+
+    @property
+    def relation_link(self) -> IRelationLink[ICircuitOperation]:
+        """:return: Description of relation to other circuit node."""
+        return self.relation
+
+    @relation_link.setter
+    def relation_link(self, link: IRelationLink[ICircuitOperation]):
+        """:sets: Description of relation to other circuit node."""
+        self.relation = link
+
+    @property
+    def start_time(self) -> float:
+        """:return: Start time [a.u.]."""
+        return self.relation_link.get_start_time(duration=self.duration)
+
+    @property
+    def duration(self) -> float:
+        """:return: Duration [ns]."""
+        return self.duration_strategy.get_variable_duration(task=self)
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualQECOperation':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualQECOperation(
+            qubit_indices=self.qubit_indices,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            duration_strategy=self.duration_strategy,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -1002,8 +1105,8 @@ class VirtualTwoQubitVacant(TwoQubitOperation, ICircuitOperation):
         :return: Copy of self with updated relation link.
         """
         return VirtualTwoQubitVacant(
-            control_qubit_index=self.control_qubit_index,
-            target_qubit_index=self.target_qubit_index,
+            _control_qubit_index=self.control_qubit_index,
+            _target_qubit_index=self.target_qubit_index,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
         )
     # endregion
@@ -1127,6 +1230,8 @@ class VirtualInjectedError(ICircuitOperation):
     Acts as a visualization wrapper for injected errors.
     """
     operation: SingleQubitOperation
+    line_style_border_overwrite: str = field(default="--")
+    color_background_overwrite: str = field(default="#ff9999")
 
     # region Interface Properties
     @property
@@ -1170,7 +1275,9 @@ class VirtualInjectedError(ICircuitOperation):
         return VirtualInjectedError(
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            )
+            ),
+            line_style_border_overwrite=self.line_style_border_overwrite,
+            color_background_overwrite=self.color_background_overwrite,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -1236,16 +1343,33 @@ class VirtualWait(SingleQubitOperation, ICircuitOperation):
     # endregion
 
 
+class IColorOverwrite(ABC):
+
+    # region Interface Properties
+    @property
+    @abstractmethod
+    def wrapped_operation(self) -> ICircuitOperation:
+        """:return: Wrapped operation used to pass to sub-draw factories."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def color_overwrite(self) -> str:
+        """:return: Color identifier for overwriting draw factory colors."""
+        raise InterfaceMethodException
+    # endregion
+
+
 @dataclass(frozen=False, unsafe_hash=True)
-class VirtualColorOverwrite(ICircuitOperation):
+class VirtualColorOverwrite(ICircuitOperation, IColorOverwrite):
     """
     Data class, containing single-qubit operation.
     Acts as a visualization wrapper for coloring visualization.
     """
-    operation: SingleQubitOperation
-    color_overwrite: str = field(init=True, default="k")
+    operation: ICircuitOperation
+    _color_overwrite: str = field(init=True, default="k")
 
-    # region Interface Properties
+    # region ICircuitOperation Properties
     @property
     def channel_identifiers(self) -> List[ChannelIdentifier]:
         """:return: Array-like of channel identifiers to which this operation applies to."""
@@ -1259,12 +1383,12 @@ class VirtualColorOverwrite(ICircuitOperation):
     @property
     def relation_link(self) -> IRelationLink[ICircuitOperation]:
         """:return: Description of relation to other circuit node."""
-        return self.operation.relation
+        return self.operation.relation_link
 
     @relation_link.setter
     def relation_link(self, link: IRelationLink[ICircuitOperation]):
         """:sets: Description of relation to other circuit node."""
-        self.operation.relation = link
+        self.operation.relation_link = link
 
     @property
     def start_time(self) -> float:
@@ -1277,6 +1401,35 @@ class VirtualColorOverwrite(ICircuitOperation):
         return self.operation.duration
     # endregion
 
+    # region IColorOverwrite Properties
+    @property
+    def wrapped_operation(self) -> ICircuitOperation:
+        """:return: Wrapped operation used to pass to sub-draw factories."""
+        return self.operation
+
+    @property
+    def color_overwrite(self) -> str:
+        """:return: Color identifier for overwriting draw factory colors."""
+        return self._color_overwrite
+    # endregion
+
+    # region Class Constructor
+    def __new__(cls, operation: ICircuitOperation, _color_overwrite: str = "k"):
+        """
+        Factory method to select the correct wrapper class at instantiation.
+        """
+        # Check if the operation is a two-qubit operation.
+        if isinstance(operation, ITwoQubitOperation):
+            # If so, instantiate and return the specialized two-qubit wrapper.
+            return VirtualTwoQubitColorOverwrite(
+                operation=operation,
+                _color_overwrite=_color_overwrite
+            )
+        else:
+            # Otherwise, proceed with the standard instantiation of this class.
+            return super().__new__(cls)
+    # endregion
+
     # region Interface Methods
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualColorOverwrite':
         """
@@ -1287,7 +1440,112 @@ class VirtualColorOverwrite(ICircuitOperation):
         return VirtualColorOverwrite(
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            )
+            ),
+            _color_overwrite=self._color_overwrite,
+        )
+
+    def apply_modifiers_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies modifiers inplace.
+        Applies modifiers such as repetition and state-control.
+        :return: Modified self.
+        """
+        return self
+
+    def decomposed_operations(self) -> List[ICircuitOperation]:
+        """
+        Functions similar to a 'flatten' operation.
+        Mostly intended for composite-operations such that they can apply repetition and state-dependent registries.
+        :return: Array-like of decomposed operations.
+        """
+        return [self]
+
+    def apply_flatten_to_self(self) -> ICircuitOperation:
+        """
+        WARNING: Applies a flatten modification inplace.
+        :return: Modified self.
+        """
+        return self
+    # endregion
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class VirtualTwoQubitColorOverwrite(ITwoQubitOperation, IColorOverwrite):
+    """
+    Virtual color overwrite operation (behaves as TwoQubitOperation).
+    Acts as a visualization wrapper for coloring visualization.
+    """
+    operation: ITwoQubitOperation = field(init=True)
+    _color_overwrite: str = field(init=True)
+
+    # region ICircuitOperation Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return self.operation.channel_identifiers
+
+    @property
+    def nr_of_repetitions(self) -> int:
+        """:return: Number of repetitions for this object."""
+        return self.operation.nr_of_repetitions
+
+    @property
+    def relation_link(self) -> IRelationLink[ICircuitOperation]:
+        """:return: Description of relation to other circuit node."""
+        return self.operation.relation_link
+
+    @relation_link.setter
+    def relation_link(self, link: IRelationLink[ICircuitOperation]):
+        """:sets: Description of relation to other circuit node."""
+        self.operation.relation_link = link
+
+    @property
+    def start_time(self) -> float:
+        """:return: Start time [a.u.]."""
+        return self.operation.start_time
+
+    @property
+    def duration(self) -> float:
+        """:return: Duration [ns]."""
+        return self.operation.duration
+    # endregion
+
+    # region ITwoQubitOperation Properties
+    @property
+    def control_qubit_index(self) -> int:
+        """:return: Index of control qubit."""
+        return self.operation.control_qubit_index
+
+    @property
+    def target_qubit_index(self) -> int:
+        """:return: Index of target qubit."""
+        return self.operation.target_qubit_index
+    # endregion
+
+    # region IColorOverwrite Properties
+    @property
+    def wrapped_operation(self) -> ICircuitOperation:
+        """:return: Wrapped operation used to pass to sub-draw factories."""
+        return self.operation
+
+    @property
+    def color_overwrite(self) -> str:
+        """:return: Color identifier for overwriting draw factory colors."""
+        return self._color_overwrite
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'VirtualTwoQubitColorOverwrite':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return VirtualTwoQubitColorOverwrite(
+            operation=self.operation.copy(
+                relation_transfer_lookup=relation_transfer_lookup,
+            ),
+            _color_overwrite=self._color_overwrite,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:

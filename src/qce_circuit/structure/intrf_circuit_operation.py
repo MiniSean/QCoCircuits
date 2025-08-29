@@ -338,6 +338,23 @@ class ICircuitOperation(ICircuitNode, IRelationComponent['ICircuitOperation'], I
 TCircuitOperation = TypeVar('TCircuitOperation', bound=ICircuitOperation)
 
 
+class ITwoQubitOperation(ICircuitOperation, metaclass=ABCMeta):
+
+    # region Interface Properties
+    @property
+    @abstractmethod
+    def control_qubit_index(self) -> int:
+        """:return: Index of control qubit."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def target_qubit_index(self) -> int:
+        """:return: Index of target qubit."""
+        raise InterfaceMethodException
+    # endregion
+
+
 @dataclass(frozen=True)
 class MultiRelationLink(IRelationLink[TCircuitOperation], Generic[TCircuitOperation]):
     """

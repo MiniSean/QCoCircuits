@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 from collections.abc import Iterable
 from typing import Dict, List, Union
 import numpy as np
+import math
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer, IParityGroup
 from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
@@ -66,6 +67,7 @@ class VisualConnectivityDescription:
     layout_spacing: float = field(default=1.0)
     pivot: Vec2D = field(default=Vec2D(0, 0))
     rotation: float = field(default=-45)
+    include_element_labels: bool = field(default=True)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
@@ -173,11 +175,12 @@ class VisualConnectivityDescription:
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             ))
-            result.append(TextComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-                text=qubit_id.id,
-                alignment=TransformAlignment.MID_CENTER,
-            ))
+            if self.include_element_labels:
+                result.append(TextComponent(
+                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    text=qubit_id.id,
+                    alignment=TransformAlignment.MID_CENTER,
+                ))
         return result
 
     def get_line_components(self) -> List[IDrawComponent]:
@@ -200,15 +203,15 @@ class VisualConnectivityDescription:
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
             ParkingComponent(
-                pivot=self.identifier_to_pivot(identifier=operation.identifier),
+                pivot=self.identifier_to_pivot(identifier=operation.identifier) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.park_operations
         ]
         gate_components: List[IDrawComponent] = [
             GateOperationComponent(
-                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
-                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]) + self.pivot,
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]) + self.pivot,
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.gate_operations
@@ -268,21 +271,22 @@ class VisualConnectivityDescription:
         )
         mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
 
+        absolute_tolerance: float = 1e-9
         if mean_center:  # Weight-2 diagonal
             line = Line2D(start=relative_coordinates[0], end=relative_coordinates[1])
             slope = (line.end.y - line.start.y) / (line.end.x - line.start.x)
-            if slope == +1.0:
+            if math.isclose(slope, +1.0, abs_tol=absolute_tolerance):
                 pass
-            elif slope == -1.0:
+            elif math.isclose(slope, -1.0, abs_tol=absolute_tolerance):
                 rotation_offset += 90
         else:  # Weight-2 triangle
-            if mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y > 0.0:
+            if math.isclose(mean_relative_coordinates.x, 0.0, abs_tol=absolute_tolerance) and mean_relative_coordinates.y > 0.0:
                 rotation_offset += 90
-            elif mean_relative_coordinates.x == 0.0 and mean_relative_coordinates.y < 0.0:
+            elif math.isclose(mean_relative_coordinates.x, 0.0, abs_tol=absolute_tolerance) and mean_relative_coordinates.y < 0.0:
                 rotation_offset += 270
-            elif mean_relative_coordinates.x > 0.0 and mean_relative_coordinates.y == 0.0:
+            elif mean_relative_coordinates.x > 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 0
-            elif mean_relative_coordinates.x < 0.0 and mean_relative_coordinates.y == 0.0:
+            elif mean_relative_coordinates.x < 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 180
 
         if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
@@ -390,11 +394,12 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                     zorder=style_setting.zorder_element,
                 ),
             ))
-            result.append(TextComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
-                text=qubit_id.id,
-                alignment=TransformAlignment.MID_CENTER,
-            ))
+            if self.include_element_labels:
+                result.append(TextComponent(
+                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    text=qubit_id.id,
+                    alignment=TransformAlignment.MID_CENTER,
+                ))
         return result
     # endregion
 
@@ -439,7 +444,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -447,6 +452,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     Allowing for extra flexibility.
     :param description: Generic surface code layer definition including parity-groups and gate sequence.
     :param kwargs: Keyword arguments passed to figure constructor.
+    :param include_element_labels: Boolean to enable or disable element label text.
     :return: Figure and Axes pair.
     """
     sequence_count: int = description.gate_sequence_count
@@ -459,7 +465,8 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
         descriptor: AllGreyVisualConnectivityDescription = AllGreyVisualConnectivityDescription(
             connectivity=Surface17Layer(),
             gate_sequence=description.get_gate_sequence_at_index(i),
-            layout_spacing=1.0
+            layout_spacing=1.0,
+            include_element_labels=include_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         fig, ax = plot_layout_description(descriptor, **kwargs)
@@ -467,7 +474,8 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
         descriptor: StabilizerGroupVisualConnectivityDescription = StabilizerGroupVisualConnectivityDescription(
             connectivity=description,
             gate_sequence=description.get_gate_sequence_at_index(i),
-            layout_spacing=1.0
+            layout_spacing=1.0,
+            include_element_labels=include_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         plot_layout_description(descriptor, **kwargs)

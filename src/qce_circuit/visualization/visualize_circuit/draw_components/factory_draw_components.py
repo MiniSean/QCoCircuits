@@ -35,7 +35,8 @@ from qce_circuit.structure.circuit_operations import (
     VirtualOptional,
     VirtualInjectedError,
     VirtualWait,
-    VirtualColorOverwrite,
+    IColorOverwrite,
+    VirtualQECOperation,
 )
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
 from qce_circuit.visualization.visualize_circuit.intrf_factory_draw_components import (
@@ -64,6 +65,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_com
     BlockTwoQubitGate,
     BlockVerticalBarrier,
     BlockTwoQubitVacant,
+    BlockQEC,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
@@ -633,6 +635,24 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
     # endregion
 
 
+class VirtualQECBlockFactory(IOperationDrawComponentFactory[VirtualQECOperation, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: VirtualQECOperation, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transforms: List[IRectTransform] = [
+            transform_constructor.construct_transform(
+                identifier=ChannelIdentifier(_id=qubit_index, _channel=QubitChannel.ALL),
+                time_component=operation,
+            )
+            for qubit_index in operation.qubit_indices
+        ]
+        return BlockQEC(
+            multiple_transforms=transforms,
+        )
+    # endregion
+
+
 class VirtualOptionalFactory(IOperationDrawComponentFactory[VirtualOptional, IDrawComponent]):
     """
     Behaviour class, implementing construction of draw component with additional requirements.
@@ -668,7 +688,10 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # region Interface Methods
     def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(line_style_border='--', color_background="#ff9999")):
+        with StyleManager.temporary_override(**dict(
+                line_style_border=operation.line_style_border_overwrite,
+                color_background=operation.color_background_overwrite,
+        )):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.operation,
                 transform_constructor=transform_constructor,
@@ -677,7 +700,7 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # endregion
 
 
-class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOverwrite, IDrawComponent]):
+class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[IColorOverwrite, IDrawComponent]):
     """
     Behaviour class, implementing construction of draw component with additional requirements.
     """
@@ -688,15 +711,16 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[VirtualColorOv
     # endregion
 
     # region Interface Methods
-    def construct(self, operation: VirtualColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
+    def construct(self, operation: IColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
         with StyleManager.temporary_override(**dict(
             color_text=operation.color_overwrite,
             color_icon=operation.color_overwrite,
             color_outline=operation.color_overwrite,
+            color_outline_dim=operation.color_overwrite,
         )):
             draw_component: IDrawComponent = self._factory_manager.construct(
-                operation=operation.operation,
+                operation=operation.wrapped_operation,
                 transform_constructor=transform_constructor,
             )
         return draw_component
