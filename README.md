@@ -160,4 +160,4 @@ plot_circuit(circuit=root_circuit, channel_order=channel_order, channel_map=chan
 ![Alt text](documentation/readme_figures/readme_figure_02.png)
 
 ### Additional Examples
-![Alt text](documentation/readme_figures/readme_figure_04.svg)
+![Alt text](documentation/readme_figures/readme_figure_04.png)
