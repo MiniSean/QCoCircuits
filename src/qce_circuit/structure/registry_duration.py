@@ -100,7 +100,12 @@ def temporary_override_get_registry_at(temp_registry: Dict[GlobalRegistryKey, fl
     original_method = GlobalDurationRegistry.get_registry_at
 
     def temp_get_registry_at(self, key: GlobalRegistryKey) -> Optional[float]:
-        return temp_registry.get(key, None)
+        extended_lookup: Dict[str, float] = GlobalDurationRegistry()._global_registry
+        # Update
+        for _key, _value in temp_registry.items():
+            extended_lookup[_key.value] = _value
+
+        return extended_lookup.get(key.value, None)
 
     try:
         GlobalDurationRegistry.get_registry_at = temp_get_registry_at
