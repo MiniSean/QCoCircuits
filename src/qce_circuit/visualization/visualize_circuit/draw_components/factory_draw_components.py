@@ -566,7 +566,7 @@ class WaitFactory(IOperationDrawComponentFactory[Wait, IDrawComponent]):
             width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
-            text_string=r'$\delta$',
+            text_string=operation.indicator_string,
         )
     # endregion
 
