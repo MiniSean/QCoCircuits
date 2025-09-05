@@ -147,6 +147,7 @@ class Wait(SingleQubitOperation, ICircuitOperation):
     """
     qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
     duration_strategy: IDurationStrategy = field(init=True, default=FixedDurationStrategy(duration=0.0))
+    indicator_string: str = field(init=True, default=r'$\delta$')
 
     # region Interface Properties
     @property
