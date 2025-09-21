@@ -335,3 +335,183 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         arrays: NDArray[np.int_] = RepetitionExperimentKernel.create_sliced_arrays(int_list, cycle_length, repetitions)
         return np.concatenate(arrays)
     # endregion
+
+
+class SimulatedRepetitionExperimentKernel(IStabilizerIndexingKernel):
+    """Behaviour class, containing gettable methods for various acquisition indexing."""
+
+    # region Interface Properties
+    @property
+    def start_index(self) -> int:
+        """:return: Starting index."""
+        return self.indexing_kernels[0].start_index
+
+    @property
+    def stop_index(self) -> int:
+        """:return: End index."""
+        total_index_size: int = self.experiment_repetitions * self.kernel_cycle_length
+        return self.start_index + total_index_size
+
+    @property
+    def kernel_cycle_length(self) -> int:
+        """:return: Integer length of indexing kernel cycle."""
+        exclusive_cycle_length: int = self.indexing_kernels[-1].stop_index - self.indexing_kernels[0].start_index
+        inclusive_cycle_length: int = exclusive_cycle_length + 1
+        return inclusive_cycle_length
+
+    @property
+    def experiment_repetitions(self) -> int:
+        """Number of repetitions for this experiment."""
+        return self._repetitions
+
+    @property
+    def include_heralded_initialization(self) -> bool:
+        """:return: Boolean whether, heralded initialization indices are included."""
+        return False
+
+    @property
+    def include_qutrit_calibration_points(self) -> bool:
+        """:return: Boolean whether, qutrit (Default qubit) calibration point indices are included."""
+        return False
+    # endregion
+
+    # region Class Properties
+    @property
+    def indexing_kernels(self) -> List[IIndexingKernel]:
+        """:return: Array-like of ordered indexing kernels that describe self."""
+        repetition_kernels: List[IIndexingKernel] = self._repetition_kernels
+        result: List[IIndexingKernel] = repetition_kernels
+        return result
+
+    # endregion
+
+    # region Class Constructor
+    def __init__(
+            self,
+            rounds: List[int],
+            involved_data_qubit_ids: List[IQubitID],
+            involved_ancilla_qubit_ids: List[IQubitID],
+            experiment_repetitions: int,
+    ):
+        self._rounds: List[int] = rounds
+        """Array-like of integers corresponding to number of repetitions. Each integer element represents a separate RepetitionIndexKernel."""
+        self._involved_data_ids: List[IQubitID] = involved_data_qubit_ids
+        self._involved_ancilla_ids: List[IQubitID] = involved_ancilla_qubit_ids
+        """Array-like of involved data- and ancilla-qubit-ID's."""
+        self._repetitions: int = experiment_repetitions
+        """Total length of data indices, including all experiment repetitions. Size of dataset."""
+        self._repetition_kernels: List[RepetitionIndexKernel] = []
+        for nr_round in self._rounds:
+            # Uses this index as excluded start to count forward.
+            offset_strategy: IIndexStrategy = FixedIndexStrategy(index=0)
+            if self._repetition_kernels:  # Not empty
+                offset_strategy = RelativeIndexStrategy(reference_index_kernel=self._repetition_kernels[-1])
+            # Append indexing kernel
+            kernel: RepetitionIndexKernel = RepetitionIndexKernel(
+                nr_repeated_parities=nr_round,
+                heralded_initialization=False,
+                index_offset_strategy=offset_strategy,
+                involved_data_qubit_ids=self._involved_data_ids,
+                involved_ancilla_qubit_ids=self._involved_ancilla_ids,
+            )
+            self._repetition_kernels.append(kernel)
+
+    # endregion
+
+    # region Interface Methods
+    def contains(self, element: IQubitID) -> List[int]:
+        """:return: Array-like of measurement indices corresponding to element within this indexing kernel."""
+        raise NotImplemented
+
+    def get_projected_calibration_acquisition_indices(self, qubit_id: IQubitID, state: StateKey) -> NDArray[np.int_]:
+        """
+        :param qubit_id: Identifier to which these acquisition indices correspond to.
+        :param state: Identifier for state specific selectivity.
+        :return: Tensor of indices pointing at all projection acquisition within calibration points.
+        """
+        raise NotImplementedError(f"Calibration indices for state: {state}, is not implemented.")
+
+    def get_heralded_calibration_acquisition_indices(self, qubit_id: IQubitID, state: StateKey) -> NDArray[np.int_]:
+        """
+        :param qubit_id: Identifier to which these acquisition indices correspond to.
+        :param state: Identifier for state specific selectivity.
+        :return: Tensor of indices pointing at all heralded acquisition before calibration points.
+        """
+        raise NotImplementedError(f"Calibration conditional indices for state: {state}, is not implemented.")
+
+    def get_heralded_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
+        """
+        :param qubit_id: Identifier to which these acquisition indices correspond to.
+        :param cycle_stabilizer_count: Identifies the indices to only include cycles with this number of stabilizers.
+        :return: Tensor of indices pointing at all heralded acquisition before stabilizer cycles.
+        """
+        for repetition_kernel in self._repetition_kernels:
+            if repetition_kernel.nr_repeated_parities == cycle_stabilizer_count:
+                heralded_indices = repetition_kernel.get_heralded_measurement_index(element=qubit_id)
+                return RepetitionExperimentKernel.create_sliced_arrays(heralded_indices, self.kernel_cycle_length, self.experiment_repetitions)
+        return np.asarray([])  # If kernel with specific number of repeated parities is not found
+
+    def get_stabilizer_and_projected_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
+        """
+        Note: Includes final acquisition.
+        :param qubit_id: Identifier to which these acquisition indices correspond to.
+        :param cycle_stabilizer_count: Identifies the indices to only include cycles with this number of stabilizers.
+        :return: Tensor of indices pointing at all stabilizer acquisition withing stabilizer cycles.
+        """
+        for repetition_kernel in self._repetition_kernels:
+            if repetition_kernel.nr_repeated_parities == cycle_stabilizer_count:
+                stabilizer_measurement_indices = repetition_kernel.get_ordered_stabilizer_measurement_indices(
+                    element=qubit_id)
+                final_measurement_indices = repetition_kernel.get_final_measurement_index(element=qubit_id)
+                return RepetitionExperimentKernel.create_sliced_arrays(
+                    stabilizer_measurement_indices + final_measurement_indices, self.kernel_cycle_length,
+                    self.experiment_repetitions)
+        raise ValueError(f"Cycle stabilizer count ({cycle_stabilizer_count}) does not appear in repetition kernels. Note indexing kernel might not contain cycle {cycle_stabilizer_count}, instead choose: {[r.nr_repeated_parities for r in self._repetition_kernels]}")
+        # return np.asarray([])  # If kernel with specific number of repeated parities is not found
+
+    def get_projected_cycle_acquisition_indices(self, qubit_id: IQubitID, cycle_stabilizer_count: int) -> NDArray[np.int_]:
+        """
+        :param qubit_id: Identifier to which these acquisition indices correspond to.
+        :param cycle_stabilizer_count: Identifies the indices to only include cycles with this number of stabilizers.
+        :return: Tensor of indices pointing at all projection acquisition after stabilizer cycles.
+        """
+        for repetition_kernel in self._repetition_kernels:
+            if repetition_kernel.nr_repeated_parities == cycle_stabilizer_count:
+                final_measurement_indices = repetition_kernel.get_final_measurement_index(element=qubit_id)
+                return RepetitionExperimentKernel.create_sliced_arrays(final_measurement_indices,
+                                                                       self.kernel_cycle_length,
+                                                                       self.experiment_repetitions)
+        return np.asarray([])  # If kernel with specific number of repeated parities is not found
+
+    # endregion
+
+    # region Static Class Methods
+    @staticmethod
+    def estimate_experiment_repetitions(rounds: List[int], heralded_initialization: bool, dataset_size: int) -> int:
+        """:return: (Calculation) estimation for the number of experiment repetition based on total dataset size."""
+        repetition_kernels: List[RepetitionIndexKernel] = []
+        for nr_round in rounds:
+            # Uses this index as excluded start to count forward.
+            offset_strategy: IIndexStrategy = FixedIndexStrategy(index=0)
+            if repetition_kernels:  # Not empty
+                offset_strategy = RelativeIndexStrategy(reference_index_kernel=repetition_kernels[-1])
+            # Append indexing kernel
+            kernel: RepetitionIndexKernel = RepetitionIndexKernel(
+                nr_repeated_parities=nr_round,
+                heralded_initialization=heralded_initialization,
+                index_offset_strategy=offset_strategy,
+                involved_data_qubit_ids=[],
+                involved_ancilla_qubit_ids=[],
+            )
+            repetition_kernels.append(kernel)
+        # Combined indexing kernels
+        indexing_kernels: List[IIndexingKernel] = repetition_kernels
+
+        # Integer length of indexing kernel cycle
+        exclusive_cycle_length: int = indexing_kernels[-1].stop_index - indexing_kernels[0].start_index
+        inclusive_cycle_length: int = exclusive_cycle_length + 1
+
+        nr_experiment_repetitions: int = int(dataset_size / inclusive_cycle_length)
+        assert dataset_size == nr_experiment_repetitions * inclusive_cycle_length, f"Expects cycle-length * repetition number to be equal to total index size. By definition. Instead {dataset_size} != {nr_experiment_repetitions * inclusive_cycle_length}"
+        return nr_experiment_repetitions
+    # endregion
