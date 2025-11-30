@@ -19,11 +19,40 @@ from qce_circuit.connectivity.intrf_connectivity import IConnectivityLayer
 from qce_circuit.connectivity.intrf_connectivity_surface_code import (
     ISurfaceCodeLayer,
     IParityGroup,
-    IGateGroup,
+    IQubitStabilizerBasis,
     StabilizerType,
+    StabilizerBasis,
     FrequencyGroup,
     FrequencyGroupIdentifier,
 )
+
+
+@dataclass(frozen=True)
+class QubitStabilizerBasis(IQubitStabilizerBasis, QubitIDObj):
+    _stabilizer_basis: StabilizerBasis
+
+    # region Interface Properties
+    @property
+    def stabilizer_basis(self) -> StabilizerBasis:
+        """:return: Stabilizer basis at which qubit-ID evaluates."""
+        return self._stabilizer_basis
+    # endregion
+
+    # region Class Methods
+    def __eq__(self, other):
+        """:returns: Boolean if other shares equal identifier, else InterfaceMethodException."""
+        if isinstance(other, IQubitStabilizerBasis):
+            return self.id.__eq__(other.id) and self._stabilizer_basis.__eq__(other.stabilizer_basis)
+        return super().__eq__(other)
+
+    @classmethod
+    def from_qubit_id(cls, qubit_id: IQubitID, stabilizer_basis: StabilizerBasis) -> 'QubitStabilizerBasis':
+        """:return: Class-method constructor"""
+        return QubitStabilizerBasis(
+            _id=qubit_id.id,
+            _stabilizer_basis=stabilizer_basis,
+        )
+    # endregion
 
 
 @dataclass(frozen=True)
@@ -31,11 +60,9 @@ class ParityGroup(IParityGroup):
     """
     Data class, implementing IParityGroup interface.
     """
-    _parity_type: StabilizerType = field(init=True)
-    """X or Z type stabilizer."""
     _ancilla_qubit: IQubitID = field(init=True)
     """Ancilla qubit."""
-    _data_qubits: List[IQubitID] = field(init=True)
+    _data_qubits: List[IQubitStabilizerBasis] = field(init=True)
     """Data qubits."""
     _edges: List[IEdgeID] = field(init=False)
     """Edges between ancilla and data qubits."""
@@ -43,8 +70,14 @@ class ParityGroup(IParityGroup):
     # region Interface Properties
     @property
     def parity_type(self) -> StabilizerType:
-        """:return: Parity type (X or Z type stabilizer)."""
-        return self._parity_type
+        """:return: Parity type (X, Z or Mixed type stabilizer)."""
+        all_x_type_stabilizer: bool = all([qubit_id.stabilizer_basis is StabilizerBasis.STABILIZER_X for qubit_id in self.data_ids])
+        all_z_type_stabilizer: bool = all([qubit_id.stabilizer_basis is StabilizerBasis.STABILIZER_Z for qubit_id in self.data_ids])
+        if all_x_type_stabilizer:
+            return StabilizerType.STABILIZER_X
+        if all_z_type_stabilizer:
+            return StabilizerType.STABILIZER_Z
+        return StabilizerType.STABILIZER_MIXED
 
     @property
     def ancilla_id(self) -> IQubitID:
@@ -52,8 +85,8 @@ class ParityGroup(IParityGroup):
         return self._ancilla_qubit
 
     @property
-    def data_ids(self) -> List[IQubitID]:
-        """:return: (All) data-qubit-ID's from parity."""
+    def data_ids(self) -> List[IQubitStabilizerBasis]:
+        """:return: (All) data-qubit-ID's from stabilizer."""
         return self._data_qubits
 
     @property
@@ -65,7 +98,9 @@ class ParityGroup(IParityGroup):
     # region Interface Methods
     def contains(self, element: Union[IQubitID, IEdgeID]) -> bool:
         """:return: Boolean, whether element is part of parity group or not."""
-        if element in self.data_ids + [self.ancilla_id]:
+        if element == self.ancilla_id:
+            return True
+        if element in self.data_ids:
             return True
         if element in self.edge_ids:
             return True
@@ -79,7 +114,7 @@ class ParityGroup(IParityGroup):
                 qubit_id0=self.ancilla_id,
                 qubit_id1=data_qubit_id,
             )
-            for data_qubit_id in self.data_ids
+            for data_qubit_id in self._data_qubits
         ]
         object.__setattr__(self, '_edges', edges)
     # endregion
@@ -122,46 +157,70 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     ]
     _parity_group_x: List[IParityGroup] = [
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_X,
             _ancilla_qubit=QubitIDObj('X1'),
-            _data_qubits=[QubitIDObj('D1'), QubitIDObj('D2')]
+            _data_qubits=[
+                QubitStabilizerBasis('D1', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D2', StabilizerBasis.STABILIZER_X),
+            ]
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_X,
             _ancilla_qubit=QubitIDObj('X2'),
-            _data_qubits=[QubitIDObj('D2'), QubitIDObj('D3'), QubitIDObj('D5'), QubitIDObj('D6')]
+            _data_qubits=[
+                QubitStabilizerBasis('D2', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D3', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D5', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D6', StabilizerBasis.STABILIZER_X),
+            ],
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_X,
             _ancilla_qubit=QubitIDObj('X3'),
-            _data_qubits=[QubitIDObj('D4'), QubitIDObj('D5'), QubitIDObj('D7'), QubitIDObj('D8')]
+            _data_qubits=[
+                QubitStabilizerBasis('D4', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D5', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D7', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D8', StabilizerBasis.STABILIZER_X),
+            ],
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_X,
             _ancilla_qubit=QubitIDObj('X4'),
-            _data_qubits=[QubitIDObj('D8'), QubitIDObj('D9')]
+            _data_qubits=[
+                QubitStabilizerBasis('D8', StabilizerBasis.STABILIZER_X),
+                QubitStabilizerBasis('D9', StabilizerBasis.STABILIZER_X),
+            ],
         ),
     ]
     _parity_group_z: List[IParityGroup] = [
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_Z,
             _ancilla_qubit=QubitIDObj('Z1'),
-            _data_qubits=[QubitIDObj('D1'), QubitIDObj('D2'), QubitIDObj('D4'), QubitIDObj('D5')]
+            _data_qubits=[
+                QubitStabilizerBasis('D1', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D2', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D4', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D5', StabilizerBasis.STABILIZER_Z),
+            ],
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_Z,
             _ancilla_qubit=QubitIDObj('Z2'),
-            _data_qubits=[QubitIDObj('D3'), QubitIDObj('D6')]
+            _data_qubits=[
+                QubitStabilizerBasis('D3', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D6', StabilizerBasis.STABILIZER_Z),
+            ],
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_Z,
             _ancilla_qubit=QubitIDObj('Z3'),
-            _data_qubits=[QubitIDObj('D4'), QubitIDObj('D7')]
+            _data_qubits=[
+                QubitStabilizerBasis('D4', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D7', StabilizerBasis.STABILIZER_Z),
+            ],
         ),
         ParityGroup(
-            _parity_type=StabilizerType.STABILIZER_Z,
             _ancilla_qubit=QubitIDObj('Z4'),
-            _data_qubits=[QubitIDObj('D5'), QubitIDObj('D6'), QubitIDObj('D8'), QubitIDObj('D9')]
+            _data_qubits=[
+                QubitStabilizerBasis('D5', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D6', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D8', StabilizerBasis.STABILIZER_Z),
+                QubitStabilizerBasis('D9', StabilizerBasis.STABILIZER_Z),
+            ],
         ),
     ]
     _frequency_group_lookup: Dict[IQubitID, FrequencyGroupIdentifier] = {
