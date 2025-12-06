@@ -7,6 +7,7 @@ from numpy.typing import NDArray
 from enum import Enum, unique
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.structure.acquisition_indexing.intrf_index_kernel import IIndexingKernel
+from qce_circuit.structure.acquisition_indexing.intrf_index_strategy import IIndexStrategy
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
 
 
@@ -98,6 +99,18 @@ class IStabilizerIndexingKernel(IIndexingKernel, metaclass=ABCMeta):
         :param qubit_id: Identifier to which these acquisition indices correspond to.
         :param state: Identifier for state specific selectivity.
         :return: Tensor of indices pointing at all projection acquisition within calibration points.
+        """
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def with_index_strategy(self, strategy: 'IIndexStrategy', experiment_repetitions: int) -> 'IStabilizerIndexingKernel':
+        """
+        Constructs a copy of self, but with a modified index strategy.
+        Useful for creating subset kernels (windowing) or creating repetitions.
+
+        :param strategy: The new strategy determining the start_index.
+        :param experiment_repetitions: Number of experimental repetitions to point to.
+        :return: A new instance of IIndexingKernel.
         """
         raise InterfaceMethodException
     # endregion
