@@ -3,7 +3,7 @@
 # Specializes repetition-code kernel implementations.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional
 import warnings
 import numpy as np
 from numpy.typing import NDArray
@@ -174,7 +174,7 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
     # endregion
 
     # region Class Constructor
-    def __init__(self, rounds: List[int], heralded_initialization: bool, qutrit_calibration_points: bool, involved_data_qubit_ids: List[IQubitID], involved_ancilla_qubit_ids: List[IQubitID], experiment_repetitions: int):
+    def __init__(self, rounds: List[int], heralded_initialization: bool, qutrit_calibration_points: bool, involved_data_qubit_ids: List[IQubitID], involved_ancilla_qubit_ids: List[IQubitID], experiment_repetitions: int, index_offset_strategy: Optional[IIndexStrategy] = None):
         self._rounds: List[int] = rounds
         """Array-like of integers corresponding to number of repetitions. Each integer element represents a separate RepetitionIndexKernel."""
         self._heralded_initialization: bool = heralded_initialization
@@ -186,11 +186,14 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         """Array-like of involved data- and ancilla-qubit-ID's."""
         self._repetitions: int = experiment_repetitions
         """Total length of data indices, including all experiment repetitions. Size of dataset."""
+        self._index_offset_strategy: IIndexStrategy = index_offset_strategy if index_offset_strategy is not None else FixedIndexStrategy(index=0)
+
         self._repetition_kernels: List[RepetitionIndexKernel] = []
-        for nr_round in self._rounds:
-            # Uses this index as excluded start to count forward.
-            offset_strategy: IIndexStrategy = FixedIndexStrategy(index=0)
-            if self._repetition_kernels:  # Not empty
+        for i, nr_round in enumerate(self._rounds):
+            # Default to fixed strategy for the first kernel if none is provided, or chain relative to the previous
+            if i == 0:
+                offset_strategy: IIndexStrategy = self._index_offset_strategy
+            else:  # if self._repetition_kernels:  # Not empty
                 offset_strategy = RelativeIndexStrategy(reference_index_kernel=self._repetition_kernels[-1])
             # Append indexing kernel
             kernel: RepetitionIndexKernel = RepetitionIndexKernel(
@@ -201,9 +204,14 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
                 involved_ancilla_qubit_ids=self._involved_ancilla_ids,
             )
             self._repetition_kernels.append(kernel)
+
+        # Calibration kernel follows the last repetition kernel
+        reference_kernel = self._repetition_kernels[-1] if self._repetition_kernels else None
+        calib_strategy = RelativeIndexStrategy(reference_index_kernel=reference_kernel) if reference_kernel else self._index_offset_strategy
+
         self._calibration_kernel: QutritCalibrationIndexKernel = QutritCalibrationIndexKernel(
             heralded_initialization=self._heralded_initialization,
-            index_offset_strategy=RelativeIndexStrategy(reference_index_kernel=self._repetition_kernels[-1]),
+            index_offset_strategy=calib_strategy,
             involved_qubit_ids=self._involved_data_ids + self._involved_ancilla_ids,
         )
     # endregion
@@ -212,6 +220,25 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
     def contains(self, element: IQubitID) -> List[int]:
         """:return: Array-like of measurement indices corresponding to element within this indexing kernel."""
         raise NotImplemented
+
+    def with_index_strategy(self, strategy: IIndexStrategy, experiment_repetitions: int) -> 'RepetitionExperimentKernel':
+        """
+        Constructs a copy of self, but with a modified index strategy.
+        Useful for creating subset kernels (windowing) or creating repetitions.
+
+        :param strategy: The new strategy determining the start_index.
+        :param experiment_repetitions: Number of experimental repetitions to point to.
+        :return: A new instance of IIndexingKernel.
+        """
+        return RepetitionExperimentKernel(
+            rounds=self._rounds,
+            heralded_initialization=self._heralded_initialization,
+            qutrit_calibration_points=self._qutrit_calibration_points,
+            involved_data_qubit_ids=self._involved_data_ids,
+            involved_ancilla_qubit_ids=self._involved_ancilla_ids,
+            experiment_repetitions=experiment_repetitions,
+            index_offset_strategy=strategy
+        )
 
     def get_projected_calibration_acquisition_indices(self, qubit_id: IQubitID, state: StateKey) -> NDArray[np.int_]:
         """
@@ -392,6 +419,7 @@ class SimulatedRepetitionExperimentKernel(IStabilizerIndexingKernel):
             involved_data_qubit_ids: List[IQubitID],
             involved_ancilla_qubit_ids: List[IQubitID],
             experiment_repetitions: int,
+            index_offset_strategy: Optional[IIndexStrategy] = None,
     ):
         self._rounds: List[int] = rounds
         """Array-like of integers corresponding to number of repetitions. Each integer element represents a separate RepetitionIndexKernel."""
@@ -400,11 +428,14 @@ class SimulatedRepetitionExperimentKernel(IStabilizerIndexingKernel):
         """Array-like of involved data- and ancilla-qubit-ID's."""
         self._repetitions: int = experiment_repetitions
         """Total length of data indices, including all experiment repetitions. Size of dataset."""
+        self._index_offset_strategy: IIndexStrategy = index_offset_strategy if index_offset_strategy is not None else FixedIndexStrategy(index=0)
+
         self._repetition_kernels: List[RepetitionIndexKernel] = []
-        for nr_round in self._rounds:
-            # Uses this index as excluded start to count forward.
-            offset_strategy: IIndexStrategy = FixedIndexStrategy(index=0)
-            if self._repetition_kernels:  # Not empty
+        for i, nr_round in enumerate(self._rounds):
+            # Default to fixed strategy for the first kernel if none is provided, or chain relative to the previous
+            if i == 0:
+                offset_strategy: IIndexStrategy = self._index_offset_strategy
+            else:  # if self._repetition_kernels:  # Not empty
                 offset_strategy = RelativeIndexStrategy(reference_index_kernel=self._repetition_kernels[-1])
             # Append indexing kernel
             kernel: RepetitionIndexKernel = RepetitionIndexKernel(
@@ -422,6 +453,23 @@ class SimulatedRepetitionExperimentKernel(IStabilizerIndexingKernel):
     def contains(self, element: IQubitID) -> List[int]:
         """:return: Array-like of measurement indices corresponding to element within this indexing kernel."""
         raise NotImplemented
+
+    def with_index_strategy(self, strategy: IIndexStrategy, experiment_repetitions: int) -> 'SimulatedRepetitionExperimentKernel':
+        """
+        Constructs a copy of self, but with a modified index strategy.
+        Useful for creating subset kernels (windowing) or creating repetitions.
+
+        :param strategy: The new strategy determining the start_index.
+        :param experiment_repetitions: Number of experimental repetitions to point to.
+        :return: A new instance of IIndexingKernel.
+        """
+        return SimulatedRepetitionExperimentKernel(
+            rounds=self._rounds,
+            involved_data_qubit_ids=self._involved_data_ids,
+            involved_ancilla_qubit_ids=self._involved_ancilla_ids,
+            experiment_repetitions=experiment_repetitions,
+            index_offset_strategy=strategy
+        )
 
     def get_projected_calibration_acquisition_indices(self, qubit_id: IQubitID, state: StateKey) -> NDArray[np.int_]:
         """
