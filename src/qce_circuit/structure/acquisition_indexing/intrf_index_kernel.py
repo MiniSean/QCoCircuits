@@ -5,7 +5,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
-from qce_circuit.connectivity.intrf_channel_identifier import IQubitID
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, IChannelIdentifier
 
 
 class IIndexingKernel(ABC):
@@ -34,7 +34,7 @@ class IIndexingKernel(ABC):
 
     # region Interface Methods
     @abstractmethod
-    def contains(self, element: IQubitID) -> List[int]:
+    def contains(self, element: IChannelIdentifier) -> List[int]:
         """:return: Array-like of measurement indices corresponding to element within this indexing kernel."""
         raise InterfaceMethodException
     # endregion
