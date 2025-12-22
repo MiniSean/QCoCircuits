@@ -5,7 +5,7 @@
 from abc import ABC, abstractmethod, ABCMeta
 from dataclasses import dataclass, field
 from multipledispatch import dispatch
-from typing import List, Union, Dict, Optional
+from typing import List, Union, Dict, Optional, TypeVar, Generic
 from enum import Enum, unique
 import numpy as np
 from numpy.typing import NDArray
@@ -35,6 +35,9 @@ from qce_circuit.structure.registry_acquisition import (
 )
 
 
+T = TypeVar("T")
+
+
 @unique
 class InitialStateEnum(Enum):
     """Enum class, containing different initial state options. Mostly for cosmetic purposes."""
@@ -47,13 +50,13 @@ class InitialStateEnum(Enum):
 
 
 @dataclass(frozen=True)
-class InitialStateContainer:
+class InitialStateContainer(Generic[T]):
     """
     Data class, holding reference to qubits and their initial state.
     """
-    initial_states: Dict[int, InitialStateEnum]
+    initial_states: Dict[T, InitialStateEnum]
     """Index pointers to data qubits only."""
-    ancilla_initial_states: Dict[int, InitialStateEnum] = field(default_factory=dict)
+    ancilla_initial_states: Dict[T, InitialStateEnum] = field(default_factory=dict)
     """Index pointers to ancilla qubits only."""
 
     # region Class Properties
@@ -63,7 +66,7 @@ class InitialStateContainer:
 
     @property
     def as_array(self) -> np.ndarray:
-        sorted_indices: List[int] = list(sorted(self.initial_states.keys()))
+        sorted_indices: List[T] = list(sorted(self.initial_states.keys()))
         # Maps initial state to binary
         to_bit_conversion: Dict[InitialStateEnum, int] = {
             InitialStateEnum.ZERO: 0,
@@ -77,10 +80,10 @@ class InitialStateContainer:
     # endregion
 
     # region Class Methods
-    def get_initial_state(self, qubit_index: int) -> InitialStateEnum:
+    def get_initial_state(self, qubit_index: T) -> InitialStateEnum:
         return self.initial_states[qubit_index]
 
-    def get_data_qubit_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
+    def get_data_qubit_operation(self, qubit_index: T, initial_state_index: T, **kwargs) -> ICircuitOperation:
         """
         :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
         :param initial_state_index: Index corresponding to qubit-ID in initial state container.
@@ -99,7 +102,7 @@ class InitialStateContainer:
             **kwargs,
         )
 
-    def get_ancilla_qubit_operation(self, qubit_index: int, initial_state_index: int, **kwargs) -> ICircuitOperation:
+    def get_ancilla_qubit_operation(self, qubit_index: T, initial_state_index: T, **kwargs) -> ICircuitOperation:
         """
         :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
         :param initial_state_index: Index corresponding to qubit-ID in initial state container.
@@ -118,7 +121,7 @@ class InitialStateContainer:
             **kwargs,
         )
 
-    def get_operation(self, qubit_index: int, initial_state: InitialStateEnum, **kwargs) -> ICircuitOperation:
+    def get_operation(self, qubit_index: T, initial_state: InitialStateEnum, **kwargs) -> ICircuitOperation:
         """
         :param qubit_index: Index corresponding to qubit-ID in circuit. Will be passed to operation constructor.
         :param initial_state: Initial state enum.
@@ -149,7 +152,7 @@ class InitialStateContainer:
         if ancilla_initial_states is None:
             ancilla_initial_states = []
 
-        return InitialStateContainer(
+        return InitialStateContainer[int](
             initial_states={i: state for i, state in enumerate(initial_states)},
             ancilla_initial_states={i: state for i, state in enumerate(ancilla_initial_states)},
         )
