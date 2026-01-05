@@ -66,7 +66,17 @@ class InitialStateContainer(Generic[T]):
 
     @property
     def as_array(self) -> np.ndarray:
-        sorted_indices: List[T] = list(sorted(self.initial_states.keys()))
+        return self.as_ordered_array(qubit_order=None)
+    # endregion
+
+    # region Class Methods
+    def get_initial_state(self, qubit_index: T) -> InitialStateEnum:
+        return self.initial_states[qubit_index]
+
+    def as_ordered_array(self, qubit_order: Optional[List[T]] = None) -> np.ndarray:
+        sorted_indices: List[T] = qubit_order
+        if sorted_indices is None:
+            sorted_indices: List[T] = list(sorted(self.initial_states.keys()))
         # Maps initial state to binary
         to_bit_conversion: Dict[InitialStateEnum, int] = {
             InitialStateEnum.ZERO: 0,
@@ -77,11 +87,6 @@ class InitialStateContainer(Generic[T]):
             InitialStateEnum.PLUS_I: 1,
         }
         return np.asarray([to_bit_conversion[self.initial_states[index]] for index in sorted_indices])
-    # endregion
-
-    # region Class Methods
-    def get_initial_state(self, qubit_index: T) -> InitialStateEnum:
-        return self.initial_states[qubit_index]
 
     def get_data_qubit_operation(self, qubit_index: T, initial_state_index: T, **kwargs) -> ICircuitOperation:
         """
