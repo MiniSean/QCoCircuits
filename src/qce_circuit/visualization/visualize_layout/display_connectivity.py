@@ -444,7 +444,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -463,7 +463,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
 
     for i, ax in enumerate(axes):
         descriptor: AllGreyVisualConnectivityDescription = AllGreyVisualConnectivityDescription(
-            connectivity=Surface17Layer(),
+            connectivity=connectivity,
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0,
             include_element_labels=include_element_labels,
