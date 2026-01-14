@@ -365,11 +365,13 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
     Data class, overwriting VisualConnectivityDescription by implementing stabilizer group element visualization.
     """
     element_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element)
+    element_highlight_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element_outline)
 
     # region Class Methods
     def get_element_components(self) -> List[IDrawComponent]:
         result: List[IDrawComponent] = []
         style_setting: StyleSettings = StyleManager.read_config()
+        gate_sequence_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in self.gate_sequence.qubit_ids if qubit_id in self.connectivity.data_qubit_ids]
 
         for qubit_id in self.connectivity.qubit_ids:
             background_color = self.element_color_overwrite
@@ -377,6 +379,8 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                 background_color = style_setting.color_background_z
             if qubit_id in [parity_group.ancilla_id for parity_group in self.connectivity.parity_group_x]:
                 background_color = style_setting.color_background_x
+            if qubit_id in gate_sequence_data_qubit_ids:
+                background_color = self.element_highlight_color_overwrite
 
             result.append(DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
