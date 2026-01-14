@@ -37,6 +37,7 @@ from qce_circuit.visualization.visualize_layout.element_components import (
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
+    LineComponent,
     GateOperationComponent,
 )
 from qce_circuit.visualization.visualize_circuit.display_circuit import CircuitAxesFormat
@@ -183,22 +184,15 @@ class VisualConnectivityDescription:
                 ))
         return result
 
-    def get_line_components(self) -> List[IDrawComponent]:
-        return [
-            PolylineComponent(
-                vertices=[
-                    self.identifier_to_pivot(QubitIDObj('D7')),
-                    self.identifier_to_pivot(QubitIDObj('Z3')),
-                    self.identifier_to_pivot(QubitIDObj('D4')),
-                    self.identifier_to_pivot(QubitIDObj('Z1')),
-                    self.identifier_to_pivot(QubitIDObj('D5')),
-                    self.identifier_to_pivot(QubitIDObj('Z4')),
-                    self.identifier_to_pivot(QubitIDObj('D6')),
-                    self.identifier_to_pivot(QubitIDObj('Z2')),
-                    self.identifier_to_pivot(QubitIDObj('D3')),
-                ],
-            )
-        ]
+    def get_element_edges_components(self) -> List[IDrawComponent]:
+        result: List[IDrawComponent] = []
+        for edge_id in self.connectivity.edge_ids:
+            result.append(LineComponent(
+                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]) + self.pivot,
+                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]) + self.pivot,
+                alignment=TransformAlignment.MID_CENTER,
+            ))
+        return result
 
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
@@ -300,7 +294,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
     """
     Data class, overwriting VisualConnectivityDescription by forcing single plaquette color.
     """
-    plaquette_color_overwrite: str = field(default="#b0b0b0")
+    plaquette_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_background_base)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
@@ -370,7 +364,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
     """
     Data class, overwriting VisualConnectivityDescription by implementing stabilizer group element visualization.
     """
-    element_color_overwrite: str = field(default="#c4c4c4")
+    element_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element)
 
     # region Class Methods
     def get_element_components(self) -> List[IDrawComponent]:
@@ -415,6 +409,9 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
         draw_component.draw(axes=ax)
 
     for draw_component in description.get_element_components():
+        draw_component.draw(axes=ax)
+
+    for draw_component in description.get_element_edges_components():
         draw_component.draw(axes=ax)
 
     for draw_component in description.get_operation_components():
