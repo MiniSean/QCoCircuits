@@ -158,14 +158,15 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.X.value}/2",
-                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -188,14 +189,15 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.X.value}/2",
-                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -266,14 +268,15 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.Y.value}/2",
-                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
@@ -296,14 +299,15 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.Y.value}/2",
-                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,

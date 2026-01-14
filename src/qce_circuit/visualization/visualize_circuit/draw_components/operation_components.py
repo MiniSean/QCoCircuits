@@ -178,6 +178,7 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
     """
     pivot: Vec2D
     height: float
+    width: float = field(default=None)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
@@ -195,9 +196,12 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
         return self._base_block.draw(axes=axes)
 
     def __post_init__(self):
+        if self.width is None:
+            object.__setattr__(self, 'width', self.height)
+
         object.__setattr__(self, '_base_block', RectangleBlock(
             pivot=self.pivot,
-            width=self.height,
+            width=self.width,
             height=self.height,
             alignment=self.alignment,
             style_settings=self.style_settings,

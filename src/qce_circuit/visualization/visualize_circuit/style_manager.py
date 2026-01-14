@@ -106,6 +106,7 @@ class StyleSettings:
     width_line: float = field(default=2.0)
     width_line_small: float = field(default=1.0)
     width_line_icon: float = field(default=6.0)
+    width_line_bar: float = field(default=2.0)
     width_border: float = field(default=2.0)
     width_divider: float = field(default=0.4)
     width_state_description: float = field(default=0.7)
@@ -138,7 +139,7 @@ class StyleSettings:
         return ChannelStyleSettings(
             line_color=self.color_channel_bar,
             text_color=self.color_text,
-            line_width=self.width_line,
+            line_width=self.width_line_bar,
             name_description_width=self.width_name_description,
             font_size=self.font_size,
             divider_width=self.width_divider,
@@ -160,22 +161,6 @@ class StyleSettings:
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
             rectilinear_margin_width=self.rectilinear_margin_width,
-            rectilinear_margin_height=self.rectilinear_margin_height,
-        )
-
-    @property
-    def operation_minimalist_style(self) -> OperationStyleSettings:
-        return OperationStyleSettings(
-            border_color=self.color_outline,
-            background_color=self.color_background,
-            text_color=self.color_text,
-            border_width=self.width_border,
-            line_width=self.width_line,
-            border_line_style=self.line_style_border,
-            dot_radius=self.radius_dot,
-            font_size=self.font_size,
-            subtext_font_size=self.font_size_small,
-            rectilinear_margin_width=self.rectilinear_margin_minimalist_broad_width + self.rectilinear_margin_width,
             rectilinear_margin_height=self.rectilinear_margin_height,
         )
 

@@ -366,6 +366,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
     """
     element_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element)
     element_highlight_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element_outline)
+    include_gate_sequence_labels: bool = field(default=False)
 
     # region Class Methods
     def get_element_components(self) -> List[IDrawComponent]:
@@ -392,7 +393,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                     zorder=style_setting.zorder_element,
                 ),
             ))
-            if self.include_element_labels:
+            if self.include_element_labels or (self.include_gate_sequence_labels and qubit_id in self.gate_sequence.qubit_ids):
                 result.append(TextComponent(
                     pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                     text=qubit_id.id,
@@ -445,7 +446,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -454,6 +455,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     :param description: Generic surface code layer definition including parity-groups and gate sequence.
     :param kwargs: Keyword arguments passed to figure constructor.
     :param include_element_labels: Boolean to enable or disable element label text.
+    :param include_gate_sequence_element_labels: Boolean to enable or disable (gate sequence only) element label text.
     :return: Figure and Axes pair.
     """
     sequence_count: int = description.gate_sequence_count
@@ -477,6 +479,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0,
             include_element_labels=include_element_labels,
+            include_gate_sequence_labels=include_gate_sequence_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         plot_layout_description(descriptor, **kwargs)
