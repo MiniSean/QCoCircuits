@@ -42,8 +42,10 @@ class OperationStyleSettings:
     dot_radius: float
     font_size: float
     subtext_font_size: float
-    rectilinear_margin: float
-    """Margin variable used to shrink the drawn rectangle to allow for 'white-space'."""
+    rectilinear_margin_width: float
+    """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (width dimension)."""
+    rectilinear_margin_height: float
+    """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (height dimension)."""
 
 
 @dataclass(frozen=True)
@@ -112,7 +114,8 @@ class StyleSettings:
     line_style_border: str = field(default='-')
 
     # Spacing
-    rectilinear_margin: float = field(default=0.1)
+    rectilinear_margin_width: float = field(default=0.1)
+    rectilinear_margin_height: float = field(default=0.1)
 
     # Header
     enable_state_description: bool = field(default=True)
@@ -144,7 +147,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property
@@ -159,7 +163,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property
@@ -174,7 +179,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property
