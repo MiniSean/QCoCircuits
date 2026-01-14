@@ -18,18 +18,19 @@ class TransformConstructor(ITransformConstructor):
     channel_spacing: float
     channel_indices: List[int]
     """Array of unique, ordered channel indices."""
+    channel_width_scaling: float = 1.0
 
     # region Interface Methods
     def identifier_to_pivot(self, identifier: ChannelIdentifier, time_component: IDurationComponent) -> Vec2D:
         """:return: Pivot based on channel identifier and duration component."""
         return Vec2D(
-            x=time_component.start_time,
+            x=time_component.start_time * self.channel_width_scaling,
             y=-1 * self.channel_indices.index(identifier.id) * self.channel_spacing
         )
 
     def identifier_to_width(self, time_component: IDurationComponent) -> float:
         """:return: Rectilinear transform height based on duration component."""
-        return time_component.duration
+        return time_component.duration * self.channel_width_scaling
 
     def identifier_to_height(self, identifier: ChannelIdentifier) -> float:
         """:return: Rectilinear transform height based on channel identifier."""

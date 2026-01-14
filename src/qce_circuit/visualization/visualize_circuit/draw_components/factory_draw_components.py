@@ -2,7 +2,7 @@
 # Module containing functionality for constructing draw components from operation class types.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Dict
 from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     ChannelIdentifier,
@@ -71,7 +71,10 @@ from qce_circuit.visualization.visualize_circuit.draw_components.annotation_comp
     HorizontalVariableIndicator,
     RoundedRectangleHighlight,
 )
-from qce_circuit.visualization.visualize_circuit.style_manager import StyleManager
+from qce_circuit.visualization.visualize_circuit.style_manager import (
+    StyleManager,
+    ChannelStyleSettings,
+)
 
 
 class DefaultFactory(IOperationDrawComponentFactory[ICircuitOperation, IDrawComponent]):
@@ -158,6 +161,7 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.X.value}/2",
+                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
@@ -187,6 +191,7 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.X.value}/2",
+                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
@@ -264,6 +269,7 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.Y.value}/2",
+                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
@@ -293,6 +299,7 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.Y.value}/2",
+                style_settings=StyleManager.read_config().operation_minimalist_style,
             )
 
         return BlockRotation(
@@ -431,6 +438,14 @@ class HadamardFactory(IOperationDrawComponentFactory[Hadamard, IDrawComponent]):
 
 class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawComponent]):
 
+    # region Class Constructor
+    def __init__(self, channel_identifier_color_map: Optional[Dict[int, str]] = None):
+        if channel_identifier_color_map is None:
+            channel_identifier_color_map = dict()
+        self.channel_identifier_color_map: Dict[int, str] = channel_identifier_color_map
+        """(Optional) colormap for updating line-color style. Artistic purpose only."""
+    # endregion
+
     # region Interface Methods
     def construct(self, operation: VirtualPark, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
@@ -438,12 +453,17 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        style_settings: ChannelStyleSettings = StyleManager.read_config().channel_style
+        if operation.qubit_index in self.channel_identifier_color_map:
+            style_settings = style_settings.update_color(line_color=self.channel_identifier_color_map[operation.qubit_index])
+
         if operation.net_zero:
             return SquareNetZeroParkBlock(
                 pivot=transform.pivot,
                 height=transform.height,
                 width=transform.width,
                 alignment=transform.parent_alignment,
+                style_settings=style_settings,
             )
 
         return SquareParkBlock(
@@ -451,6 +471,7 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             height=transform.height,
             width=transform.width,
             alignment=transform.parent_alignment,
+            style_settings=style_settings,
         )
     # endregion
 

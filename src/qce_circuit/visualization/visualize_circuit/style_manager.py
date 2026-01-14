@@ -2,7 +2,7 @@
 # Module for specific (Quantum circuit visualization) style manager
 # -------------------------------------------
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import threading
 from contextlib import contextmanager
 from qce_circuit.utilities.singleton_base import Singleton
@@ -23,9 +23,15 @@ class ChannelStyleSettings:
     line_width: float
     font_size: float
     divider_width: float
+    name_description_width: float
     state_description_width: float
     enable_state_description: bool
     enable_label_description: bool
+
+    # region Class Methods
+    def update_color(self, line_color: str) -> 'ChannelStyleSettings':
+        return replace(self, line_color=line_color)
+    # endregion
 
 
 @dataclass(frozen=True)
@@ -92,6 +98,7 @@ class StyleSettings:
     color_icon: str = field(default='black')
     color_outline: str = field(default='black')
     color_outline_dim: str = field(default='darkgrey')
+    color_channel_bar: str = field(default='black')
     color_highlight_background: str = field(default='lightblue')
     color_highlight_outline: str = field(default='blue')
 
@@ -102,6 +109,7 @@ class StyleSettings:
     width_border: float = field(default=2.0)
     width_divider: float = field(default=0.4)
     width_state_description: float = field(default=0.7)
+    width_name_description: float = field(default=0.5)
 
     # Radius
     radius_dot: float = field(default=0.1)
@@ -115,7 +123,10 @@ class StyleSettings:
 
     # Spacing
     rectilinear_margin_width: float = field(default=0.1)
+    rectilinear_margin_minimalist_broad_width: float = field(default=0.1)
     rectilinear_margin_height: float = field(default=0.1)
+    channel_height_scaling: float = field(default=1.2)
+    channel_width_scaling: float = field(default=1.0)
 
     # Header
     enable_state_description: bool = field(default=True)
@@ -125,9 +136,10 @@ class StyleSettings:
     @property
     def channel_style(self) -> ChannelStyleSettings:
         return ChannelStyleSettings(
-            line_color=self.color_outline,
+            line_color=self.color_channel_bar,
             text_color=self.color_text,
             line_width=self.width_line,
+            name_description_width=self.width_name_description,
             font_size=self.font_size,
             divider_width=self.width_divider,
             state_description_width=self.width_state_description,
@@ -148,6 +160,22 @@ class StyleSettings:
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
             rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
+        )
+
+    @property
+    def operation_minimalist_style(self) -> OperationStyleSettings:
+        return OperationStyleSettings(
+            border_color=self.color_outline,
+            background_color=self.color_background,
+            text_color=self.color_text,
+            border_width=self.width_border,
+            line_width=self.width_line,
+            border_line_style=self.line_style_border,
+            dot_radius=self.radius_dot,
+            font_size=self.font_size,
+            subtext_font_size=self.font_size_small,
+            rectilinear_margin_width=self.rectilinear_margin_minimalist_broad_width + self.rectilinear_margin_width,
             rectilinear_margin_height=self.rectilinear_margin_height,
         )
 

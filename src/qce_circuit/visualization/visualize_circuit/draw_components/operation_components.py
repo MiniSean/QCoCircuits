@@ -73,7 +73,7 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
         """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
         margin_width: float = self.style_settings.rectilinear_margin_width
         margin_height: float = self.style_settings.rectilinear_margin_height
-        margin_pivot_shift: Vec2D = Vec2D(x=margin_width/2, y=0.0)
+        margin_pivot_shift: Vec2D = Vec2D(x=0.0, y=0.0)
         return RectTransform(
             _pivot_strategy=FixedPivot(self.pivot + margin_pivot_shift),
             _width_strategy=FixedLength(self.width - margin_width),
