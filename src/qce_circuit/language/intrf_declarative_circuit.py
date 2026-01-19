@@ -76,7 +76,7 @@ class InitialStateContainer(Generic[T]):
     def as_ordered_array(self, qubit_order: Optional[List[T]] = None) -> np.ndarray:
         sorted_indices: List[T] = qubit_order
         if sorted_indices is None:
-            sorted_indices: List[T] = list(sorted(self.initial_states.keys()))
+            sorted_indices: List[T] = list(self.initial_states.keys())
         # Maps initial state to binary
         to_bit_conversion: Dict[InitialStateEnum, int] = {
             InitialStateEnum.ZERO: 0,
