@@ -104,6 +104,12 @@ class NoiseSettings:
             return self.individual_noise[qubit_id]
         return self.get_default_noise_settings()
 
+    def get_operation_duration(self, identifier: str) -> float:
+        duration_mapper: Dict[str, float] = self.operation_durations.duration_mapper
+        if identifier in duration_mapper:
+            return duration_mapper[identifier]
+        return self.operation_durations.default_duration
+
     def to_dict(self):
         # Manually serialize, especially for the individual_noise dictionary
         serialized_data = {

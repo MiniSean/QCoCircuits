@@ -84,9 +84,13 @@ class PauliAdditiveCircuitNoiseFactory(IStimAdditiveCircuitNoiseFactory):
         if t == 0:
             return 0, 0, 0
 
-        px = 0.25 * (1 - np.exp(-t / t1))
+        exp_t1 = np.exp(-t / t1)
+        exp_t2 = np.exp(-t / t2)
+
+        px = 0.25 * (1 - exp_t1)
         py = px
-        pz = 0.5 * (1 - np.exp(-t / t2)) - 0.25 * (1 - np.exp(-t / t1))
+        pz = 0.5 * (1 - exp_t2) - px
+
         # Clamp values
         px = min(max(px, 0.0), 1.0)
         py = min(max(py, 0.0), 1.0)
