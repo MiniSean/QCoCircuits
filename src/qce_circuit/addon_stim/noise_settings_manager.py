@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass, field, asdict, fields, is_dataclass
 from typing import Dict, List, Any, get_type_hints
 from qce_circuit.utilities.singleton_base import Singleton
-from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj, IEdgeID
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj, IEdgeID, EdgeIDObj
 from qce_circuit.utilities.readwrite_yaml import (
     get_yaml_file_path,
     write_yaml,
@@ -145,7 +145,7 @@ class NoiseSettings:
         operation_durations_data = data_copy.pop("operation_durations", asdict(OperationDurationParameters()))
         # Reconstruct the individual_noise dictionary
         individual_noise = {QubitIDObj(key): QubitNoiseModelParameters(**value) for key, value in individual_noise_data.items()}
-        pair_noise = {QubitIDObj(key): EdgeNoiseModelParameters(**value) for key, value in pair_noise_data.items()}
+        pair_noise = {EdgeIDObj.from_qubit_ids(*key.split("-")): EdgeNoiseModelParameters(**value) for key, value in pair_noise_data.items()}
         operation_durations = OperationDurationParameters(**operation_durations_data)
         # Construct and return the NoiseSettings instance
         return cls(
