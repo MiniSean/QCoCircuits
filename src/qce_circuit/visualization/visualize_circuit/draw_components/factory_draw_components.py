@@ -651,7 +651,7 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
         ]
         transform: IRectTransform = transform_constructor.combine_transforms(transforms=transforms)
         text_string: str = ""
-        if operation.nr_of_repetitions is not "":
+        if operation.nr_of_repetitions != "":
             text_string = f"x{operation.nr_of_repetitions}"
         return RoundedRectangleHighlight(
             pivot=transform.pivot,
