@@ -650,12 +650,15 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
             for channel_identifier in operation.channel_identifiers
         ]
         transform: IRectTransform = transform_constructor.combine_transforms(transforms=transforms)
+        text_string: str = ""
+        if operation.nr_of_repetitions is not "":
+            text_string = f"x{operation.nr_of_repetitions}"
         return RoundedRectangleHighlight(
             pivot=transform.pivot,
             width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
-            text_string=f'x{operation.nr_of_repetitions}'
+            text_string=text_string,
         )
     # endregion
 
@@ -738,12 +741,25 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[IColorOverwrit
     # region Interface Methods
     def construct(self, operation: IColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(
-            color_text=operation.color_overwrite,
-            color_icon=operation.color_overwrite,
-            color_outline=operation.color_overwrite,
-            color_outline_dim=operation.color_overwrite,
-        )):
+        overwrite_line: bool = any([
+            isinstance(operation.wrapped_operation, CPhase),
+        ])
+        overwrite_virtual_park: bool = isinstance(operation.wrapped_operation, VirtualPark)
+        overwrite_dict = dict(
+            color_background=operation.color_overwrite,
+        )
+        if overwrite_line:
+            overwrite_dict = dict(
+                color_text=operation.color_overwrite,
+                color_icon=operation.color_overwrite,
+                color_outline=operation.color_overwrite,
+                color_outline_dim=operation.color_overwrite,
+            )
+        if overwrite_virtual_park:
+            overwrite_dict = dict(
+                color_channel_bar_cover=operation.color_overwrite,
+            )
+        with StyleManager.temporary_override(**overwrite_dict):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.wrapped_operation,
                 transform_constructor=transform_constructor,

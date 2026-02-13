@@ -401,7 +401,7 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
             cover_arc_ycoords,
             linestyle='-',
             linewidth=self.style_settings.line_width * 2,
-            color='white',  #
+            color=self.style_settings.cover_color,
             zorder=-16,
         )
 

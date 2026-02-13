@@ -90,7 +90,7 @@ class StyleSettings:
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
     color_element: str = field(default='#808080')
-    color_element_outline: str = field(default='#1c50a3')
+    color_element_outline: str = field(default='#d62e28')
     color_park_operation: str = field(default='black')
     color_gate_operation: str = field(default='black')
 
@@ -98,12 +98,12 @@ class StyleSettings:
     width_line_small: float = field(default=2.0)
     width_line_medium: float = field(default=4.0)
     width_line_large: float = field(default=8.0)
-    width_line_thick: float = field(default=12.0)
+    width_line_thick: float = field(default=8.0)
 
     # Radius
     radius_dot: float = field(default=0.2)
     radius_hexagon: float = field(default=0.3)
-    radius_dot_indicator: float = field(default=0.3)
+    radius_dot_indicator: float = field(default=0.28)
 
     # Font sizes
     font_size: float = field(default=16.0)

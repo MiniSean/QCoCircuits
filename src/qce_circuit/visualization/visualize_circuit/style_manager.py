@@ -20,6 +20,7 @@ class ChannelStyleSettings:
     """
     line_color: str
     text_color: str
+    cover_color: str
     line_width: float
     font_size: float
     divider_width: float
@@ -99,6 +100,7 @@ class StyleSettings:
     color_outline: str = field(default='black')
     color_outline_dim: str = field(default='darkgrey')
     color_channel_bar: str = field(default='black')
+    color_channel_bar_cover: str = field(default='white')
     color_highlight_background: str = field(default='lightblue')
     color_highlight_outline: str = field(default='blue')
 
@@ -139,6 +141,7 @@ class StyleSettings:
         return ChannelStyleSettings(
             line_color=self.color_channel_bar,
             text_color=self.color_text,
+            cover_color=self.color_channel_bar_cover,
             line_width=self.width_line_bar,
             name_description_width=self.width_name_description,
             font_size=self.font_size,

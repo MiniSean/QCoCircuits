@@ -112,10 +112,20 @@ class NoiseSettings:
             single_qubit_gate_error=self.default_single_qubit_gate_error,
         )
 
+    def get_default_pair_noise_settings(self) -> EdgeNoiseModelParameters:
+        return EdgeNoiseModelParameters(
+            two_qubit_gate_error=0.0,
+        )
+
     def get_noise_settings(self, qubit_id: IQubitID) -> QubitNoiseModelParameters:
         if qubit_id in self.individual_noise:
             return self.individual_noise[qubit_id]
         return self.get_default_noise_settings()
+
+    def get_pair_noise_settings(self, edge_id: IEdgeID) -> EdgeNoiseModelParameters:
+        if edge_id in self.pair_noise:
+            return self.pair_noise[edge_id]
+        return self.get_default_pair_noise_settings()
 
     def get_operation_duration(self, identifier: str) -> float:
         duration_mapper: Dict[str, float] = self.operation_durations.duration_mapper
