@@ -190,7 +190,6 @@ class TextComponent(IRectTransformComponent, IDrawComponent):
             color=self.color,
             fontsize=self.style_settings.font_size,
             weight='bold',
-            antialiased=False,
             ha='center',
             va='center',
             zorder=self.style_settings.zorder,
