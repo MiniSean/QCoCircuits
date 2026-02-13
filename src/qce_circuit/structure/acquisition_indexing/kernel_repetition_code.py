@@ -169,7 +169,11 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         """:return: Array-like of ordered indexing kernels that describe self."""
         repetition_kernels: List[IIndexingKernel] = self._repetition_kernels
         calibration_kernel: List[IIndexingKernel] = [self._calibration_kernel]
-        result: List[IIndexingKernel] = repetition_kernels + calibration_kernel
+
+        result: List[IIndexingKernel] = repetition_kernels
+        if not self.include_qutrit_calibration_points:
+            return result
+        result = repetition_kernels + calibration_kernel
         return result
     # endregion
 

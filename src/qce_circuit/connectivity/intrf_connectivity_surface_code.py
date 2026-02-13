@@ -167,6 +167,11 @@ class ISurfaceCodeLayer(IDeviceLayer, metaclass=ABCMeta):
         raise InterfaceMethodException
 
     @property
+    def parity_groups(self) -> List[IParityGroup]:
+        """:return: (All) X- and Z-type parity groups."""
+        return self.parity_group_x + self.parity_group_z
+
+    @property
     @abstractmethod
     def data_qubit_ids(self) -> List[IQubitID]:
         """:return: (Data) qubit-ID's in device layer."""

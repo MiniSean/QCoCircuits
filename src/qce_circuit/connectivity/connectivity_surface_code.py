@@ -288,6 +288,32 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     # endregion
 
 
+class SurfaceTuna17Layer(Surface17Layer):
+    """
+    Singleton class, implementing ISurfaceCodeLayer interface to describe a surface-17 layout.
+    Extends Surface-17 layout by setting frequency groups to common mid-frequency range. Suppresses parking constraints.
+    """
+    _frequency_group_lookup: Dict[IQubitID, FrequencyGroupIdentifier] = {
+        QubitIDObj('D1'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D2'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D3'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D4'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D5'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D6'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D7'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D8'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('D9'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('Z1'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('Z2'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('Z3'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('Z4'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('X1'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('X2'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('X3'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+        QubitIDObj('X4'): FrequencyGroupIdentifier(_id=FrequencyGroup.MID),
+    }
+
+
 def get_neighbors(element: Union[IQubitID, IEdgeID], connectivity: IConnectivityLayer, order: int = 1) -> List[IQubitID]:
     """
     Functionality for both qubit-ID and edge-ID.

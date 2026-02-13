@@ -71,12 +71,13 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
     @property
     def rectilinear_transform(self) -> IRectTransform:
         """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
-        margin: float = self.style_settings.rectilinear_margin
-        margin_pivot_shift: Vec2D = Vec2D(x=margin/2, y=0.0)
+        margin_width: float = self.style_settings.rectilinear_margin_width
+        margin_height: float = self.style_settings.rectilinear_margin_height
+        margin_pivot_shift: Vec2D = Vec2D(x=0.0, y=0.0)
         return RectTransform(
             _pivot_strategy=FixedPivot(self.pivot + margin_pivot_shift),
-            _width_strategy=FixedLength(self.width - margin),
-            _height_strategy=FixedLength(self.height - margin),
+            _width_strategy=FixedLength(self.width - margin_width),
+            _height_strategy=FixedLength(self.height - margin_height),
             _parent_alignment=self.alignment,
         )
     # endregion
@@ -177,6 +178,7 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
     """
     pivot: Vec2D
     height: float
+    width: float = field(default=None)
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
@@ -194,9 +196,12 @@ class SquareBlock(IRectTransformComponent, IDrawComponent):
         return self._base_block.draw(axes=axes)
 
     def __post_init__(self):
+        if self.width is None:
+            object.__setattr__(self, 'width', self.height)
+
         object.__setattr__(self, '_base_block', RectangleBlock(
             pivot=self.pivot,
-            width=self.height,
+            width=self.width,
             height=self.height,
             alignment=self.alignment,
             style_settings=self.style_settings,
@@ -396,7 +401,7 @@ class SquareParkBlock(IRectTransformComponent, IDrawComponent):
             cover_arc_ycoords,
             linestyle='-',
             linewidth=self.style_settings.line_width * 2,
-            color='white',  #
+            color=self.style_settings.cover_color,
             zorder=-16,
         )
 

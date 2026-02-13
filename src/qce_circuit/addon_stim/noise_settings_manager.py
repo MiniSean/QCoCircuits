@@ -6,7 +6,7 @@ import os
 from dataclasses import dataclass, field, asdict, fields, is_dataclass
 from typing import Dict, List, Any, get_type_hints
 from qce_circuit.utilities.singleton_base import Singleton
-from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
+from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj, IEdgeID, EdgeIDObj
 from qce_circuit.utilities.readwrite_yaml import (
     get_yaml_file_path,
     write_yaml,
@@ -78,6 +78,17 @@ class QubitNoiseModelParameters:
 
 
 @dataclass(frozen=True)
+class EdgeNoiseModelParameters:
+    """Data class, containing noise model parameters for two-qubit edge."""
+    two_qubit_gate_error: float = field(default=0.0)
+
+    # region Class Methods
+    def __post_init__(self):
+        typecast_dataclass_fields(self)
+    # endregion
+
+
+@dataclass(frozen=True)
 class NoiseSettings:
     """
     Data class, describing a variety of parameter settings for circuit-level noise.
@@ -86,8 +97,10 @@ class NoiseSettings:
     default_t2: float = field(default=20e-6)
     default_assignment_error: float = field(default=0.01)
     default_single_qubit_gate_error: float = field(default=0.0)
+    default_two_qubit_gate_error: float = field(default=0.0)
 
     individual_noise: Dict[IQubitID, QubitNoiseModelParameters] = field(default_factory=dict)
+    pair_noise: Dict[IEdgeID, EdgeNoiseModelParameters] = field(default_factory=dict)
     operation_durations: OperationDurationParameters = field(default_factory=OperationDurationParameters)
 
     # region Class Methods
@@ -99,10 +112,26 @@ class NoiseSettings:
             single_qubit_gate_error=self.default_single_qubit_gate_error,
         )
 
+    def get_default_pair_noise_settings(self) -> EdgeNoiseModelParameters:
+        return EdgeNoiseModelParameters(
+            two_qubit_gate_error=0.0,
+        )
+
     def get_noise_settings(self, qubit_id: IQubitID) -> QubitNoiseModelParameters:
         if qubit_id in self.individual_noise:
             return self.individual_noise[qubit_id]
         return self.get_default_noise_settings()
+
+    def get_pair_noise_settings(self, edge_id: IEdgeID) -> EdgeNoiseModelParameters:
+        if edge_id in self.pair_noise:
+            return self.pair_noise[edge_id]
+        return self.get_default_pair_noise_settings()
+
+    def get_operation_duration(self, identifier: str) -> float:
+        duration_mapper: Dict[str, float] = self.operation_durations.duration_mapper
+        if identifier in duration_mapper:
+            return duration_mapper[identifier]
+        return self.operation_durations.default_duration
 
     def to_dict(self):
         # Manually serialize, especially for the individual_noise dictionary
@@ -112,6 +141,7 @@ class NoiseSettings:
             "default_assignment_error": self.default_assignment_error,
             "default_single_qubit_gate_error": self.default_single_qubit_gate_error,
             "individual_noise": {key.id: asdict(value) for key, value in self.individual_noise.items()},
+            "pair_noise": {key.id: asdict(value) for key, value in self.pair_noise.items()},
             "operation_durations": asdict(self.operation_durations),
         }
         return serialized_data
@@ -121,14 +151,17 @@ class NoiseSettings:
         # Extract and remove the individual_noise from the input dictionary to handle it separately
         data_copy = data.copy()
         individual_noise_data = data_copy.pop("individual_noise", {})
+        pair_noise_data = data_copy.pop("pair_noise", {})
         operation_durations_data = data_copy.pop("operation_durations", asdict(OperationDurationParameters()))
         # Reconstruct the individual_noise dictionary
         individual_noise = {QubitIDObj(key): QubitNoiseModelParameters(**value) for key, value in individual_noise_data.items()}
+        pair_noise = {EdgeIDObj.from_qubit_ids(*key.split("-")): EdgeNoiseModelParameters(**value) for key, value in pair_noise_data.items()}
         operation_durations = OperationDurationParameters(**operation_durations_data)
         # Construct and return the NoiseSettings instance
         return cls(
             **data_copy,
             individual_noise=individual_noise,
+            pair_noise=pair_noise,
             operation_durations=operation_durations,
         )
     # endregion

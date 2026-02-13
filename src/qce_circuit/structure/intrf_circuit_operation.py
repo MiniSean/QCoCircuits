@@ -12,6 +12,7 @@ from qce_circuit.utilities.custom_exceptions import (
     RelationTypeNotImplementedException,
 )
 from qce_circuit.utilities.custom_warnings import OperationNotFoundWarning
+from qce_circuit.utilities.array_manipulation import unique_in_order
 
 
 @unique
@@ -289,6 +290,11 @@ class ICircuitOperation(ICircuitNode, IRelationComponent['ICircuitOperation'], I
     def channel_identifiers(self) -> List[ChannelIdentifier]:
         """:return: Array-like of channel identifiers to which this operation applies to."""
         raise InterfaceMethodException
+
+    @property
+    def unique_channel_indices(self) -> List[int]:
+        """:return: Unique list of channel indices."""
+        return unique_in_order([channel.id for channel in self.channel_identifiers])
     # endregion
 
     # region Interface Methods

@@ -84,12 +84,13 @@ class StyleSettings:
     Data class, describing a variety of parameter settings for stylization.
     """
     # Color schemes
+    color_background_base: str = field(default='#e5e5e5')  # #b0b0b0
     color_background_x: str = field(default='#7ba3e3')
     color_background_z: str = field(default='#2bab4b')  # '#3870c9'
     color_text: str = field(default='black')
     color_outline: str = field(default='black')
-    color_element: str = field(default='#b3c7e8')
-    color_element_outline: str = field(default='#1c50a3')
+    color_element: str = field(default='#808080')
+    color_element_outline: str = field(default='#d62e28')
     color_park_operation: str = field(default='black')
     color_gate_operation: str = field(default='black')
 
@@ -97,12 +98,12 @@ class StyleSettings:
     width_line_small: float = field(default=2.0)
     width_line_medium: float = field(default=4.0)
     width_line_large: float = field(default=8.0)
-    width_line_thick: float = field(default=12.0)
+    width_line_thick: float = field(default=8.0)
 
     # Radius
     radius_dot: float = field(default=0.2)
     radius_hexagon: float = field(default=0.3)
-    radius_dot_indicator: float = field(default=0.3)
+    radius_dot_indicator: float = field(default=0.28)
 
     # Font sizes
     font_size: float = field(default=16.0)
@@ -156,6 +157,15 @@ class StyleSettings:
         return LineSettings(
             line_color=self.color_outline,
             line_width=self.width_line_large,
+            line_style='-',
+            zorder=self.zorder_line,
+        )
+
+    @property
+    def edge_style(self) -> LineSettings:
+        return LineSettings(
+            line_color=self.color_element,
+            line_width=self.width_line_small,
             line_style='-',
             zorder=self.zorder_line,
         )
