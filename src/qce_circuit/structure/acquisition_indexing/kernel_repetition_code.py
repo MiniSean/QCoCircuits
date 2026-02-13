@@ -173,7 +173,7 @@ class RepetitionExperimentKernel(IStabilizerIndexingKernel):
         result: List[IIndexingKernel] = repetition_kernels
         if not self.include_qutrit_calibration_points:
             return result
-        result += calibration_kernel
+        result = repetition_kernels + calibration_kernel
         return result
     # endregion
 
