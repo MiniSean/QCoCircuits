@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     Ry90,
     Rym90,
     RyTheta,
+    RPhiTheta,
     VirtualPhase,
     Reset,
     Wait,
@@ -330,6 +331,25 @@ class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
+            rotation_angle=RotationAngle.THETA,
+        )
+    # endregion
+
+
+class RPhiThetaFactory(IOperationDrawComponentFactory[RPhiTheta, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: RPhiTheta, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.PHI,
             rotation_angle=RotationAngle.THETA,
         )
     # endregion
