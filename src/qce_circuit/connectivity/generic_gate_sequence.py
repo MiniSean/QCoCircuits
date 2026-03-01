@@ -1,9 +1,13 @@
 # -------------------------------------------
 # Module containing interface and implementation of generic (Surface17) gate sequences.
 # -------------------------------------------
-from abc import ABCMeta, abstractmethod
-from typing import List, Union
-from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException, InterfaceMethodException
+import warnings
+from abc import ABC, ABCMeta, abstractmethod
+from typing import List, Union, Optional, Dict
+from qce_circuit.utilities.custom_exceptions import (
+    ElementNotIncludedException,
+    InterfaceMethodException,
+)
 from qce_circuit.utilities.array_manipulation import unique_in_order
 from qce_circuit.connectivity.intrf_channel_identifier import (
     IQubitID,
@@ -14,12 +18,53 @@ from qce_circuit.connectivity.intrf_connectivity_surface_code import (
     ISurfaceCodeLayer,
     IParityGroup,
     FrequencyGroupIdentifier,
+    StabilizerType,
 )
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     IGateSequenceLayer,
     GateSequenceLayer,
 )
 from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+
+
+class ILogicalObservable(ABC):
+    """
+    Interface class, describing logical observable.
+    """
+
+    # region Interface Properties
+    @property
+    @abstractmethod
+    def observable_basis(self) -> StabilizerType:
+        """:return: (StabilizerType) basis of logical observable."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def involved_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: Array-like of data-qubit ID's involved in observable."""
+        raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def concordant_stabilizer_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: Array-like of ancilla-qubit ID's that describe the stabilizers which are concordant with the observable.
+        """
+        raise InterfaceMethodException
+    # endregion
+
+    # region Interface Methods
+    @abstractmethod
+    def contains(self, element: IQubitID) -> bool:
+        """:return: True if element is contained in logical observable, else False."""
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def get_projection_basis(self, qubit_id: IQubitID) -> StabilizerType:
+        """:return: Projection basis per qubit in observable."""
+        raise InterfaceMethodException
+    # endregion
 
 
 class IGenericSurfaceCodeLayer(ISurfaceCodeLayer, IGateSequenceLayer, metaclass=ABCMeta):
@@ -35,6 +80,63 @@ class IGenericSurfaceCodeLayer(ISurfaceCodeLayer, IGateSequenceLayer, metaclass=
         Returns an empty list if parity-group is not present.
         """
         raise InterfaceMethodException
+
+    @abstractmethod
+    def get_logical_observable(self, basis: StabilizerType) -> ILogicalObservable:
+        """:return: Logical observable corresponding to basis."""
+        raise InterfaceMethodException
+    # endregion
+
+
+class LogicalObservable(ILogicalObservable):
+    """
+    Data class, implementing ILogicalObservable interface.
+    """
+
+    # region Interface Properties
+    @property
+    def observable_basis(self) -> StabilizerType:
+        """:return: (StabilizerType) basis of logical observable."""
+        return self._observable_basis
+
+    @property
+    def involved_data_qubit_ids(self) -> List[IQubitID]:
+        """:return: Array-like of data-qubit ID's involved in observable."""
+        return unique_in_order(self._data_qubit_projections.keys())
+
+    @property
+    def concordant_stabilizer_qubit_ids(self) -> List[IQubitID]:
+        """
+        :return: Array-like of ancilla-qubit ID's that describe the stabilizers which are concordant with the observable.
+        """
+        return self._supporting_stabilizers
+    # endregion
+
+    # region Class Constructor
+    def __init__(
+            self,
+            observable_basis: StabilizerType,
+            data_qubit_projections: Dict[IQubitID, StabilizerType],
+            supporting_stabilizers: List[IQubitID],
+            default_projections: StabilizerType = StabilizerType.STABILIZER_Z,
+    ):
+        self._observable_basis: StabilizerType = observable_basis
+        self._data_qubit_projections: Dict[IQubitID, StabilizerType] = data_qubit_projections
+        self._supporting_stabilizers: List[IQubitID] = supporting_stabilizers
+        self._default_projections: StabilizerType = default_projections
+    # endregion
+
+    # region Interface Methods
+    def contains(self, element: IQubitID) -> bool:
+        """:return: True if element is contained in logical observable, else False."""
+        return element in self._data_qubit_projections
+
+    def get_projection_basis(self, qubit_id: IQubitID) -> StabilizerType:
+        """:return: Projection basis per qubit in observable."""
+        if qubit_id not in self._data_qubit_projections:
+            # raise ObservableElementNotIncludedException(f"{qubit_id} is not in logical observable. Use one of self.involved_data_qubit_ids.")
+            return self._default_projections
+        return self._data_qubit_projections[qubit_id]
     # endregion
 
 
@@ -100,10 +202,16 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
     # endregion
 
     # region Class Constructor
-    def __init__(self, gate_sequences: List[GateSequenceLayer], parity_group_z: List[IParityGroup], parity_group_x: List[IParityGroup], surface_code_layer: ISurfaceCodeLayer = Surface17Layer()):
+    def __init__(self, gate_sequences: List[GateSequenceLayer], parity_group_z: List[IParityGroup], parity_group_x: List[IParityGroup], logical_observables: Optional[List[ILogicalObservable]] = None, surface_code_layer: ISurfaceCodeLayer = Surface17Layer()):
         self._gate_sequences: List[GateSequenceLayer] = gate_sequences
         self._parity_group_z: List[IParityGroup] = parity_group_z
         self._parity_group_x: List[IParityGroup] = parity_group_x
+        if logical_observables is None:
+            logical_observables = []
+        self._logical_observables: Dict[StabilizerType, ILogicalObservable] = {
+            logical_observable.observable_basis: logical_observable
+            for logical_observable in logical_observables
+        }
         self._surface_code_layer: ISurfaceCodeLayer = surface_code_layer
     # endregion
 
@@ -125,6 +233,20 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
                 continue
 
         return result
+
+    def get_logical_observable(self, basis: StabilizerType) -> ILogicalObservable:
+        """:return: Logical observable corresponding to basis."""
+        default_fallback: bool = basis not in self._logical_observables
+        if default_fallback:
+            warnings.warn(f"Logical observable for basis {basis.name} is not defined in GenericSurfaceCode. Defaulting to {StabilizerType.STABILIZER_Z.name} for all data qubit ID's.")
+            return LogicalObservable(
+                observable_basis=StabilizerType.STABILIZER_Z,
+                data_qubit_projections={
+                    data_qubit_id: StabilizerType.STABILIZER_Z
+                    for data_qubit_id in self.data_qubit_ids
+                }
+            )
+        return self._logical_observables[basis]
     # endregion
 
     # region IGateSequenceLayer Interface Methods
