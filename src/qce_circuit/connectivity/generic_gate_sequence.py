@@ -244,7 +244,8 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
                 data_qubit_projections={
                     data_qubit_id: StabilizerType.STABILIZER_Z
                     for data_qubit_id in self.data_qubit_ids
-                }
+                },
+                supporting_stabilizers=StabilizerType.STABILIZER_Z,
             )
         return self._logical_observables[basis]
     # endregion

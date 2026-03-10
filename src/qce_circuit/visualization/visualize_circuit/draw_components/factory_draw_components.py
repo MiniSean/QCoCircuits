@@ -61,6 +61,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
     RotationAngle,
     SquareParkBlock,
     SquareNetZeroParkBlock,
+    DualityBlock,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
@@ -130,6 +131,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"{RotationAxis.X.value}",
@@ -137,6 +139,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -740,10 +743,24 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
                 line_style_border=operation.line_style_border_overwrite,
                 color_background=operation.color_background_overwrite,
         )):
-            draw_component: IDrawComponent = self._factory_manager.construct(
-                operation=operation.operation,
-                transform_constructor=transform_constructor,
-            )
+            # Special exception coherent/stochastic error
+            special_exception: bool = isinstance(operation.operation, Rx180)
+            if not special_exception:
+                draw_component: IDrawComponent = self._factory_manager.construct(
+                    operation=operation.operation,
+                    transform_constructor=transform_constructor,
+                )
+            else:
+                transform: IRectTransform = transform_constructor.construct_transform(
+                    identifier=operation.operation.channel_identifiers[0],
+                    time_component=operation.operation,
+                )
+                draw_component: IDrawComponent = DualityBlock(
+                    pivot=transform.pivot,
+                    width=transform.width,
+                    height=transform.height,
+                    alignment=transform.parent_alignment,
+                )
         return draw_component
     # endregion
 

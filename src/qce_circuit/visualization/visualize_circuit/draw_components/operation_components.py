@@ -517,3 +517,95 @@ class SquareNetZeroParkBlock(IRectTransformComponent, IDrawComponent):
 
         return axes
     # endregion
+
+
+@dataclass(frozen=True)
+class DualityBlock(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing schedule block.
+    """
+    pivot: Vec2D
+    width: float
+    height: float
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
+    _base_block: RectangleBlock = field(init=False)
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary. Should be treated as 'personal zone'."""
+        return self._base_block.rectilinear_transform
+    # endregion
+
+    # region Class Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        axes = self._base_block.draw(axes=axes)
+
+        origin_x, origin_y = self.rectilinear_transform.origin_pivot.to_tuple()
+        w = self.rectilinear_transform.width
+        h = self.rectilinear_transform.height
+        x_offset = 0.05
+        vertices = [
+            (origin_x, origin_y),  # (0.0, 0.0)
+            (origin_x + (0.5 - x_offset) * w, origin_y),  # (0.5-x, 0.0)
+            (origin_x + (0.5 + x_offset) * w, origin_y + h),  # (0.5+x, 1.0)
+            (origin_x, origin_y + h)  # (0.0, 1.0)
+        ]
+
+        # Create the Polygon patch
+        polygon = patches.Polygon(
+            xy=vertices,
+            closed=True,
+            linewidth=self.style_settings.border_width,
+            linestyle=self.style_settings.border_line_style,
+            edgecolor=self.style_settings.border_color,
+            facecolor="#37CBDB",  # self.style_settings.background_color,
+            zorder=-1,
+        )
+
+        # PlotErrorType.COHERENT_SIMULATION: "#DB379A",  # #DB8D37 (#DB379A)
+        # PlotErrorType.STOCHASTIC_SIMULATION: "#37CBDB",  # #7537DB (#37CBDB)
+        axes.add_patch(polygon)
+
+        # Draw X
+        text_center = Vec2D.from_vector(0.5 * (
+                self.rectilinear_transform.center_pivot.to_vector()
+                + self.rectilinear_transform.left_pivot.to_vector())
+        )
+        axes.text(
+            x=text_center.x,
+            y=text_center.y,
+            s=f"${RotationAxis.X.value}_{{p}}$",
+            fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='center',
+            va='center',
+        )
+        # Draw RX
+        text_center = Vec2D.from_vector(0.5 * (
+                self.rectilinear_transform.center_pivot.to_vector()
+                + self.rectilinear_transform.right_pivot.to_vector())
+        )
+        axes.text(
+            x=text_center.x,
+            y=text_center.y,
+            s=rf'$\mathtt{{R_{{{RotationAxis.X.value}}}{{{RotationAngle.THETA.value}}}}}$',
+            fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='center',
+            va='center',
+        )
+
+        return axes
+
+    def __post_init__(self):
+        object.__setattr__(self, '_base_block', RectangleBlock(
+            pivot=self.pivot,
+            width=self.width,
+            height=self.height,
+            alignment=self.alignment,
+            style_settings=self.style_settings,
+        ))
+    # endregion
