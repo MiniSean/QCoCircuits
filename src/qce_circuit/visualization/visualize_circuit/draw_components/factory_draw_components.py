@@ -739,18 +739,11 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # region Interface Methods
     def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(
-                line_style_border=operation.line_style_border_overwrite,
-                color_background=operation.color_background_overwrite,
-        )):
-            # Special exception coherent/stochastic error
-            special_exception: bool = isinstance(operation.operation, Rx180)
-            if not special_exception:
-                draw_component: IDrawComponent = self._factory_manager.construct(
-                    operation=operation.operation,
-                    transform_constructor=transform_constructor,
-                )
-            else:
+        if isinstance(operation.operation, Identity):
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background="white",
+            )):
                 transform: IRectTransform = transform_constructor.construct_transform(
                     identifier=operation.operation.channel_identifiers[0],
                     time_component=operation.operation,
@@ -759,8 +752,32 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
                     pivot=transform.pivot,
                     width=transform.width,
                     height=transform.height,
+                    text_left=f"${RotationAxis.X.value}$",
+                    text_right=f"$I$",
                     alignment=transform.parent_alignment,
                 )
+        else:
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background=operation.color_background_overwrite,
+            )):
+                # Special exception coherent/stochastic error
+                if isinstance(operation.operation, Rx180):
+                    transform: IRectTransform = transform_constructor.construct_transform(
+                        identifier=operation.operation.channel_identifiers[0],
+                        time_component=operation.operation,
+                    )
+                    draw_component: IDrawComponent = DualityBlock(
+                        pivot=transform.pivot,
+                        width=transform.width,
+                        height=transform.height,
+                        alignment=transform.parent_alignment,
+                    )
+                else:
+                    draw_component: IDrawComponent = self._factory_manager.construct(
+                        operation=operation.operation,
+                        transform_constructor=transform_constructor,
+                    )
         return draw_component
     # endregion
 
