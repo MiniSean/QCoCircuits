@@ -527,6 +527,9 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
     pivot: Vec2D
     width: float
     height: float
+    face_color_left: str = field(default="#37CBDB")
+    text_left: str = field(default=f"${RotationAxis.X.value}_{{p}}$")
+    text_right: str = field(default=rf'$\mathtt{{R_{{{RotationAxis.X.value}}}{{{RotationAngle.THETA.value}}}}}$')
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     _base_block: RectangleBlock = field(init=False)
@@ -561,7 +564,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
             linewidth=self.style_settings.border_width,
             linestyle=self.style_settings.border_line_style,
             edgecolor=self.style_settings.border_color,
-            facecolor="#37CBDB",  # self.style_settings.background_color,
+            facecolor=self.face_color_left,  # self.style_settings.background_color,
             zorder=-1,
         )
 
@@ -577,7 +580,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
         axes.text(
             x=text_center.x,
             y=text_center.y,
-            s=f"${RotationAxis.X.value}_{{p}}$",
+            s=self.text_left,
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
@@ -591,7 +594,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
         axes.text(
             x=text_center.x,
             y=text_center.y,
-            s=rf'$\mathtt{{R_{{{RotationAxis.X.value}}}{{{RotationAngle.THETA.value}}}}}$',
+            s=self.text_right,
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
