@@ -17,6 +17,7 @@ from qce_circuit.connectivity.intrf_connectivity import IDeviceLayer
 class StabilizerType(Enum):
     STABILIZER_X = 0
     STABILIZER_Z = 1
+    STABILIZER_Y = 2
 
 
 class IParityGroup(ABC):

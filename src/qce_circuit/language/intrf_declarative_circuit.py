@@ -7,6 +7,7 @@ from dataclasses import dataclass, field
 from multipledispatch import dispatch
 from typing import List, Union, Dict, Optional, TypeVar, Generic
 from enum import Enum, unique
+import math
 import numpy as np
 from numpy.typing import NDArray
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
@@ -49,6 +50,13 @@ class InitialStateEnum(Enum):
     MINUS_I = '-i'
 
 
+@unique
+class CodeDimension(Enum):
+    """Enum class, describing code dimensions."""
+    REPETITION_CODE = "1D"
+    SURFACE_CODE = "2D"
+
+
 @dataclass(frozen=True)
 class InitialStateContainer(Generic[T]):
     """
@@ -58,10 +66,13 @@ class InitialStateContainer(Generic[T]):
     """Index pointers to data qubits only."""
     ancilla_initial_states: Dict[T, InitialStateEnum] = field(default_factory=dict)
     """Index pointers to ancilla qubits only."""
+    code_dimension: CodeDimension = field(default=CodeDimension.REPETITION_CODE)
 
     # region Class Properties
     @property
     def distance(self) -> int:
+        if self.code_dimension == CodeDimension.SURFACE_CODE:
+            return int(math.sqrt(len(self.initial_states)))
         return len(self.initial_states)
 
     @property
@@ -149,7 +160,7 @@ class InitialStateContainer(Generic[T]):
         raise NotImplementedError(f"Initial state {initial_state} is not supported.")
 
     @classmethod
-    def from_ordered_list(cls, initial_states: List[InitialStateEnum], ancilla_initial_states: Optional[List[InitialStateEnum]] = None) -> 'InitialStateContainer':
+    def from_ordered_list(cls, initial_states: List[InitialStateEnum], ancilla_initial_states: Optional[List[InitialStateEnum]] = None, code_dimension: CodeDimension = CodeDimension.REPETITION_CODE) -> 'InitialStateContainer':
         """
         :return: Class method constructor based on ordered array of initial state.
         Where each element index corresponds to qubit index.
@@ -160,6 +171,7 @@ class InitialStateContainer(Generic[T]):
         return InitialStateContainer[int](
             initial_states={i: state for i, state in enumerate(initial_states)},
             ancilla_initial_states={i: state for i, state in enumerate(ancilla_initial_states)},
+            code_dimension=code_dimension,
         )
 
     @classmethod

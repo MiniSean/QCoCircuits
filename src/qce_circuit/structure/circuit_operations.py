@@ -595,6 +595,37 @@ class Rphi90(SingleQubitOperation, ICircuitOperation):
     # endregion
 
 
+
+@dataclass(frozen=False, unsafe_hash=True)
+class RPhiTheta(SingleQubitOperation, ICircuitOperation):
+    """
+    Rotation- [Xcos(phi) + Ysin(phi)] (Theta degrees) operation.
+    """
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=QubitChannel.MICROWAVE),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'RPhiTheta':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
+        )
+    # endregion
+
+
 @dataclass(frozen=False, unsafe_hash=True)
 class TwoQubitOperation(ITwoQubitOperation):
     """
