@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     Ry90,
     Rym90,
     RyTheta,
+    RPhiTheta,
     VirtualPhase,
     Reset,
     Wait,
@@ -60,6 +61,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
     RotationAngle,
     SquareParkBlock,
     SquareNetZeroParkBlock,
+    DualityBlock,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
@@ -129,6 +131,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"{RotationAxis.X.value}",
@@ -136,6 +139,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -330,6 +334,25 @@ class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
+            rotation_angle=RotationAngle.THETA,
+        )
+    # endregion
+
+
+class RPhiThetaFactory(IOperationDrawComponentFactory[RPhiTheta, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: RPhiTheta, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.PHI,
             rotation_angle=RotationAngle.THETA,
         )
     # endregion
@@ -716,14 +739,45 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # region Interface Methods
     def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(
-                line_style_border=operation.line_style_border_overwrite,
-                color_background=operation.color_background_overwrite,
-        )):
-            draw_component: IDrawComponent = self._factory_manager.construct(
-                operation=operation.operation,
-                transform_constructor=transform_constructor,
-            )
+        if isinstance(operation.operation, Identity):
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background="white",
+            )):
+                transform: IRectTransform = transform_constructor.construct_transform(
+                    identifier=operation.operation.channel_identifiers[0],
+                    time_component=operation.operation,
+                )
+                draw_component: IDrawComponent = DualityBlock(
+                    pivot=transform.pivot,
+                    width=transform.width,
+                    height=transform.height,
+                    text_left=f"${RotationAxis.X.value}$",
+                    text_right=f"$I$",
+                    alignment=transform.parent_alignment,
+                )
+        else:
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background=operation.color_background_overwrite,
+            )):
+                # Special exception coherent/stochastic error
+                if isinstance(operation.operation, Rx180):
+                    transform: IRectTransform = transform_constructor.construct_transform(
+                        identifier=operation.operation.channel_identifiers[0],
+                        time_component=operation.operation,
+                    )
+                    draw_component: IDrawComponent = DualityBlock(
+                        pivot=transform.pivot,
+                        width=transform.width,
+                        height=transform.height,
+                        alignment=transform.parent_alignment,
+                    )
+                else:
+                    draw_component: IDrawComponent = self._factory_manager.construct(
+                        operation=operation.operation,
+                        transform_constructor=transform_constructor,
+                    )
         return draw_component
     # endregion
 
