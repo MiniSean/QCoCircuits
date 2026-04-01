@@ -158,6 +158,12 @@ class GenericSurfaceCode(IGenericSurfaceCodeLayer):
         """:return: (Only) involved qubit-ID's in gate sequence."""
         gate_sequence_layers: List[GateSequenceLayer] = [self.get_gate_sequence_at_index(layer_index) for layer_index in range(self.gate_sequence_count)]
         return unique_in_order([qubit_id for gate_sequence_layer in gate_sequence_layers for qubit_id in gate_sequence_layer.qubit_ids])
+
+    @property
+    def involved_edge_ids(self) -> List[IEdgeID]:
+        """:return: (Only) involved edge-ID's in gate sequence."""
+        gate_sequence_layers: List[GateSequenceLayer] = [self.get_gate_sequence_at_index(layer_index) for layer_index in range(self.gate_sequence_count)]
+        return unique_in_order([edge_ids for gate_sequence_layer in gate_sequence_layers for edge_ids in gate_sequence_layer.edge_ids])
     # endregion
 
     # region ISurfaceCodeLayer Interface Properties
