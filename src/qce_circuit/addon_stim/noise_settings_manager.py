@@ -68,6 +68,7 @@ class QubitNoiseModelParameters:
     """Data class, containing noise model parameters for single qubit."""
     t1: float = field(default=1e-3)
     t2: float = field(default=2e-3)
+    t2_echo: float = field(default=2e-3)
     assignment_error: float = field(default=0.0)
     single_qubit_gate_error: float = field(default=0.0)
 
@@ -95,6 +96,7 @@ class NoiseSettings:
     """
     default_t1: float = field(default=10e-6)
     default_t2: float = field(default=20e-6)
+    default_t2_echo: float = field(default=20e-6)
     default_assignment_error: float = field(default=0.01)
     default_single_qubit_gate_error: float = field(default=0.0)
     default_two_qubit_gate_error: float = field(default=0.0)
@@ -108,6 +110,7 @@ class NoiseSettings:
         return QubitNoiseModelParameters(
             t1=self.default_t1,
             t2=self.default_t2,
+            t2_echo=self.default_t2_echo,
             assignment_error=self.default_assignment_error,
             single_qubit_gate_error=self.default_single_qubit_gate_error,
         )
@@ -138,6 +141,7 @@ class NoiseSettings:
         serialized_data = {
             "default_t1": self.default_t1,
             "default_t2": self.default_t2,
+            "default_t2_echo": self.default_t2_echo,
             "default_assignment_error": self.default_assignment_error,
             "default_single_qubit_gate_error": self.default_single_qubit_gate_error,
             "individual_noise": {key.id: asdict(value) for key, value in self.individual_noise.items()},
