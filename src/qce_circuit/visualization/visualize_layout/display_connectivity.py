@@ -37,6 +37,7 @@ from qce_circuit.visualization.visualize_layout.element_components import (
 )
 from qce_circuit.visualization.visualize_layout.polygon_component import (
     PolylineComponent,
+    LineComponent,
     GateOperationComponent,
 )
 from qce_circuit.visualization.visualize_circuit.display_circuit import CircuitAxesFormat
@@ -183,22 +184,15 @@ class VisualConnectivityDescription:
                 ))
         return result
 
-    def get_line_components(self) -> List[IDrawComponent]:
-        return [
-            PolylineComponent(
-                vertices=[
-                    self.identifier_to_pivot(QubitIDObj('D7')),
-                    self.identifier_to_pivot(QubitIDObj('Z3')),
-                    self.identifier_to_pivot(QubitIDObj('D4')),
-                    self.identifier_to_pivot(QubitIDObj('Z1')),
-                    self.identifier_to_pivot(QubitIDObj('D5')),
-                    self.identifier_to_pivot(QubitIDObj('Z4')),
-                    self.identifier_to_pivot(QubitIDObj('D6')),
-                    self.identifier_to_pivot(QubitIDObj('Z2')),
-                    self.identifier_to_pivot(QubitIDObj('D3')),
-                ],
-            )
-        ]
+    def get_element_edges_components(self) -> List[IDrawComponent]:
+        result: List[IDrawComponent] = []
+        for edge_id in self.connectivity.edge_ids:
+            result.append(LineComponent(
+                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]) + self.pivot,
+                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]) + self.pivot,
+                alignment=TransformAlignment.MID_CENTER,
+            ))
+        return result
 
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
@@ -300,7 +294,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
     """
     Data class, overwriting VisualConnectivityDescription by forcing single plaquette color.
     """
-    plaquette_color_overwrite: str = field(default="#b0b0b0")
+    plaquette_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_background_base)
 
     # region Class Methods
     def get_plaquette_components(self) -> List[IDrawComponent]:
@@ -370,12 +364,15 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
     """
     Data class, overwriting VisualConnectivityDescription by implementing stabilizer group element visualization.
     """
-    element_color_overwrite: str = field(default="#c4c4c4")
+    element_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element)
+    element_highlight_color_overwrite: str = field(default_factory=lambda: StyleManager.read_config().color_element_outline)
+    include_gate_sequence_labels: bool = field(default=False)
 
     # region Class Methods
     def get_element_components(self) -> List[IDrawComponent]:
         result: List[IDrawComponent] = []
         style_setting: StyleSettings = StyleManager.read_config()
+        gate_sequence_data_qubit_ids: List[IQubitID] = [qubit_id for qubit_id in self.gate_sequence.qubit_ids if qubit_id in self.connectivity.data_qubit_ids]
 
         for qubit_id in self.connectivity.qubit_ids:
             background_color = self.element_color_overwrite
@@ -383,6 +380,8 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                 background_color = style_setting.color_background_z
             if qubit_id in [parity_group.ancilla_id for parity_group in self.connectivity.parity_group_x]:
                 background_color = style_setting.color_background_x
+            if qubit_id in gate_sequence_data_qubit_ids:
+                background_color = self.element_highlight_color_overwrite
 
             result.append(DotComponent(
                 pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
@@ -394,7 +393,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                     zorder=style_setting.zorder_element,
                 ),
             ))
-            if self.include_element_labels:
+            if self.include_element_labels or (self.include_gate_sequence_labels and qubit_id in self.gate_sequence.qubit_ids):
                 result.append(TextComponent(
                     pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
                     text=qubit_id.id,
@@ -415,6 +414,9 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
         draw_component.draw(axes=ax)
 
     for draw_component in description.get_element_components():
+        draw_component.draw(axes=ax)
+
+    for draw_component in description.get_element_edges_components():
         draw_component.draw(axes=ax)
 
     for draw_component in description.get_operation_components():
@@ -444,7 +446,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -453,6 +455,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     :param description: Generic surface code layer definition including parity-groups and gate sequence.
     :param kwargs: Keyword arguments passed to figure constructor.
     :param include_element_labels: Boolean to enable or disable element label text.
+    :param include_gate_sequence_element_labels: Boolean to enable or disable (gate sequence only) element label text.
     :return: Figure and Axes pair.
     """
     sequence_count: int = description.gate_sequence_count
@@ -463,7 +466,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
 
     for i, ax in enumerate(axes):
         descriptor: AllGreyVisualConnectivityDescription = AllGreyVisualConnectivityDescription(
-            connectivity=Surface17Layer(),
+            connectivity=connectivity,
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0,
             include_element_labels=include_element_labels,
@@ -476,6 +479,7 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0,
             include_element_labels=include_element_labels,
+            include_gate_sequence_labels=include_gate_sequence_element_labels,
         )
         kwargs[SubplotKeywordEnum.HOST_AXES.value] = (fig, ax)
         plot_layout_description(descriptor, **kwargs)

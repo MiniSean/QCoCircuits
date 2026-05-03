@@ -189,6 +189,7 @@ class TextComponent(IRectTransformComponent, IDrawComponent):
             s=self.text,
             color=self.color,
             fontsize=self.style_settings.font_size,
+            fontweight='bold',
             ha='center',
             va='center',
             zorder=self.style_settings.zorder,

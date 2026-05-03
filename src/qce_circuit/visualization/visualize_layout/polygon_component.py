@@ -47,6 +47,33 @@ class PolylineComponent(IDrawComponent):
 
 
 @dataclass(frozen=True)
+class LineComponent(IDrawComponent):
+    """
+    Data class, containing dimension data for drawing circle.
+    """
+    pivot0: Vec2D
+    pivot1: Vec2D
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: LineSettings = field(default_factory=lambda: StyleManager.read_config().edge_style)
+
+    # region Class Properties
+    @property
+    def vertices(self) -> List[Vec2D]:
+        return [self.pivot0, self.pivot1]
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        return PolylineComponent(
+            vertices=self.vertices,
+            alignment=self.alignment,
+            style_settings=self.style_settings,
+        ).draw(axes=axes)
+    # endregion
+
+
+@dataclass(frozen=True)
 class GateOperationComponent(IDrawComponent):
     """
     Data class, containing dimension data for drawing circle.

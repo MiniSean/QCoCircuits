@@ -52,10 +52,10 @@ def count_latex_characters(latex_str: str) -> int:
     return total_count
 
 
-def estimate_latex_length(latex_str: str, font_size: float) -> float:
+def estimate_latex_length(latex_str: str, font_size: float, scaling_factor: float = 1.0) -> float:
     # Define a scaling factor and calculate the average character width
-    scaling_factor: float = 0.025
-    avg_char_width: float = scaling_factor * font_size
+    _scaling_factor: float = 0.025 * scaling_factor
+    avg_char_width: float = _scaling_factor * font_size
 
     # Get the total character count
     char_count: int = count_latex_characters(latex_str=latex_str)
@@ -100,7 +100,7 @@ class ChannelHeader(IRectTransformComponent, IDrawComponent):
 
     @property
     def channel_name_width(self) -> float:
-        return estimate_latex_length(latex_str=self.channel_name, font_size=self.style_settings.font_size)
+        return self.style_settings.name_description_width
 
     @property
     def state_description_width(self) -> float:

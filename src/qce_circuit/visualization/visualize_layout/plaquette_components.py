@@ -62,7 +62,8 @@ class RectanglePlaquette(IRectTransformComponent, IDrawComponent):
             height=self.rectilinear_transform.height,
             rotation_point=self.rectilinear_transform.pivot.to_tuple(),
             angle=self.rotation,
-            edgecolor='none',
+            edgecolor=self.style_settings.background_color,
+            linewidth=0.1,  # Fixed (small) width, to prevent aliasing
             facecolor=self.style_settings.background_color,  # Depends on background type
             zorder=self.style_settings.zorder,
         )

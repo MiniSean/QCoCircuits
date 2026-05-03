@@ -2,7 +2,7 @@
 # Module containing functionality for constructing draw components from operation class types.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List
+from typing import List, Optional, Dict
 from qce_circuit.structure.intrf_circuit_operation import (
     ICircuitOperation,
     ChannelIdentifier,
@@ -22,6 +22,7 @@ from qce_circuit.structure.circuit_operations import (
     Ry90,
     Rym90,
     RyTheta,
+    RPhiTheta,
     VirtualPhase,
     Reset,
     Wait,
@@ -60,6 +61,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.operation_compo
     RotationAngle,
     SquareParkBlock,
     SquareNetZeroParkBlock,
+    DualityBlock,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.multi_pivot_components import (
     BlockTwoQubitGate,
@@ -71,7 +73,10 @@ from qce_circuit.visualization.visualize_circuit.draw_components.annotation_comp
     HorizontalVariableIndicator,
     RoundedRectangleHighlight,
 )
-from qce_circuit.visualization.visualize_circuit.style_manager import StyleManager
+from qce_circuit.visualization.visualize_circuit.style_manager import (
+    StyleManager,
+    ChannelStyleSettings,
+)
 
 
 class DefaultFactory(IOperationDrawComponentFactory[ICircuitOperation, IDrawComponent]):
@@ -126,6 +131,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"{RotationAxis.X.value}",
@@ -133,6 +139,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -155,6 +162,7 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.X.value}/2",
@@ -162,6 +170,7 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -184,6 +193,7 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.X.value}/2",
@@ -191,6 +201,7 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -261,6 +272,7 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"+{RotationAxis.Y.value}/2",
@@ -268,6 +280,7 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
@@ -290,6 +303,7 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"-{RotationAxis.Y.value}/2",
@@ -297,6 +311,7 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
@@ -319,6 +334,25 @@ class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
+            rotation_angle=RotationAngle.THETA,
+        )
+    # endregion
+
+
+class RPhiThetaFactory(IOperationDrawComponentFactory[RPhiTheta, IDrawComponent]):
+
+    # region Interface Methods
+    def construct(self, operation: RPhiTheta, transform_constructor: ITransformConstructor) -> IDrawComponent:
+        """:return: Draw component based on operation type."""
+        transform: IRectTransform = transform_constructor.construct_transform(
+            identifier=operation.channel_identifiers[0],
+            time_component=operation,
+        )
+        return BlockRotation(
+            pivot=transform.pivot,
+            height=transform.height,
+            alignment=transform.parent_alignment,
+            rotation_axes=RotationAxis.PHI,
             rotation_angle=RotationAngle.THETA,
         )
     # endregion
@@ -431,6 +465,14 @@ class HadamardFactory(IOperationDrawComponentFactory[Hadamard, IDrawComponent]):
 
 class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawComponent]):
 
+    # region Class Constructor
+    def __init__(self, channel_identifier_color_map: Optional[Dict[int, str]] = None):
+        if channel_identifier_color_map is None:
+            channel_identifier_color_map = dict()
+        self.channel_identifier_color_map: Dict[int, str] = channel_identifier_color_map
+        """(Optional) colormap for updating line-color style. Artistic purpose only."""
+    # endregion
+
     # region Interface Methods
     def construct(self, operation: VirtualPark, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
@@ -438,12 +480,17 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             identifier=operation.channel_identifiers[0],
             time_component=operation,
         )
+        style_settings: ChannelStyleSettings = StyleManager.read_config().channel_style
+        if operation.qubit_index in self.channel_identifier_color_map:
+            style_settings = style_settings.update_color(line_color=self.channel_identifier_color_map[operation.qubit_index])
+
         if operation.net_zero:
             return SquareNetZeroParkBlock(
                 pivot=transform.pivot,
                 height=transform.height,
                 width=transform.width,
                 alignment=transform.parent_alignment,
+                style_settings=style_settings,
             )
 
         return SquareParkBlock(
@@ -451,6 +498,7 @@ class VirtualParkFactory(IOperationDrawComponentFactory[VirtualPark, IDrawCompon
             height=transform.height,
             width=transform.width,
             alignment=transform.parent_alignment,
+            style_settings=style_settings,
         )
     # endregion
 
@@ -625,12 +673,15 @@ class FootprintFactory(IOperationDrawComponentFactory[ICircuitCompositeOperation
             for channel_identifier in operation.channel_identifiers
         ]
         transform: IRectTransform = transform_constructor.combine_transforms(transforms=transforms)
+        text_string: str = ""
+        if operation.nr_of_repetitions != "":
+            text_string = f"x{operation.nr_of_repetitions}"
         return RoundedRectangleHighlight(
             pivot=transform.pivot,
             width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
-            text_string=f'x{operation.nr_of_repetitions}'
+            text_string=text_string,
         )
     # endregion
 
@@ -688,14 +739,45 @@ class VirtualInjectedErrorFactory(IOperationDrawComponentFactory[VirtualInjected
     # region Interface Methods
     def construct(self, operation: VirtualInjectedError, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(
-                line_style_border=operation.line_style_border_overwrite,
-                color_background=operation.color_background_overwrite,
-        )):
-            draw_component: IDrawComponent = self._factory_manager.construct(
-                operation=operation.operation,
-                transform_constructor=transform_constructor,
-            )
+        if isinstance(operation.operation, Identity):
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background="white",
+            )):
+                transform: IRectTransform = transform_constructor.construct_transform(
+                    identifier=operation.operation.channel_identifiers[0],
+                    time_component=operation.operation,
+                )
+                draw_component: IDrawComponent = DualityBlock(
+                    pivot=transform.pivot,
+                    width=transform.width,
+                    height=transform.height,
+                    text_left=f"${RotationAxis.X.value}$",
+                    text_right=f"$I$",
+                    alignment=transform.parent_alignment,
+                )
+        else:
+            with StyleManager.temporary_override(**dict(
+                    line_style_border=operation.line_style_border_overwrite,
+                    color_background=operation.color_background_overwrite,
+            )):
+                # Special exception coherent/stochastic error
+                if isinstance(operation.operation, Rx180):
+                    transform: IRectTransform = transform_constructor.construct_transform(
+                        identifier=operation.operation.channel_identifiers[0],
+                        time_component=operation.operation,
+                    )
+                    draw_component: IDrawComponent = DualityBlock(
+                        pivot=transform.pivot,
+                        width=transform.width,
+                        height=transform.height,
+                        alignment=transform.parent_alignment,
+                    )
+                else:
+                    draw_component: IDrawComponent = self._factory_manager.construct(
+                        operation=operation.operation,
+                        transform_constructor=transform_constructor,
+                    )
         return draw_component
     # endregion
 
@@ -713,12 +795,25 @@ class VirtualColorOverwriteFactory(IOperationDrawComponentFactory[IColorOverwrit
     # region Interface Methods
     def construct(self, operation: IColorOverwrite, transform_constructor: ITransformConstructor) -> IDrawComponent:
         """:return: Draw component based on operation type."""
-        with StyleManager.temporary_override(**dict(
-            color_text=operation.color_overwrite,
-            color_icon=operation.color_overwrite,
-            color_outline=operation.color_overwrite,
-            color_outline_dim=operation.color_overwrite,
-        )):
+        overwrite_line: bool = any([
+            isinstance(operation.wrapped_operation, CPhase),
+        ])
+        overwrite_virtual_park: bool = isinstance(operation.wrapped_operation, VirtualPark)
+        overwrite_dict = dict(
+            color_background=operation.color_overwrite,
+        )
+        if overwrite_line:
+            overwrite_dict = dict(
+                color_text=operation.color_overwrite,
+                color_icon=operation.color_overwrite,
+                color_outline=operation.color_overwrite,
+                color_outline_dim=operation.color_overwrite,
+            )
+        if overwrite_virtual_park:
+            overwrite_dict = dict(
+                color_channel_bar_cover=operation.color_overwrite,
+            )
+        with StyleManager.temporary_override(**overwrite_dict):
             draw_component: IDrawComponent = self._factory_manager.construct(
                 operation=operation.wrapped_operation,
                 transform_constructor=transform_constructor,

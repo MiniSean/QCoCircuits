@@ -2,7 +2,7 @@
 # Module for specific (Quantum circuit visualization) style manager
 # -------------------------------------------
 import os
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 import threading
 from contextlib import contextmanager
 from qce_circuit.utilities.singleton_base import Singleton
@@ -20,12 +20,19 @@ class ChannelStyleSettings:
     """
     line_color: str
     text_color: str
+    cover_color: str
     line_width: float
     font_size: float
     divider_width: float
+    name_description_width: float
     state_description_width: float
     enable_state_description: bool
     enable_label_description: bool
+
+    # region Class Methods
+    def update_color(self, line_color: str) -> 'ChannelStyleSettings':
+        return replace(self, line_color=line_color)
+    # endregion
 
 
 @dataclass(frozen=True)
@@ -42,8 +49,10 @@ class OperationStyleSettings:
     dot_radius: float
     font_size: float
     subtext_font_size: float
-    rectilinear_margin: float
-    """Margin variable used to shrink the drawn rectangle to allow for 'white-space'."""
+    rectilinear_margin_width: float
+    """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (width dimension)."""
+    rectilinear_margin_height: float
+    """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (height dimension)."""
 
 
 @dataclass(frozen=True)
@@ -90,6 +99,8 @@ class StyleSettings:
     color_icon: str = field(default='black')
     color_outline: str = field(default='black')
     color_outline_dim: str = field(default='darkgrey')
+    color_channel_bar: str = field(default='black')
+    color_channel_bar_cover: str = field(default='white')
     color_highlight_background: str = field(default='lightblue')
     color_highlight_outline: str = field(default='blue')
 
@@ -97,9 +108,11 @@ class StyleSettings:
     width_line: float = field(default=2.0)
     width_line_small: float = field(default=1.0)
     width_line_icon: float = field(default=6.0)
+    width_line_bar: float = field(default=2.0)
     width_border: float = field(default=2.0)
     width_divider: float = field(default=0.4)
     width_state_description: float = field(default=0.7)
+    width_name_description: float = field(default=0.5)
 
     # Radius
     radius_dot: float = field(default=0.1)
@@ -112,7 +125,11 @@ class StyleSettings:
     line_style_border: str = field(default='-')
 
     # Spacing
-    rectilinear_margin: float = field(default=0.1)
+    rectilinear_margin_width: float = field(default=0.1)
+    rectilinear_margin_minimalist_broad_width: float = field(default=0.1)
+    rectilinear_margin_height: float = field(default=0.1)
+    channel_height_scaling: float = field(default=1.2)
+    channel_width_scaling: float = field(default=1.0)
 
     # Header
     enable_state_description: bool = field(default=True)
@@ -122,9 +139,11 @@ class StyleSettings:
     @property
     def channel_style(self) -> ChannelStyleSettings:
         return ChannelStyleSettings(
-            line_color=self.color_outline,
+            line_color=self.color_channel_bar,
             text_color=self.color_text,
-            line_width=self.width_line,
+            cover_color=self.color_channel_bar_cover,
+            line_width=self.width_line_bar,
+            name_description_width=self.width_name_description,
             font_size=self.font_size,
             divider_width=self.width_divider,
             state_description_width=self.width_state_description,
@@ -144,7 +163,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property
@@ -159,7 +179,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property
@@ -174,7 +195,8 @@ class StyleSettings:
             dot_radius=self.radius_dot,
             font_size=self.font_size,
             subtext_font_size=self.font_size_small,
-            rectilinear_margin=self.rectilinear_margin,
+            rectilinear_margin_width=self.rectilinear_margin_width,
+            rectilinear_margin_height=self.rectilinear_margin_height,
         )
 
     @property

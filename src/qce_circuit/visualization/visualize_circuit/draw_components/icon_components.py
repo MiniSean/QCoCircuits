@@ -88,8 +88,10 @@ class IconMeasure(IDrawComponent):
                 head_width=self.arrow_head_width,
                 tail_width=self.arrow_thickness,
             ),
+            shrinkA=0,
+            shrinkB=0,
             color=self.style_settings.icon_color,
-            linewidth=self.circle_thickness,
+            linewidth=self.arrow_thickness,
         )
         arrow_base = patches.Circle(
             xy=self.circle_center.to_tuple(),

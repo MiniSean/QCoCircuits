@@ -17,7 +17,7 @@ from qce_circuit.connectivity.intrf_connectivity import IDeviceLayer
 class StabilizerType(Enum):
     STABILIZER_X = 0
     STABILIZER_Z = 1
-    STABILIZER_MIXED = 2  # Mixed group stabilizer
+    STABILIZER_Y = 2
 
 
 @unique
@@ -46,7 +46,7 @@ class IParityGroup(ABC):
     @property
     @abstractmethod
     def parity_type(self) -> StabilizerType:
-        """:return: Parity type (X, Z or Mixed type stabilizer)."""
+        """:return: Parity type (X or Z type stabilizer)."""
         raise InterfaceMethodException
 
     @property
@@ -57,7 +57,7 @@ class IParityGroup(ABC):
 
     @property
     @abstractmethod
-    def data_ids(self) -> List[IQubitStabilizerBasis]:
+    def data_ids(self) -> List[IQubitID]:
         """:return: (All) data-qubit-ID's from parity."""
         raise InterfaceMethodException
 
@@ -183,6 +183,11 @@ class ISurfaceCodeLayer(IDeviceLayer, metaclass=ABCMeta):
     def parity_group_z(self) -> List[IParityGroup]:
         """:return: (All) parity groups part of Z-stabilizers."""
         raise InterfaceMethodException
+
+    @property
+    def parity_groups(self) -> List[IParityGroup]:
+        """:return: (All) X- and Z-type parity groups."""
+        return self.parity_group_x + self.parity_group_z
 
     @property
     @abstractmethod

@@ -531,7 +531,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         result.extend([
             initial_state.get_data_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
-                    qubit_id=self.data_qubit_ids[initial_state_index],
+                    qubit_id=initial_state_index if isinstance(initial_state_index, IQubitID) else self.data_qubit_ids[initial_state_index],
                 ),
                 initial_state_index=initial_state_index,
                 **kwargs,
@@ -541,7 +541,7 @@ class RepetitionCodeDescription(IRepetitionCodeDescription):
         result.extend([
             initial_state.get_data_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
-                    qubit_id=self.ancilla_qubit_ids[initial_state_index],
+                    qubit_id=initial_state_index if isinstance(initial_state_index, IQubitID) else self.ancilla_qubit_ids[initial_state_index],
                 ),
                 initial_state_index=initial_state_index,
                 **kwargs,
@@ -821,7 +821,7 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
         result.extend([
             initial_state.get_data_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
-                    qubit_id=self.data_qubit_ids[initial_state_index],
+                    qubit_id=initial_state_index if isinstance(initial_state_index, IQubitID) else self.data_qubit_ids[initial_state_index],
                 ),
                 initial_state_index=initial_state_index,
                 **kwargs,
@@ -831,7 +831,7 @@ class CompositeRepetitionCodeDescription(IRepetitionCodeDescription):
         result.extend([
             initial_state.get_ancilla_qubit_operation(
                 qubit_index=self.map_qubit_id_to_circuit_index(
-                    qubit_id=self.ancilla_qubit_ids[initial_state_index],
+                    qubit_id=initial_state_index if isinstance(initial_state_index, IQubitID) else self.ancilla_qubit_ids[initial_state_index],
                 ),
                 initial_state_index=initial_state_index,
                 **kwargs,

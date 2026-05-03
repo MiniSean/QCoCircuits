@@ -29,6 +29,7 @@ TRegistryKey = str
 class GlobalRegistryKey(Enum):
     READOUT = 'default_allocated_readout_duration'
     MICROWAVE = 'default_allocated_microwave_duration'
+    MICROWAVE_BROAD = 'default_allocated_microwave_broad_duration'
     FLUX = 'default_allocated_flux_duration'
     RESET = 'default_allocated_reset_duration'
     QEC_BLOCK = 'default_allocated_qec_duration'
@@ -43,6 +44,7 @@ class GlobalDurationRegistry(IRegistryGetter[GlobalRegistryKey, float]):
     _global_registry: Dict[str, float] = field(default_factory=lambda: {
         GlobalRegistryKey.READOUT.value: 2.0,
         GlobalRegistryKey.MICROWAVE.value: 1.0,
+        GlobalRegistryKey.MICROWAVE_BROAD.value: 2.0,
         GlobalRegistryKey.FLUX.value: 1.0,
         GlobalRegistryKey.RESET.value: 2.0,
         GlobalRegistryKey.QEC_BLOCK.value: 2.0,

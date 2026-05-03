@@ -18,6 +18,7 @@ from qce_circuit.structure.circuit_operations import (
     Ry90,
     Rym90,
     RyTheta,
+    RPhiTheta,
     Rx180ef,
     VirtualPhase,
     Rphi90,
@@ -48,6 +49,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.channel_compone
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.transform_constructor import TransformConstructor
 from qce_circuit.visualization.visualize_circuit.intrf_draw_component import IDrawComponent
+from qce_circuit.visualization.visualize_circuit.style_manager import StyleManager
 from qce_circuit.utilities.geometric_definitions import (
     IRectTransformComponent,
     IRectTransform,
@@ -102,6 +104,7 @@ from qce_circuit.visualization.visualize_circuit.draw_components.factory_draw_co
     Ry90Factory,
     Rym90Factory,
     RyThetaFactory,
+    RPhiThetaFactory,
     Rx180efFactory,
     ZPhaseFactory,
     Rphi90Factory,
@@ -158,27 +161,40 @@ class VisualCircuitDescription:
     composite_operations: List[ICircuitCompositeOperation]
     """Array of composite operations."""
     channel_label_map: Dict[int, str] = field(default_factory=dict)
+    """Channel identifier index to label mapping"""
+    channel_color_map: Dict[int, str] = field(default_factory=dict)
+    """Channel identifier index to color mapping"""
     minimalist: bool = field(default=False)
     """Minimalist drawing style, passed to factories"""
+    channel_height_scaling: float = field(default_factory=lambda: StyleManager.read_config().channel_height_scaling)
+    """Scalar for (duration) height of visualized circuit. Adds white space inbetween channel components."""
+    channel_width_scaling: float = field(default_factory=lambda: StyleManager.read_config().channel_width_scaling)
+    """Scalar for (duration) width of visualized circuit. Adds white space inbetween time-grouped components."""
 
     # region Class Properties
     @property
     def channel_spacing(self) -> float:
-        return self.channel_height * 1.2
+        return self.channel_height * self.channel_height_scaling
 
     @property
     def figure_size(self) -> Tuple[float, float]:
         """:return: Figure size (x, y) depending on visualized circuit components."""
-        return (self.channel_width, self.channel_spacing * len(self.channel_indices))
+        return (self.channel_width * self.channel_width_scaling, self.channel_spacing * len(self.channel_indices))
     # endregion
 
     # region Class Methods
     def get_channel_bar(self, index: int) -> ChannelBar:
         """:return: Channel bar drawing components."""
+        style_settings = StyleManager.read_config().channel_style
+        identifier = self.channel_indices[index]
+        if identifier in self.channel_color_map:
+            style_settings = style_settings.update_color(line_color=self.channel_color_map[identifier])
+
         return ChannelBar(
             pivot=Vec2D(x=0, y=-1 * index * self.channel_spacing),
-            width=self.channel_width,
+            width=self.channel_width * self.channel_width_scaling,
             height=self.channel_height,
+            style_settings=style_settings,
         )
 
     def get_channel_header(self, index: int) -> ChannelHeader:
@@ -189,12 +205,17 @@ class VisualCircuitDescription:
         if index in self.channel_label_map:
             channel_name = f'{self.channel_label_map[index]}'
 
+        style_settings = StyleManager.read_config().channel_style
+        if channel_index in self.channel_color_map:
+            style_settings = style_settings.update_color(line_color=self.channel_color_map[channel_index])
+
         channel_state = self.channel_states[index].value
         return ChannelHeader(
             pivot=Vec2D(x=0, y=-1 * index * self.channel_spacing),
             height=FixedLength(self.channel_height),
             channel_name=channel_name,
             state_description=rf'$|{channel_state}\rangle$',
+            style_settings=style_settings,
         )
 
     def get_transform_constructor(self) -> TransformConstructor:
@@ -202,6 +223,7 @@ class VisualCircuitDescription:
             channel_height=self.channel_height,
             channel_spacing=self.channel_spacing,
             channel_indices=self.channel_indices,
+            channel_width_scaling=self.channel_width_scaling,
         )
 
     def get_operation_draw_components(self) -> List[IDrawComponent]:
@@ -221,13 +243,14 @@ class VisualCircuitDescription:
                 Ry90: Ry90Factory(minimalist=minimalist),
                 Rym90: Rym90Factory(minimalist=minimalist),
                 RyTheta: RyThetaFactory(),
+                RPhiTheta: RPhiThetaFactory(),
                 Rx180ef: Rx180efFactory(minimalist=minimalist),
                 Rphi90: Rphi90Factory(),
                 VirtualPhase: ZPhaseFactory(),
                 Identity: IdentityFactory(),
                 Hadamard: HadamardFactory(),
                 Barrier: BarrierFactory(),
-                VirtualPark: VirtualParkFactory(),
+                VirtualPark: VirtualParkFactory(channel_identifier_color_map=self.channel_color_map),
                 VirtualVacant: VirtualVacantFactory(),
                 VirtualTwoQubitVacant: VirtualTwoQubitVacantFactory(),
                 VirtualEmpty: VirtualEmptyFactory(),
@@ -318,9 +341,12 @@ def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T
     return result
 
 
-def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, minimalist: bool = False) -> VisualCircuitDescription:
+def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, minimalist: bool = False) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
+    # Construct custom channel color map
+    if channel_color_map is None:
+        channel_color_map = {}
     # Apply custom channel order
     if custom_channel_order is None:
         custom_channel_order = []
@@ -351,6 +377,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         channel_height=1.0,
         channel_indices=channel_indices,
         channel_label_map=custom_channel_map,
+        channel_color_map=channel_color_map,
         channel_states=channel_states,
         operations=operations,
         composite_operations=circuit.composite_operations,
@@ -570,7 +597,7 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, **kwargs) -> IFigureAxesPair:
     if compact_visualization:
         with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
             with clear_lru_cache(RelationLink.get_start_time):
@@ -579,6 +606,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
                         circuit=circuit,
                         custom_channel_order=channel_order,
                         custom_channel_map=channel_map,
+                        channel_color_map=channel_color_map,
                         minimalist=minimalist_visualization,
                     ),
                     **kwargs
@@ -590,6 +618,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
             circuit=circuit,
             custom_channel_order=channel_order,
             custom_channel_map=channel_map,
+            channel_color_map=channel_color_map,
             minimalist=minimalist_visualization,
         ),
         **kwargs

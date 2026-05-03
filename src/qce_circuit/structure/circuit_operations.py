@@ -2,7 +2,7 @@
 # Module describing the declarative operations.
 # -------------------------------------------
 from abc import ABC, abstractmethod
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import List, Optional, Dict
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.structure.intrf_circuit_operation import (
@@ -114,7 +114,7 @@ class Reset(SingleQubitOperation, ICircuitOperation):
     """
     Reset operation covers all qubit channels.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.RESET))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.RESET))
 
     # region Interface Properties
     @property
@@ -132,9 +132,9 @@ class Reset(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Reset(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -165,11 +165,9 @@ class Wait(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Wait(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            qubit_channel=self.qubit_channel,
-            duration_strategy=self.duration_strategy,
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -179,7 +177,7 @@ class Identity(SingleQubitOperation, ICircuitOperation):
     """
     Identity operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -197,9 +195,9 @@ class Identity(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Identity(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -209,7 +207,7 @@ class Hadamard(SingleQubitOperation, ICircuitOperation):
     """
     Hadamard operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -227,9 +225,9 @@ class Hadamard(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Hadamard(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -239,7 +237,7 @@ class Rx180(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-X (180 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -257,9 +255,9 @@ class Rx180(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rx180(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -269,7 +267,7 @@ class Rx90(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-X (90 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -287,9 +285,9 @@ class Rx90(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rx90(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -299,7 +297,7 @@ class Rxm90(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-X (-90 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -317,9 +315,9 @@ class Rxm90(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rxm90(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -329,7 +327,7 @@ class RxTheta(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-X (theta degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -347,9 +345,9 @@ class RxTheta(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return RxTheta(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -359,7 +357,7 @@ class Ry180(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-Y (180 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -377,9 +375,9 @@ class Ry180(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Ry180(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -389,7 +387,7 @@ class Ry90(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-Y (90 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -407,9 +405,9 @@ class Ry90(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Ry90(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -419,7 +417,7 @@ class Rym90(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-Y (-90 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -437,9 +435,9 @@ class Rym90(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rym90(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -449,7 +447,7 @@ class RyTheta(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-Y (theta degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -467,9 +465,9 @@ class RyTheta(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return RyTheta(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -479,7 +477,7 @@ class Rx180ef(SingleQubitOperation, ICircuitOperation):
     """
     Rotation-X (180 degrees) operation between excited (e) and second-excited (f) state.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -497,9 +495,9 @@ class Rx180ef(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rx180ef(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -509,7 +507,7 @@ class VirtualPhase(SingleQubitOperation, ICircuitOperation):
     """
     Virtual (Z) phase rotation operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -527,9 +525,9 @@ class VirtualPhase(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualPhase(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -540,7 +538,7 @@ class VirtualPark(SingleQubitOperation, ICircuitOperation):
     Virtual park operation.
     Usually only interesting when working with frequency-tunable qubits.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.FLUX))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.FLUX))
     net_zero: bool = field(init=True, default=False)
     """Boolean describing the net-zero behaviour of the virtual parking. - Mainly useful for visualization."""
 
@@ -560,9 +558,9 @@ class VirtualPark(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualPark(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -572,7 +570,7 @@ class Rphi90(SingleQubitOperation, ICircuitOperation):
     """
     Rotation- [Xcos(phi) + Ysin(phi)] (90 degrees) operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
 
     # region Interface Properties
     @property
@@ -590,9 +588,40 @@ class Rphi90(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Rphi90(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
+        )
+    # endregion
+
+
+
+@dataclass(frozen=False, unsafe_hash=True)
+class RPhiTheta(SingleQubitOperation, ICircuitOperation):
+    """
+    Rotation- [Xcos(phi) + Ysin(phi)] (Theta degrees) operation.
+    """
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+
+    # region Interface Properties
+    @property
+    def channel_identifiers(self) -> List[ChannelIdentifier]:
+        """:return: Array-like of channel identifiers to which this operation applies to."""
+        return [
+            ChannelIdentifier(_id=self.qubit_index, _channel=QubitChannel.MICROWAVE),
+        ]
+    # endregion
+
+    # region Interface Methods
+    def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'RPhiTheta':
+        """
+        Creates a copy from self. Excluding any relation details.
+        :param relation_transfer_lookup: Lookup table used to transfer relation link.
+        :return: Copy of self with updated relation link.
+        """
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -661,11 +690,9 @@ class TwoQubitOperation(ITwoQubitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return TwoQubitOperation(
-            _control_qubit_index=self.control_qubit_index,
-            _target_qubit_index=self.target_qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            duration_strategy=self.duration_strategy,
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -698,7 +725,7 @@ class CPhase(TwoQubitOperation, ICircuitOperation):
     """
     Control-Phase operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.FLUX))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.FLUX))
 
     # region Interface Properties
     @property
@@ -719,10 +746,9 @@ class CPhase(TwoQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return CPhase(
-            _control_qubit_index=self.control_qubit_index,
-            _target_qubit_index=self.target_qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -732,7 +758,7 @@ class TwoQubitVirtualPhase(TwoQubitOperation, ICircuitOperation):
     """
     Virtual (Z) phase rotation operation.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=FixedDurationStrategy(duration=0.0))
+    duration_strategy: IDurationStrategy = field(init=True, default=FixedDurationStrategy(duration=0.0))
 
     # region Interface Properties
     @property
@@ -751,10 +777,9 @@ class TwoQubitVirtualPhase(TwoQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return TwoQubitVirtualPhase(
-            _control_qubit_index=self.control_qubit_index,
-            _target_qubit_index=self.target_qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -768,7 +793,7 @@ class DispersiveMeasure(IAcquisitionOperation):
     acquisition_strategy: IAcquisitionStrategy = field(init=True, repr=False)
     acquisition_tag: str = field(init=True, default='', repr=True)
     relation: IRelationLink[ICircuitOperation] = field(default_factory=RelationLink.no_relation, repr=False)
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.READOUT), repr=False)
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.READOUT), repr=False)
     _acquisition_identifier: AcquisitionIdentifier = field(init=False, repr=False)
 
     # region Interface Properties
@@ -833,11 +858,10 @@ class DispersiveMeasure(IAcquisitionOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return DispersiveMeasure(
-            qubit_index=self.qubit_index,
+        return replace(
+            self,
             acquisition_strategy=self.acquisition_strategy.copy(strategy_transfer_lookup=relation_transfer_lookup),
-            acquisition_tag=self.acquisition_tag,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
 
     def apply_modifiers_to_self(self) -> IAcquisitionOperation:
@@ -880,7 +904,7 @@ class Barrier(ICircuitOperation):
     """
     qubit_indices: List[int] = field(init=True)
     relation: IRelationLink[ICircuitOperation] = field(init=False, default_factory=RelationLink.no_relation)
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.BARRIER))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.BARRIER))
 
     # region Interface Properties
     @property
@@ -924,9 +948,7 @@ class Barrier(ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return Barrier(
-            qubit_indices=self.qubit_indices,
-        )
+        return replace(self)
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
         """
@@ -1010,10 +1032,9 @@ class VirtualQECOperation(ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualQECOperation(
-            qubit_indices=self.qubit_indices,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            duration_strategy=self.duration_strategy,
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -1071,11 +1092,9 @@ class VirtualVacant(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualVacant(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            qubit_channel=self.qubit_channel,
-            duration_strategy=self.duration_strategy,
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -1105,10 +1124,9 @@ class VirtualTwoQubitVacant(TwoQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualTwoQubitVacant(
-            _control_qubit_index=self.control_qubit_index,
-            _target_qubit_index=self.target_qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -1137,11 +1155,9 @@ class VirtualEmpty(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualEmpty(
-            qubit_index=self.qubit_index,
-            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            qubit_channel=self.qubit_channel,
-            duration_strategy=self.duration_strategy,
+        return replace(
+            self,
+            relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup)
         )
     # endregion
 
@@ -1193,7 +1209,8 @@ class VirtualOptional(ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualOptional(
+        return replace(
+            self,
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
             )
@@ -1273,12 +1290,11 @@ class VirtualInjectedError(ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualInjectedError(
+        return replace(
+            self,
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
             ),
-            line_style_border_overwrite=self.line_style_border_overwrite,
-            color_background_overwrite=self.color_background_overwrite,
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -1313,7 +1329,7 @@ class VirtualWait(SingleQubitOperation, ICircuitOperation):
     Allow to wait on specific (qubit) channel.
     Intended to display wait time.
     """
-    duration_strategy: IDurationStrategy = field(init=False, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
+    duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.MICROWAVE))
     qubit_channel: QubitChannel = field(init=True, default=QubitChannel.ALL)
     header_text: str = field(init=True, default="W")
     body_text: str = field(init=True, default="")
@@ -1334,12 +1350,9 @@ class VirtualWait(SingleQubitOperation, ICircuitOperation):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualWait(
-            qubit_index=self.qubit_index,
+        return replace(
+            self,
             relation=self.relation.copy(relation_transfer_lookup=relation_transfer_lookup),
-            qubit_channel=self.qubit_channel,
-            header_text=self.header_text,
-            body_text=self.body_text,
         )
     # endregion
 
@@ -1438,11 +1451,11 @@ class VirtualColorOverwrite(ICircuitOperation, IColorOverwrite):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualColorOverwrite(
+        return replace(
+            self,
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            ),
-            _color_overwrite=self._color_overwrite,
+            )
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -1542,11 +1555,11 @@ class VirtualTwoQubitColorOverwrite(ITwoQubitOperation, IColorOverwrite):
         :param relation_transfer_lookup: Lookup table used to transfer relation link.
         :return: Copy of self with updated relation link.
         """
-        return VirtualTwoQubitColorOverwrite(
+        return replace(
+            self,
             operation=self.operation.copy(
                 relation_transfer_lookup=relation_transfer_lookup,
-            ),
-            _color_overwrite=self._color_overwrite,
+            )
         )
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
