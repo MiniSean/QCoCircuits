@@ -8,7 +8,7 @@ import numpy as np
 import math
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer, IParityGroup
-from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer, StabilizerType
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     GateSequenceLayer,
 )
@@ -98,6 +98,21 @@ class VisualConnectivityDescription:
                         style_settings=StyleManager.read_config().plaquette_style_x,
                     )
                 )
+                # Process unique data-qubit stabilizer type plaquettes
+                for parity_data_qubit_id in parity_group.data_ids:
+                    stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                    if stabilizer_type == StabilizerType.STABILIZER_X:
+                        continue
+                    draw_element = RectanglePlaquette(
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5 + self.pivot,
+                        width=0.5 * diagonal_spacing,
+                        height=0.5 * diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group),
+                        alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_z,
+                    )
+                    result.append(draw_element)
+
             if len(parity_group.data_ids) == 2:
                 if mean_center:
                     result.append(
@@ -110,6 +125,12 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_x,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        raise NotImplementedError(f"Unique data-qubit stabilizer visualization not yet supported for diagonal stabilizers.")
                 else:
                     result.append(
                         TrianglePlaquette(
@@ -121,6 +142,26 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_x,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_X:
+                            continue
+                        triangle_scalar: float = 1 / math.sqrt(2)
+                        draw_element = TrianglePlaquette(
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=triangle_scalar * diagonal_spacing,
+                            height=triangle_scalar * diagonal_spacing,
+                            rotation=self.get_rotation_offset_from_relative_direction(
+                                start=self.identifier_to_pivot(parity_group.ancilla_id),
+                                end=self.identifier_to_pivot(parity_data_qubit_id),
+                                mean_relative_coordinates=mean_relative_coordinates,
+                            ) + 45,
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_z,
+                        )
+                        result.append(draw_element)
+
         for parity_group in self.connectivity.parity_group_z:
             ancilla_coordinates: Vec2D = self.identifier_to_pivot(identifier=parity_group.ancilla_id)
             relative_coordinates: List[Vec2D] = [
@@ -144,6 +185,21 @@ class VisualConnectivityDescription:
                         style_settings=StyleManager.read_config().plaquette_style_z,
                     )
                 )
+                # Process unique data-qubit stabilizer type plaquettes
+                for parity_data_qubit_id in parity_group.data_ids:
+                    stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                    if stabilizer_type == StabilizerType.STABILIZER_Z:
+                        continue
+                    draw_element = RectanglePlaquette(
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5 + self.pivot,
+                        width=0.5 * diagonal_spacing,
+                        height=0.5 * diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group),
+                        alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_x,
+                    )
+                    result.append(draw_element)
+
             if len(parity_group.data_ids) == 2:
                 if mean_center:
                     result.append(
@@ -156,6 +212,12 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_z,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        raise NotImplementedError(f"Unique data-qubit stabilizer visualization not yet supported for diagonal stabilizers.")
                 else:
                     result.append(
                         TrianglePlaquette(
@@ -167,6 +229,25 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_z,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        triangle_scalar: float = 1 / math.sqrt(2)
+                        draw_element = TrianglePlaquette(
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            width=triangle_scalar * diagonal_spacing,
+                            height=triangle_scalar * diagonal_spacing,
+                            rotation=self.get_rotation_offset_from_relative_direction(
+                                start=self.identifier_to_pivot(parity_group.ancilla_id),
+                                end=self.identifier_to_pivot(parity_data_qubit_id),
+                                mean_relative_coordinates=mean_relative_coordinates,
+                            ) + 45,
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_x,
+                        )
+                        result.append(draw_element)
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
@@ -263,11 +344,32 @@ class VisualConnectivityDescription:
             x=np.mean([v.x for v in relative_coordinates]),
             y=np.mean([v.y for v in relative_coordinates]),
         )
+        rotation_offset += self.get_rotation_offset_from_relative_direction(
+            start=relative_coordinates[0],
+            end=relative_coordinates[1],
+            mean_relative_coordinates=mean_relative_coordinates,
+        )
+
+        if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
+            return self.rotation + rotation_offset
+        return self.rotation  # default
+    # endregion
+
+    @staticmethod
+    def get_rotation_offset_from_relative_direction(start: Vec2D, end: Vec2D, mean_relative_coordinates: Vec2D) -> float:
+        """
+        :param start: Starting pivot of line from which we want to determine the rotation offset.
+        :param end: Ending pivot of line from which we want to determine the rotation offset.
+        :param mean_relative_coordinates: Relative mean coordinate of all data qubits compared to ancilla qubit.
+            Needed to distinguish between (triangle) weight-2 and (diagonal) wheight-2 stabilizers.
+        :return: Rotation offset [degree].
+        """
+        rotation_offset: float = 0
+        absolute_tolerance: float = 1e-9
         mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
 
-        absolute_tolerance: float = 1e-9
         if mean_center:  # Weight-2 diagonal
-            line = Line2D(start=relative_coordinates[0], end=relative_coordinates[1])
+            line = Line2D(start=start, end=end)
             slope = (line.end.y - line.start.y) / (line.end.x - line.start.x)
             if math.isclose(slope, +1.0, abs_tol=absolute_tolerance):
                 pass
@@ -282,11 +384,7 @@ class VisualConnectivityDescription:
                 rotation_offset += 0
             elif mean_relative_coordinates.x < 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 180
-
-        if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
-            return self.rotation + rotation_offset
-        return self.rotation  # default
-    # endregion
+        return rotation_offset
 
 
 @dataclass(frozen=True)

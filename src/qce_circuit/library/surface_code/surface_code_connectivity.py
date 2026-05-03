@@ -498,6 +498,189 @@ class Surface17Round4Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclas
     # endregion
 
 
+class Surface17Round4ZXXZCode(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
+
+    # region Class Constructor
+    def __init__(self):
+        super().__init__(
+            gate_sequences=[
+                GateSequenceLayer(
+                    _park_operations=[
+                    ],
+                    _gate_operations=[
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X3'), QubitIDObj('D7'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z4'), QubitIDObj('D8'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z1'), QubitIDObj('D4'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X2'), QubitIDObj('D5'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X1'), QubitIDObj('D1'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z2'), QubitIDObj('D6'))),
+                    ],
+                ),
+                GateSequenceLayer(
+                    _park_operations=[
+                    ],
+                    _gate_operations=[
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X3'), QubitIDObj('D8'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z4'), QubitIDObj('D5'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z1'), QubitIDObj('D1'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X2'), QubitIDObj('D6'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X1'), QubitIDObj('D2'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z2'), QubitIDObj('D3'))),
+                    ],
+                ),
+                GateSequenceLayer(
+                    _park_operations=[
+                    ],
+                    _gate_operations=[
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X3'), QubitIDObj('D4'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z4'), QubitIDObj('D9'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z1'), QubitIDObj('D5'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X2'), QubitIDObj('D2'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z3'), QubitIDObj('D7'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X4'), QubitIDObj('D8'))),
+                    ],
+                ),
+                GateSequenceLayer(
+                    _park_operations=[
+                    ],
+                    _gate_operations=[
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X3'), QubitIDObj('D5'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z4'), QubitIDObj('D6'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z1'), QubitIDObj('D2'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X2'), QubitIDObj('D3'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('Z3'), QubitIDObj('D4'))),
+                        Operation.type_gate(EdgeIDObj(QubitIDObj('X4'), QubitIDObj('D9'))),
+                    ],
+                ),
+            ],
+            parity_group_z=[
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_Z,
+                    _ancilla_qubit=QubitIDObj('Z1'),
+                    _data_qubits=[
+                        (QubitIDObj('D4'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D1'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D5'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D2'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_Z,
+                    _ancilla_qubit=QubitIDObj('Z2'),
+                    _data_qubits=[
+                        (QubitIDObj('D6'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D3'), StabilizerType.STABILIZER_X),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_Z,
+                    _ancilla_qubit=QubitIDObj('Z3'),
+                    _data_qubits=[
+                        (QubitIDObj('D7'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D4'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_Z,
+                    _ancilla_qubit=QubitIDObj('Z4'),
+                    _data_qubits=[
+                        (QubitIDObj('D8'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D5'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D9'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D6'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+            ],
+            parity_group_x=[
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_X,
+                    _ancilla_qubit=QubitIDObj('X1'),
+                    _data_qubits=[
+                        (QubitIDObj('D1'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D2'), StabilizerType.STABILIZER_X),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_X,
+                    _ancilla_qubit=QubitIDObj('X2'),
+                    _data_qubits=[
+                        (QubitIDObj('D5'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D6'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D2'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D3'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_X,
+                    _ancilla_qubit=QubitIDObj('X3'),
+                    _data_qubits=[
+                        (QubitIDObj('D7'), StabilizerType.STABILIZER_Z),
+                        (QubitIDObj('D8'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D4'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D5'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+                ParityGroup(
+                    _parity_type=StabilizerType.STABILIZER_X,
+                    _ancilla_qubit=QubitIDObj('X4'),
+                    _data_qubits=[
+                        (QubitIDObj('D8'), StabilizerType.STABILIZER_X),
+                        (QubitIDObj('D9'), StabilizerType.STABILIZER_Z),
+                    ]
+                ),
+            ],
+            logical_observables=[
+                LogicalObservable(
+                    observable_basis=StabilizerType.STABILIZER_X,
+                    data_qubit_projections={
+                        QubitIDObj("D1"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D4"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_X,
+                    },
+                    supporting_stabilizers=[
+                        QubitIDObj("X1"),
+                        QubitIDObj("X2"),
+                        QubitIDObj("X3"),
+                        QubitIDObj("X4"),
+                    ],
+                    default_projections=StabilizerType.STABILIZER_X
+                ),
+                LogicalObservable(
+                    observable_basis=StabilizerType.STABILIZER_Y,
+                    data_qubit_projections={
+                        QubitIDObj("D1"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D4"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_Y,
+                        QubitIDObj("D8"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
+                    },
+                    supporting_stabilizers=[
+                        QubitIDObj("Z4"),
+                        QubitIDObj("Z2"),
+                    ],
+                    default_projections=StabilizerType.STABILIZER_Z
+                ),
+                LogicalObservable(
+                    observable_basis=StabilizerType.STABILIZER_Z,
+                    data_qubit_projections={
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D8"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
+                    },
+                    supporting_stabilizers=[
+                        QubitIDObj("Z1"),
+                        QubitIDObj("Z2"),
+                        QubitIDObj("Z3"),
+                        QubitIDObj("Z4"),
+                    ],
+                    default_projections=StabilizerType.STABILIZER_Z
+                )
+            ],
+            surface_code_layer=SurfaceTuna17Layer(),
+        )
+    # endregion
+
+
 class Surface17Round8BCode(GenericSurfaceCode, IGenericSurfaceCodeLayer, metaclass=SingletonABCMeta):
 
     # region Class Constructor
