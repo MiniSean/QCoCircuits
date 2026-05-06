@@ -633,10 +633,21 @@ class Surface17Round4ZXXZCode(GenericSurfaceCode, IGenericSurfaceCodeLayer, meta
                 LogicalObservable(
                     observable_basis=StabilizerType.STABILIZER_X,
                     data_qubit_projections={
-                        QubitIDObj("D1"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D1"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D2"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D3"): StabilizerType.STABILIZER_Z,
                         QubitIDObj("D4"): StabilizerType.STABILIZER_X,
-                        QubitIDObj("D7"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D5"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D6"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D8"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
                     },
+                    supporting_logical=[
+                        QubitIDObj("D1"),
+                        QubitIDObj("D4"),
+                        QubitIDObj("D7"),
+                    ],
                     supporting_stabilizers=[
                         QubitIDObj("X1"),
                         QubitIDObj("X2"),
@@ -646,27 +657,23 @@ class Surface17Round4ZXXZCode(GenericSurfaceCode, IGenericSurfaceCodeLayer, meta
                     default_projections=StabilizerType.STABILIZER_X
                 ),
                 LogicalObservable(
-                    observable_basis=StabilizerType.STABILIZER_Y,
-                    data_qubit_projections={
-                        QubitIDObj("D1"): StabilizerType.STABILIZER_X,
-                        QubitIDObj("D4"): StabilizerType.STABILIZER_X,
-                        QubitIDObj("D7"): StabilizerType.STABILIZER_Y,
-                        QubitIDObj("D8"): StabilizerType.STABILIZER_Z,
-                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
-                    },
-                    supporting_stabilizers=[
-                        QubitIDObj("Z4"),
-                        QubitIDObj("Z2"),
-                    ],
-                    default_projections=StabilizerType.STABILIZER_Z
-                ),
-                LogicalObservable(
                     observable_basis=StabilizerType.STABILIZER_Z,
                     data_qubit_projections={
-                        QubitIDObj("D7"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D1"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D2"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D3"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D4"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D5"): StabilizerType.STABILIZER_X,
+                        QubitIDObj("D6"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_X,
                         QubitIDObj("D8"): StabilizerType.STABILIZER_Z,
-                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D9"): StabilizerType.STABILIZER_X,
                     },
+                    supporting_logical=[
+                        QubitIDObj("D7"),
+                        QubitIDObj("D8"),
+                        QubitIDObj("D9"),
+                    ],
                     supporting_stabilizers=[
                         QubitIDObj("Z1"),
                         QubitIDObj("Z2"),

@@ -102,7 +102,7 @@ class LogicalObservable(ILogicalObservable):
     @property
     def involved_data_qubit_ids(self) -> List[IQubitID]:
         """:return: Array-like of data-qubit ID's involved in observable."""
-        return unique_in_order(self._data_qubit_projections.keys())
+        return self._supporting_logical
 
     @property
     def concordant_stabilizer_qubit_ids(self) -> List[IQubitID]:
@@ -118,11 +118,13 @@ class LogicalObservable(ILogicalObservable):
             observable_basis: StabilizerType,
             data_qubit_projections: Dict[IQubitID, StabilizerType],
             supporting_stabilizers: List[IQubitID],
+            supporting_logical: Optional[List[IQubitID]] = None,  # Defaults to data_qubit_projections
             default_projections: StabilizerType = StabilizerType.STABILIZER_Z,
     ):
         self._observable_basis: StabilizerType = observable_basis
         self._data_qubit_projections: Dict[IQubitID, StabilizerType] = data_qubit_projections
         self._supporting_stabilizers: List[IQubitID] = supporting_stabilizers
+        self._supporting_logical: List[IQubitID] = supporting_logical if supporting_logical is not None else list(data_qubit_projections.keys())
         self._default_projections: StabilizerType = default_projections
     # endregion
 
