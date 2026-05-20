@@ -314,6 +314,8 @@ class BlockVerticalBarrier(IRectTransformComponent, IDrawComponent):
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
+        if len(self.multiple_transforms) == 0:
+            return axes
 
         top_pivot: Vec2D = self.top_pivot
         bot_pivot: Vec2D = self.bot_pivot
