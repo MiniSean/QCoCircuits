@@ -117,7 +117,7 @@ class NoiseSettings:
 
     def get_default_pair_noise_settings(self) -> EdgeNoiseModelParameters:
         return EdgeNoiseModelParameters(
-            two_qubit_gate_error=0.0,
+            two_qubit_gate_error=self.default_two_qubit_gate_error,
         )
 
     def get_noise_settings(self, qubit_id: IQubitID) -> QubitNoiseModelParameters:
