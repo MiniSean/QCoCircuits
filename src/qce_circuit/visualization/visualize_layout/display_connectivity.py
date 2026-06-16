@@ -295,28 +295,12 @@ class VisualConnectivityDescription:
 
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
         """:return: Pivot based on qubit identifier."""
-        # Surface-17 layout
-        map_qubits: Dict[IQubitID, Vec2D] = {
-            QubitIDObj('Z3'): Vec2D(-2, -1) * self.layout_spacing,
-            QubitIDObj('D9'): Vec2D(0, 2) * self.layout_spacing,
-            QubitIDObj('X4'): Vec2D(-1, 2) * self.layout_spacing,
-            QubitIDObj('D8'): Vec2D(-1, 1) * self.layout_spacing,
-            QubitIDObj('Z4'): Vec2D(0, 1) * self.layout_spacing,
-            QubitIDObj('D6'): Vec2D(1, 1) * self.layout_spacing,
-            QubitIDObj('D7'): Vec2D(-2, 0) * self.layout_spacing,
-            QubitIDObj('X3'): Vec2D(-1, 0) * self.layout_spacing,
-            QubitIDObj('D5'): Vec2D(0, 0) * self.layout_spacing,
-            QubitIDObj('X2'): Vec2D(1, 0) * self.layout_spacing,
-            QubitIDObj('D3'): Vec2D(2, 0) * self.layout_spacing,
-            QubitIDObj('D4'): Vec2D(-1, -1) * self.layout_spacing,
-            QubitIDObj('Z1'): Vec2D(0, -1) * self.layout_spacing,
-            QubitIDObj('D2'): Vec2D(1, -1) * self.layout_spacing,
-            QubitIDObj('X1'): Vec2D(1, -2) * self.layout_spacing,
-            QubitIDObj('Z2'): Vec2D(2, 1) * self.layout_spacing,
-            QubitIDObj('D1'): Vec2D(0, -2) * self.layout_spacing,
-        }
-        if identifier in map_qubits:
-            return map_qubits[identifier].rotate(np.deg2rad(self.rotation)) + self.pivot
+        if hasattr(self.connectivity, 'get_qubit_coordinates'):
+            try:
+                coord = self.connectivity.get_qubit_coordinates(identifier)
+                return (coord * self.layout_spacing).rotate(np.deg2rad(self.rotation)) + self.pivot
+            except Exception:
+                return self.pivot
         return self.pivot  # Default
 
     def identifier_to_rotation(self, identifier: Union[IQubitID, IParityGroup]) -> float:

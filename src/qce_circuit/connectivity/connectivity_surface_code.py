@@ -25,6 +25,7 @@ from qce_circuit.connectivity.intrf_connectivity_surface_code import (
     FrequencyGroup,
     FrequencyGroupIdentifier,
 )
+from qce_circuit.utilities.geometric_definitions.vector_elements import Vec2D
 
 
 @dataclass(frozen=True)
@@ -138,6 +139,25 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     """
     Singleton class, implementing ISurfaceCodeLayer interface to describe a surface-17 layout.
     """
+    _qubit_coordinates_lookup: Dict[IQubitID, Vec2D] = {
+        QubitIDObj('Z3'): Vec2D(-2, -1),
+        QubitIDObj('D9'): Vec2D(0, 2),
+        QubitIDObj('X4'): Vec2D(-1, 2),
+        QubitIDObj('D8'): Vec2D(-1, 1),
+        QubitIDObj('Z4'): Vec2D(0, 1),
+        QubitIDObj('D6'): Vec2D(1, 1),
+        QubitIDObj('D7'): Vec2D(-2, 0),
+        QubitIDObj('X3'): Vec2D(-1, 0),
+        QubitIDObj('D5'): Vec2D(0, 0),
+        QubitIDObj('X2'): Vec2D(1, 0),
+        QubitIDObj('D3'): Vec2D(2, 0),
+        QubitIDObj('D4'): Vec2D(-1, -1),
+        QubitIDObj('Z1'): Vec2D(0, -1),
+        QubitIDObj('D2'): Vec2D(1, -1),
+        QubitIDObj('X1'): Vec2D(1, -2),
+        QubitIDObj('Z2'): Vec2D(2, 1),
+        QubitIDObj('D1'): Vec2D(0, -2),
+    }
     _feedline_qubit_lookup: Dict[IFeedlineID, List[IQubitID]] = {
         FeedlineIDObj('FL1'): [QubitIDObj('D9'), QubitIDObj('D8'), QubitIDObj('X4'), QubitIDObj('Z4'), QubitIDObj('Z2'), QubitIDObj('D6')],
         FeedlineIDObj('FL2'): [QubitIDObj('D3'), QubitIDObj('D7'), QubitIDObj('D2'), QubitIDObj('X3'), QubitIDObj('Z1'), QubitIDObj('X2'), QubitIDObj('Z3'), QubitIDObj('D5'), QubitIDObj('D4')],
@@ -287,6 +307,12 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""
         return self._frequency_group_lookup[element]
+        
+    def get_qubit_coordinates(self, qubit_id: IQubitID) -> Vec2D:
+        """:return: The geometric coordinates for the given qubit ID."""
+        if qubit_id not in self._qubit_coordinates_lookup:
+            raise ElementNotIncludedException(f"Element: {qubit_id} has no coordinates defined.")
+        return self._qubit_coordinates_lookup[qubit_id]
     # endregion
 
     # region IDeviceLayer Interface Methods

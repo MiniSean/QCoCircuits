@@ -9,6 +9,7 @@ from qce_circuit.connectivity.intrf_channel_identifier import (
     IQubitID,
     IEdgeID,
 )
+from qce_circuit.utilities.geometric_definitions.vector_elements import Vec2D
 
 
 class IIdentifier(ABC):
@@ -90,6 +91,11 @@ class IConnectivityLayer(ABC):
     @abstractmethod
     def contains(self, element: Union[IQubitID, IEdgeID]) -> bool:
         """:return: Boolean, whether element is part of connectivity layer or not."""
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def get_qubit_coordinates(self, qubit_id: IQubitID) -> Vec2D:
+        """:return: The geometric coordinates for the given qubit ID."""
         raise InterfaceMethodException
     # endregion
 
