@@ -49,3 +49,9 @@ class ExceedingCombinationCountException(Exception):
     """
     Raised when the expected number of (gate-sequence) combinations exceeds limit value.
     """
+
+
+class LayoutTranslationException(Exception):
+    """
+    Raised when a layout translation fails because a matching coordinate cannot be found.
+    """

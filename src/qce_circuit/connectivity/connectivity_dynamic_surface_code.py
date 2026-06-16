@@ -268,14 +268,23 @@ class DynamicSurfaceCodeLayer(ISurfaceCodeLayer):
 
 
 if __name__ == '__main__':
-    from qce_circuit.visualization.visualize_layout.display_connectivity import plot_layout_description, VisualConnectivityDescription
+    from qce_circuit.visualization.visualize_layout.display_connectivity import plot_layout_description, VisualConnectivityDescription, plot_gate_sequences, plot_stabilizer_specific_gate_sequences
     from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+    from qce_circuit.connectivity.generic_gate_sequence import TranslatedGenericSurfaceCodeLayer
+    from qce_circuit.library.surface_code.surface_code_connectivity import Surface17Round4Code
     import matplotlib.pyplot as plt
 
     # Initialize an arbitrary HxW surface code:
-    layer = DynamicSurfaceCodeLayer(width=5, height=5)
+    layer = DynamicSurfaceCodeLayer(width=7, height=3)
     print(layer)
     # layer = Surface17Layer()
+    code_layer = TranslatedGenericSurfaceCodeLayer(
+        base_layer=Surface17Round4Code(),
+        target_layer=layer,
+        base_anchor=QubitIDObj("D1"),
+        target_anchor=QubitIDObj("D0"),
+    )
 
-    plot_layout_description(description=VisualConnectivityDescription(layer))
+    # plot_layout_description(description=VisualConnectivityDescription(layer))
+    plot_stabilizer_specific_gate_sequences(description=code_layer)
     plt.show()

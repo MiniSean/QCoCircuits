@@ -3,7 +3,7 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from collections.abc import Iterable
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 import numpy as np
 import math
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
@@ -532,7 +532,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
 
     for i, ax in enumerate(axes):
         descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
-            connectivity=Surface17Layer(),
+            connectivity=description.background_surface_layer,
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0
         )
@@ -541,7 +541,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: Optional[ISurfaceCodeLayer] = None, **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -551,8 +551,12 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     :param kwargs: Keyword arguments passed to figure constructor.
     :param include_element_labels: Boolean to enable or disable element label text.
     :param include_gate_sequence_element_labels: Boolean to enable or disable (gate sequence only) element label text.
+    :param connectivity: Optional connectivity layer to use as background. If None, uses description.background_surface_layer.
     :return: Figure and Axes pair.
     """
+    if connectivity is None:
+        connectivity = description.background_surface_layer
+
     sequence_count: int = description.gate_sequence_count
     kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
     fig, axes = construct_subplot(ncols=sequence_count, **kwargs)
