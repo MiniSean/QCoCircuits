@@ -486,8 +486,18 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
 
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
+    # Calculate span to adapt figure size automatically
+    x_coords = [description.identifier_to_pivot(qubit_id).x for qubit_id in description.connectivity.qubit_ids]
+    y_coords = [description.identifier_to_pivot(qubit_id).y for qubit_id in description.connectivity.qubit_ids]
+    x_span = (max(x_coords) - min(x_coords)) if x_coords else 5
+    y_span = (max(y_coords) - min(y_coords)) if y_coords else 5
+    
+    # Use a base scaling factor to maintain text-to-circle proportion
+    # Default Surface-17 size is roughly span=4 -> figure_size=5. So factor = 1.25.
+    default_fig_size = (x_span * 1.25 + 1.0, y_span * 1.25 + 1.0)
+
     # Data allocation
-    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, (5, 5))
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, default_fig_size)
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(SubplotKeywordEnum.AXES_FORMAT.value, CircuitAxesFormat())
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
@@ -505,8 +515,11 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
         draw_component.draw(axes=ax)
 
     ax.set_aspect('equal')
-    ax.set_xlim([-3, 3])
-    ax.set_ylim([-3, 3])
+    ax.autoscale(enable=True, axis='both', tight=True)
+    ax.margins(0.01)
+    ax.relim()
+    ax.autoscale_view()
+    fig.tight_layout()
     return fig, ax
 
 
