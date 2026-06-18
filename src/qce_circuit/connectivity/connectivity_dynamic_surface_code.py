@@ -276,7 +276,6 @@ if __name__ == '__main__':
 
     # Initialize an arbitrary HxW surface code:
     layer = DynamicSurfaceCodeLayer(width=7, height=3)
-    print(layer)
     # layer = Surface17Layer()
     code_layer = TranslatedGenericSurfaceCodeLayer(
         base_layer=Surface17Round4Code(),
@@ -284,7 +283,23 @@ if __name__ == '__main__':
         base_anchor=QubitIDObj("D1"),
         target_anchor=QubitIDObj("D0"),
     )
+    plot_stabilizer_specific_gate_sequences(description=code_layer)
 
-    # plot_layout_description(description=VisualConnectivityDescription(layer))
+    code_layer = TranslatedGenericSurfaceCodeLayer(
+        base_layer=Surface17Round4Code(),
+        target_layer=layer,
+        base_anchor=QubitIDObj("D1"),
+        target_anchor=QubitIDObj("D4"),
+    )
+    plot_stabilizer_specific_gate_sequences(description=code_layer)
+
+    layer = DynamicSurfaceCodeLayer(width=7, height=7)
+    # layer = Surface17Layer()
+    code_layer = TranslatedGenericSurfaceCodeLayer(
+        base_layer=Surface17Round4Code(),
+        target_layer=layer,
+        base_anchor=QubitIDObj("D1"),
+        target_anchor=QubitIDObj("D32"),
+    )
     plot_stabilizer_specific_gate_sequences(description=code_layer)
     plt.show()

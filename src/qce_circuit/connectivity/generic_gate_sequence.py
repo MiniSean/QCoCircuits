@@ -61,6 +61,12 @@ class ILogicalObservable(ABC):
         :return: Array-like of ancilla-qubit ID's that describe the stabilizers which are concordant with the observable.
         """
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def default_projection_basis(self) -> StabilizerType:
+        """:return: Default projection type"""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods
@@ -127,6 +133,11 @@ class LogicalObservable(ILogicalObservable):
         :return: Array-like of ancilla-qubit ID's that describe the stabilizers which are concordant with the observable.
         """
         return self._supporting_stabilizers
+
+    @property
+    def default_projection_basis(self) -> StabilizerType:
+        """:return: Default projection type"""
+        return self._default_projections
     # endregion
 
     # region Class Constructor
@@ -374,33 +385,27 @@ class TranslatedGenericSurfaceCodeLayer(IGenericSurfaceCodeLayer):
     @property
     def qubit_ids(self) -> List[IQubitID]:
         """:return: All mapped qubit-ID's in the translated device layer."""
-        return list(self._qubit_mapping.values())
+        return self.background_surface_layer.qubit_ids
 
     @property
     def data_qubit_ids(self) -> List[IQubitID]:
         """:return: Data qubit-ID's in the translated device layer."""
-        return [self._translate_qubit(qubit=qubit) for qubit in self._base_layer.data_qubit_ids]
+        return self.background_surface_layer.data_qubit_ids
 
     @property
     def ancilla_qubit_ids(self) -> List[IQubitID]:
         """:return: Ancilla qubit-ID's in the translated device layer."""
-        return [self._translate_qubit(qubit=qubit) for qubit in self._base_layer.ancilla_qubit_ids]
+        return self.background_surface_layer.ancilla_qubit_ids
 
     @property
     def edge_ids(self) -> List[IEdgeID]:
         """:return: All mapped edge-ID's in the translated device layer."""
-        return [self._translate_edge(edge=edge) for edge in self._base_layer.edge_ids]
+        return self.background_surface_layer.edge_ids
 
     @property
     def feedline_ids(self) -> List[IFeedlineID]:
         """:return: All feedline-ID's connected to mapped qubits in the target device layer."""
-        result: set = set()
-        for qubit in self.qubit_ids:
-            try:
-                result.add(self._target_layer.get_connected_feedline(qubit=qubit))
-            except ElementNotIncludedException:
-                pass
-        return list(result)
+        return self.background_surface_layer.feedline_ids
 
     @property
     def gate_sequence_count(self) -> int:
@@ -439,7 +444,7 @@ class TranslatedGenericSurfaceCodeLayer(IGenericSurfaceCodeLayer):
         translation_vector: Vec2D = target_coordinate - base_coordinate
         
         self._qubit_mapping: Dict[IQubitID, IQubitID] = {}
-        for base_qubit in self._base_layer.qubit_ids:
+        for base_qubit in self._base_layer.involved_qubit_ids:
             mapped_coordinate: Vec2D = self._base_layer.get_qubit_coordinates(qubit_id=base_qubit) + translation_vector
             
             # Find matching target qubit
@@ -570,11 +575,26 @@ class TranslatedGenericSurfaceCodeLayer(IGenericSurfaceCodeLayer):
         :return: Translated logical observable corresponding to basis.
         """
         base_observable: ILogicalObservable = self._base_layer.get_logical_observable(basis=basis)
-        translated_projections: Dict[IQubitID, StabilizerType] = {self._translate_qubit(qubit=qubit): stabilizer for qubit, stabilizer in base_observable.data_qubit_projections.items()}
-        return LogicalObservable(
+        translated_data_qubit_projections: Dict[IQubitID, StabilizerType] = {
+            self._translate_qubit(qubit=qubit_id): base_observable.get_projection_basis(qubit_id=qubit_id)
+            for qubit_id in base_observable.involved_data_qubit_ids
+        }
+        translated_supporting_stabilizers: List[IQubitID] = [
+            self._translate_qubit(qubit=qubit_id)
+            for qubit_id in base_observable.concordant_stabilizer_qubit_ids
+        ]
+        translated_supporting_logical: List[IQubitID] = [
+            self._translate_qubit(qubit=qubit_id)
+            for qubit_id in base_observable.involved_data_qubit_ids
+        ]
+        result = LogicalObservable(
             observable_basis=base_observable.observable_basis,
-            data_qubit_projections=translated_projections
+            data_qubit_projections=translated_data_qubit_projections,
+            supporting_stabilizers=translated_supporting_stabilizers,
+            supporting_logical=translated_supporting_logical,
+            default_projections=base_observable.default_projection_basis,
         )
+        return result
 
     def get_parity_group(self, element: Union[IQubitID, IEdgeID]) -> List[IParityGroup]:
         """
