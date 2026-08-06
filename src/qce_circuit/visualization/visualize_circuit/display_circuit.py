@@ -43,6 +43,7 @@ from qce_circuit.structure.circuit_operations import (
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import (
     HorizontalVariableIndicator,
+    UnderbraceAnnotationHighlight,
 )
 from qce_circuit.visualization.visualize_circuit.draw_components.channel_components import (
     ChannelHeader,
@@ -287,8 +288,6 @@ class VisualCircuitDescription:
         )
 
     def get_annotation_draw_components(self) -> List[IDrawComponent]:
-        from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import UnderbraceAnnotationHighlight
-        
         components = []
         transform_constructor = self.get_transform_constructor()
         for annotation in self.annotations:
@@ -680,6 +679,35 @@ def plot_circuit_description(description: VisualCircuitDescription, fixed_scale:
     )
     fig, ax = construct_subplot(**kwargs)
 
+    if fixed_scale:
+        style = StyleManager.read_config()
+        
+        scale_factor = fixed_scale if isinstance(fixed_scale, float) else 1.0
+        fig_width, _ = fig.get_size_inches()
+        # QCoCircuits natively uses 1 data unit = 1 inch for its natural figure size.
+        # By setting the axes limits to exactly the figure size, we lock this 1:1 scale.
+        # If scale_factor is provided, we divide the figure size by it to zoom in/out.
+        # X starts at 0, so we use a left margin based on the widest channel header
+        x_min = min(description.get_channel_header(i).rectilinear_transform.left_pivot.x for i in range(len(description.channel_indices))) if description.channel_indices else 0.0
+        
+        # Y=0 is the top channel. We give a small top margin
+        has_highlights = len(description.get_highlight_draw_components()) > 0
+        highlight_margin_y: float = (style.margin_highlight_y + 0.0 if has_highlights else 0.0)
+        has_annotations = len(description.annotations) > 0
+        underbrace_margin_y: float = (style.margin_underbrace_y + 0.6 if has_annotations else 0.6)
+        y_max = 0.7 + highlight_margin_y
+        
+        # Calculate minimal y_min based on channels and annotations
+        lowest_channel_y = - (len(description.channel_indices) - 1) * description.channel_spacing if description.channel_indices else 0.0
+        y_min = lowest_channel_y - underbrace_margin_y - highlight_margin_y
+        
+        # Update physical figure height to perfectly fit the Y-limits
+        fig_height = (y_max - y_min) * scale_factor
+        fig.set_size_inches(fig_width, fig_height)
+        
+        ax.set_xlim(x_min, x_min + (fig_width / scale_factor))
+        ax.set_ylim(y_min, y_max)
+
     for i, channel_index in enumerate(description.channel_indices):
         transform: ChannelBar = description.get_channel_bar(index=i)
         transform.draw(axes=ax)
@@ -697,30 +725,6 @@ def plot_circuit_description(description: VisualCircuitDescription, fixed_scale:
 
     for draw_component in description.get_annotation_draw_components():
         draw_component.draw(axes=ax)
-
-    if fixed_scale:
-        scale_factor = fixed_scale if isinstance(fixed_scale, float) else 1.0
-        fig_width, _ = fig.get_size_inches()
-        # QCoCircuits natively uses 1 data unit = 1 inch for its natural figure size.
-        # By setting the axes limits to exactly the figure size, we lock this 1:1 scale.
-        # If scale_factor is provided, we divide the figure size by it to zoom in/out.
-        # X starts at 0, so we use a left margin based on the widest channel header
-        x_min = min(description.get_channel_header(i).rectilinear_transform.left_pivot.x for i in range(len(description.channel_indices))) if description.channel_indices else 0.0
-        
-        # Y=0 is the top channel. We give a small top margin
-        y_max = 0.5
-        
-        # Calculate minimal y_min based on channels and annotations
-        lowest_channel_y = - (len(description.channel_indices) - 1) * description.channel_spacing if description.channel_indices else 0.0
-        has_annotations = len(description.annotations) > 0
-        y_min = lowest_channel_y - (1.0 if has_annotations else 0.6)
-        
-        # Update physical figure height to perfectly fit the Y-limits
-        fig_height = (y_max - y_min) * scale_factor
-        fig.set_size_inches(fig_width, fig_height)
-        
-        ax.set_xlim(x_min, x_min + (fig_width / scale_factor))
-        ax.set_ylim(y_min, y_max)
 
     return fig, ax
 

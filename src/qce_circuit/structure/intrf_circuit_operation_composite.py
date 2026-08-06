@@ -28,6 +28,7 @@ from qce_circuit.structure.registry_repetition import (
     IRepetitionStrategy,
     FixedRepetitionStrategy,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 
 
 @dataclass(frozen=True)
@@ -191,6 +192,7 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
     relation: IRelationLink[ICircuitOperation] = field(init=True, default_factory=RelationLink.no_relation)
     repetition_strategy: IRepetitionStrategy = field(init=True, default=FixedRepetitionStrategy(repetitions=1))
     _circuit_graph: CircuitGraphBranch = field(init=False, default_factory=CircuitGraphBranch)
+    annotations: List[CircuitAnnotation] = field(init=False, default_factory=list, hash=False, compare=False)
 
     # region Interface Properties
     @property
@@ -275,6 +277,11 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
             relation_transfer_lookup[node.operation] = operation_copy
             result.add(operation_copy)
 
+        result.annotations = [
+            annotation.copy(relation_transfer_lookup=relation_transfer_lookup)
+            for annotation in self.annotations
+        ]
+
         return result
 
     def apply_modifiers_to_self(self) -> ICircuitOperation:
@@ -318,6 +325,7 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
                 operation=operation,
             )
         self._circuit_graph = flatten_circuit_graph
+        self.annotations = self.get_flattened_annotations()
         return self
     # endregion
 
@@ -343,6 +351,10 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
             if not node.operation.has_relation:
                 node.operation.relation_link = relation
             self.add(operation=node.operation)
+        self.annotations.extend([
+            annotation.copy() 
+            for annotation in other.annotations
+        ])
         return self
 
     def repeat(self, times: int) -> 'CircuitCompositeOperation':
@@ -362,6 +374,13 @@ class CircuitCompositeOperation(ICircuitCompositeOperation):
             if isinstance(node.operation, CircuitCompositeOperation):
                 result.append(node.operation)
                 result.extend(node.operation.get_sub_composite_operations())
+        return result
+
+    def get_flattened_annotations(self) -> List[CircuitAnnotation]:
+        result = list(self.annotations)
+        for node in self._circuit_graph.get_node_iterator():
+            if isinstance(node.operation, CircuitCompositeOperation):
+                result.extend(node.operation.get_flattened_annotations())
         return result
     # endregion
 

@@ -159,26 +159,31 @@ class RoundedRectangleHighlight(IRectTransformComponent, IDrawComponent):
     # region Class Properties
     @property
     def text_pivot(self) -> Vec2D:
-        return self.rectilinear_transform.origin_opposite_pivot + Vec2D(x=-self.rectilinear_transform.width, y=0)
+        margin_y = self.style_settings.margin_y
+        return self.rectilinear_transform.origin_opposite_pivot + Vec2D(x=-self.rectilinear_transform.width, y=margin_y)
     # endregion
 
     # region Interface Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
         box_style: str = "round,pad=0.02,rounding_size=0.3"
+        margin_y = self.style_settings.margin_y
+        xy = (self.rectilinear_transform.origin_pivot.x, self.rectilinear_transform.origin_pivot.y - margin_y)
+        height = self.rectilinear_transform.height + (2 * margin_y)
+        
         rounded_rectangle = patches.FancyBboxPatch(
-            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+            xy=xy,
             width=self.rectilinear_transform.width,
-            height=self.rectilinear_transform.height,
+            height=height,
             boxstyle=box_style,
             linestyle='none',
             facecolor=self.style_settings.background_color,
             zorder=-30,
         )
         rounded_rectangle_border = patches.FancyBboxPatch(
-            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+            xy=xy,
             width=self.rectilinear_transform.width,
-            height=self.rectilinear_transform.height,
+            height=height,
             boxstyle=box_style,
             linestyle='--',
             linewidth=self.style_settings.line_width,
@@ -236,22 +241,11 @@ class UnderbraceAnnotationHighlight(IRectTransformComponent, IDrawComponent):
         bottom_right = bottom_left + Vec2D(x=self.rectilinear_transform.width, y=0)
         tick_height = self.style_settings.tick_height
         
-        line_x = [bottom_left.x, bottom_left.x, bottom_right.x, bottom_right.x]
-        line_y = [bottom_left.y + tick_height, bottom_left.y, bottom_right.y, bottom_right.y + tick_height]
-        
-        axes.plot(
-            line_x, 
-            line_y, 
-            color=self.style_settings.line_color, 
-            linewidth=self.style_settings.line_width,
-            zorder=self.style_settings.zorder_line,
-        )
-        
         center_x = (bottom_left.x + bottom_right.x) / 2.0
         center_y = bottom_left.y
-        background_color = self.style_settings.background_color
         
-        axes.text(
+        # Draw Text (No background box)
+        text_element = axes.text(
             x=center_x,
             y=center_y,
             s=self.text_string,
@@ -259,8 +253,54 @@ class UnderbraceAnnotationHighlight(IRectTransformComponent, IDrawComponent):
             ha='center',
             va='center',
             color=self.style_settings.text_color,
-            bbox=dict(facecolor=background_color, edgecolor='none', pad=2.0),
             zorder=self.style_settings.zorder_text,
         )
+        
+        # Extract bounding box in data coordinates
+        fig = axes.get_figure()
+        renderer = fig.canvas.get_renderer()
+        bbox = text_element.get_window_extent(renderer=renderer)
+        bbox_data = bbox.transformed(axes.transData.inverted())
+        
+        # Small padding in data coordinates around text
+        padding_x = 0.05
+        text_left_x = bbox_data.xmin - padding_x
+        text_right_x = bbox_data.xmax + padding_x
+        
+        # Draw Left Segment
+        if text_left_x > bottom_left.x:
+            axes.plot(
+                [bottom_left.x, bottom_left.x, text_left_x], 
+                [bottom_left.y + tick_height, bottom_left.y, bottom_left.y], 
+                color=self.style_settings.line_color, 
+                linewidth=self.style_settings.line_width,
+                zorder=self.style_settings.zorder_line,
+            )
+        else:
+            axes.plot(
+                [bottom_left.x, bottom_left.x], 
+                [bottom_left.y + tick_height, bottom_left.y], 
+                color=self.style_settings.line_color, 
+                linewidth=self.style_settings.line_width,
+                zorder=self.style_settings.zorder_line,
+            )
+            
+        # Draw Right Segment
+        if text_right_x < bottom_right.x:
+            axes.plot(
+                [text_right_x, bottom_right.x, bottom_right.x], 
+                [bottom_right.y, bottom_right.y, bottom_right.y + tick_height], 
+                color=self.style_settings.line_color, 
+                linewidth=self.style_settings.line_width,
+                zorder=self.style_settings.zorder_line,
+            )
+        else:
+            axes.plot(
+                [bottom_right.x, bottom_right.x], 
+                [bottom_right.y, bottom_right.y + tick_height], 
+                color=self.style_settings.line_color, 
+                linewidth=self.style_settings.line_width,
+                zorder=self.style_settings.zorder_line,
+            )
         return axes
     # endregion

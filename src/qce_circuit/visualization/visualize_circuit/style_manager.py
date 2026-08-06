@@ -88,13 +88,19 @@ class HighlightStyleSettings:
     line_color: str
     line_width: float
     font_size: float
+    margin_y: float
 
 
 @dataclass(frozen=True)
-class UnderbraceStyleSettings(HighlightStyleSettings):
+class UnderbraceStyleSettings:
     """
     Data class, containing underbrace annotation specific style settings.
     """
+    text_color: str
+    background_color: str
+    line_color: str
+    line_width: float
+    font_size: float
     margin_y: float
     tick_height: float
     zorder_line: int
@@ -155,6 +161,9 @@ class StyleSettings:
     height_underbrace_tick: float = field(default=0.2)
     zorder_underbrace_line: int = field(default=-30)
     zorder_underbrace_text: int = field(default=-29)
+
+    # Highlight
+    margin_highlight_y: float = field(default=0.0)
 
     # region Class Properties
     @property
@@ -241,6 +250,7 @@ class StyleSettings:
             line_color=self.color_highlight_outline,
             line_width=self.width_line,
             font_size=self.font_size_small,
+            margin_y=self.margin_highlight_y,
         )
 
     @property
