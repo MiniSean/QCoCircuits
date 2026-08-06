@@ -19,6 +19,7 @@ from qce_circuit.structure.intrf_circuit_operation import (
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
 )
@@ -236,6 +237,12 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     def acquisition_registry(self) -> AcquisitionRegistry:
         """:return: Acquisition Registry."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def annotations(self) -> List['CircuitAnnotation']:
+        """:return: Array-like of circuit annotations."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods
@@ -256,6 +263,11 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     @abstractmethod
     def add_operation(self, operation: ICircuitOperation) -> 'ICircuitOperation':
         """:return: Added operation. Adds operation to circuit."""
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def add_annotation(self, annotation: 'CircuitAnnotation') -> 'IDeclarativeCircuit':
+        """:return: Self. Adds annotation to circuit."""
         raise InterfaceMethodException
 
     @abstractmethod

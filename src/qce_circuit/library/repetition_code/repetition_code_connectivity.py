@@ -260,6 +260,33 @@ class Repetition9Round6Code(GenericSurfaceCode, IGenericSurfaceCodeLayer, metacl
                 ),
             ],
             parity_group_x=[],
+            logical_observables=[
+                LogicalObservable(
+                    observable_basis=StabilizerType.STABILIZER_Z,
+                    data_qubit_projections={
+                        QubitIDObj("D1"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D2"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D3"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D4"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D5"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D6"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D7"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D8"): StabilizerType.STABILIZER_Z,
+                        QubitIDObj("D9"): StabilizerType.STABILIZER_Z,
+                    },
+                    supporting_stabilizers=[
+                        QubitIDObj("X1"),
+                        QubitIDObj("X2"),
+                        QubitIDObj("X3"),
+                        QubitIDObj("X4"),
+                        QubitIDObj("Z1"),
+                        QubitIDObj("Z2"),
+                        QubitIDObj("Z3"),
+                        QubitIDObj("Z4"),
+                    ],
+                    default_projections=StabilizerType.STABILIZER_Z
+                )
+            ],
         )
     # endregion
 

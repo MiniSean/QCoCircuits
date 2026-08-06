@@ -4,7 +4,8 @@
 from dataclasses import dataclass, field
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
-from typing import List, Optional, TypeVar, Dict, Any, Tuple
+import warnings
+from typing import List, Optional, TypeVar, Dict, Any, Tuple, Union
 from copy import deepcopy
 from qce_circuit.structure.intrf_circuit_operation import RelationLink
 from qce_circuit.structure.circuit_operations import (
@@ -81,7 +82,9 @@ from qce_circuit.structure.intrf_circuit_operation import (
 )
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
+    CircuitCompositeOperation,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 from qce_circuit.structure.registry_duration import (
     temporary_override_get_registry_at,
     GlobalRegistryKey,
@@ -160,6 +163,8 @@ class VisualCircuitDescription:
     """Array of operations are duration component."""
     composite_operations: List[ICircuitCompositeOperation]
     """Array of composite operations."""
+    annotations: List['CircuitAnnotation'] = field(default_factory=list)
+    """Array of cosmetic annotations."""
     channel_label_map: Dict[int, str] = field(default_factory=dict)
     """Channel identifier index to label mapping"""
     channel_color_map: Dict[int, str] = field(default_factory=dict)
@@ -281,6 +286,36 @@ class VisualCircuitDescription:
             transform_constructor=transform_constructor,
         )
 
+    def get_annotation_draw_components(self) -> List[IDrawComponent]:
+        from qce_circuit.visualization.visualize_circuit.draw_components.annotation_components import UnderbraceAnnotationHighlight
+        
+        components = []
+        transform_constructor = self.get_transform_constructor()
+        for annotation in self.annotations:
+            transforms = []
+            for op in annotation.operations:
+                for channel_identifier in op.channel_identifiers:
+                    transforms.append(
+                        transform_constructor.construct_transform(
+                            identifier=channel_identifier,
+                            time_component=op
+                        )
+                    )
+            if not transforms:
+                continue
+            
+            combined_transform = transform_constructor.combine_transforms(transforms)
+            components.append(
+                UnderbraceAnnotationHighlight(
+                    pivot=combined_transform.pivot,
+                    width=combined_transform.width,
+                    height=combined_transform.height,
+                    alignment=combined_transform.parent_alignment,
+                    text_string=annotation.text_string
+                )
+            )
+        return components
+
     def get_highlight_draw_components(self) -> List[IDrawComponent]:
         # Data allocation
         result: List[IDrawComponent] = []
@@ -381,6 +416,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         channel_states=channel_states,
         operations=operations,
         composite_operations=circuit.composite_operations,
+        annotations=circuit.annotations,
         minimalist=minimalist,
     )
 
@@ -597,7 +633,7 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, fixed_scale: Union[bool, float] = False, **kwargs) -> IFigureAxesPair:
     if compact_visualization:
         with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
             with clear_lru_cache(RelationLink.get_start_time):
@@ -609,6 +645,7 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
                         channel_color_map=channel_color_map,
                         minimalist=minimalist_visualization,
                     ),
+                    fixed_scale=fixed_scale,
                     **kwargs
                 )
         return fig, ax
@@ -621,12 +658,13 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
             channel_color_map=channel_color_map,
             minimalist=minimalist_visualization,
         ),
+        fixed_scale=fixed_scale,
         **kwargs
     )
     return fig, ax
 
 
-def plot_circuit_description(description: VisualCircuitDescription, **kwargs) -> IFigureAxesPair:
+def plot_circuit_description(description: VisualCircuitDescription, fixed_scale: Union[bool, float] = False, **kwargs) -> IFigureAxesPair:
     # Data allocation
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(
         SubplotKeywordEnum.AXES_FORMAT.value,
@@ -656,6 +694,33 @@ def plot_circuit_description(description: VisualCircuitDescription, **kwargs) ->
 
     for draw_component in description.get_highlight_draw_components():
         draw_component.draw(axes=ax)
+
+    for draw_component in description.get_annotation_draw_components():
+        draw_component.draw(axes=ax)
+
+    if fixed_scale:
+        scale_factor = fixed_scale if isinstance(fixed_scale, float) else 1.0
+        fig_width, _ = fig.get_size_inches()
+        # QCoCircuits natively uses 1 data unit = 1 inch for its natural figure size.
+        # By setting the axes limits to exactly the figure size, we lock this 1:1 scale.
+        # If scale_factor is provided, we divide the figure size by it to zoom in/out.
+        # X starts at 0, so we use a left margin based on the widest channel header
+        x_min = min(description.get_channel_header(i).rectilinear_transform.left_pivot.x for i in range(len(description.channel_indices))) if description.channel_indices else 0.0
+        
+        # Y=0 is the top channel. We give a small top margin
+        y_max = 0.5
+        
+        # Calculate minimal y_min based on channels and annotations
+        lowest_channel_y = - (len(description.channel_indices) - 1) * description.channel_spacing if description.channel_indices else 0.0
+        has_annotations = len(description.annotations) > 0
+        y_min = lowest_channel_y - (1.0 if has_annotations else 0.6)
+        
+        # Update physical figure height to perfectly fit the Y-limits
+        fig_height = (y_max - y_min) * scale_factor
+        fig.set_size_inches(fig_width, fig_height)
+        
+        ax.set_xlim(x_min, x_min + (fig_width / scale_factor))
+        ax.set_ylim(y_min, y_max)
 
     return fig, ax
 

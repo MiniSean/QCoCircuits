@@ -59,7 +59,7 @@ class IconMeasure(IDrawComponent):
 
     @property
     def arrow_head_width(self) -> float:
-        return self.radius * self.style_settings.icon_line_width * 2.0
+        return self.radius * self.style_settings.icon_line_width * self.style_settings.arrow_head_width_scalar
 
     @property
     def arrow_head_length(self) -> float:

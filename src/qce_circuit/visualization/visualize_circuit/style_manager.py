@@ -53,7 +53,8 @@ class OperationStyleSettings:
     """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (width dimension)."""
     rectilinear_margin_height: float
     """Margin variable used to shrink the drawn rectangle to allow for 'white-space' (height dimension)."""
-
+    bevel_weight: float
+    """Weight for the bevel of the operation block."""
 
 @dataclass(frozen=True)
 class IndicatorStyleSettings:
@@ -74,6 +75,7 @@ class IconStyleSettings:
     """
     icon_color: str
     icon_line_width: float
+    arrow_head_width_scalar: float
 
 
 @dataclass(frozen=True)
@@ -86,6 +88,17 @@ class HighlightStyleSettings:
     line_color: str
     line_width: float
     font_size: float
+
+
+@dataclass(frozen=True)
+class UnderbraceStyleSettings(HighlightStyleSettings):
+    """
+    Data class, containing underbrace annotation specific style settings.
+    """
+    margin_y: float
+    tick_height: float
+    zorder_line: int
+    zorder_text: int
 
 
 @dataclass(frozen=True)
@@ -113,9 +126,11 @@ class StyleSettings:
     width_divider: float = field(default=0.4)
     width_state_description: float = field(default=0.7)
     width_name_description: float = field(default=0.5)
+    width_arrow_head_scalar: float = field(default=2.0)
 
     # Radius
     radius_dot: float = field(default=0.1)
+    bevel_weight: float = field(default=0.0)
 
     # Font sizes
     font_size: float = field(default=16.0)
@@ -134,6 +149,12 @@ class StyleSettings:
     # Header
     enable_state_description: bool = field(default=True)
     enable_label_description: bool = field(default=True)
+
+    # Underbrace Annotation
+    margin_underbrace_y: float = field(default=0.4)
+    height_underbrace_tick: float = field(default=0.2)
+    zorder_underbrace_line: int = field(default=-30)
+    zorder_underbrace_text: int = field(default=-29)
 
     # region Class Properties
     @property
@@ -165,6 +186,7 @@ class StyleSettings:
             subtext_font_size=self.font_size_small,
             rectilinear_margin_width=self.rectilinear_margin_width,
             rectilinear_margin_height=self.rectilinear_margin_height,
+            bevel_weight=self.bevel_weight,
         )
 
     @property
@@ -181,6 +203,7 @@ class StyleSettings:
             subtext_font_size=self.font_size_small,
             rectilinear_margin_width=self.rectilinear_margin_width,
             rectilinear_margin_height=self.rectilinear_margin_height,
+            bevel_weight=self.bevel_weight,
         )
 
     @property
@@ -197,6 +220,7 @@ class StyleSettings:
             subtext_font_size=self.font_size_small,
             rectilinear_margin_width=self.rectilinear_margin_width,
             rectilinear_margin_height=self.rectilinear_margin_height,
+            bevel_weight=self.bevel_weight,
         )
 
     @property
@@ -220,10 +244,25 @@ class StyleSettings:
         )
 
     @property
+    def underbrace_style(self) -> UnderbraceStyleSettings:
+        return UnderbraceStyleSettings(
+            text_color=self.color_text,
+            background_color=self.color_background,
+            line_color=self.color_highlight_outline,
+            line_width=self.width_line,
+            font_size=self.font_size_small,
+            margin_y=self.margin_underbrace_y,
+            tick_height=self.height_underbrace_tick,
+            zorder_line=self.zorder_underbrace_line,
+            zorder_text=self.zorder_underbrace_text,
+        )
+
+    @property
     def icon_style(self) -> IconStyleSettings:
         return IconStyleSettings(
             icon_color=self.color_icon,
             icon_line_width=self.width_line_icon,
+            arrow_head_width_scalar=self.width_arrow_head_scalar,
         )
     # endregion
 

@@ -18,6 +18,7 @@ from qce_circuit.visualization.visualize_circuit.style_manager import (
     StyleManager,
     IndicatorStyleSettings,
     HighlightStyleSettings,
+    UnderbraceStyleSettings,
 )
 
 
@@ -198,5 +199,68 @@ class RoundedRectangleHighlight(IRectTransformComponent, IDrawComponent):
         # Apply patches
         axes.add_patch(rounded_rectangle)
         axes.add_patch(rounded_rectangle_border)
+        return axes
+    # endregion
+
+
+@dataclass(frozen=True)
+class UnderbraceAnnotationHighlight(IRectTransformComponent, IDrawComponent):
+    """
+    Data class, containing dimension data for drawing underbrace annotation.
+    """
+    pivot: Vec2D
+    width: float
+    height: float
+    alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    style_settings: UnderbraceStyleSettings = field(default_factory=lambda: StyleManager.read_config().underbrace_style)
+    text_string: str = field(default='')
+
+    # region Interface Properties
+    @property
+    def rectilinear_transform(self) -> IRectTransform:
+        """:return: 'Hard' rectilinear transform boundary."""
+        return RectTransform(
+            _pivot_strategy=FixedPivot(self.pivot),
+            _width_strategy=FixedLength(self.width),
+            _height_strategy=FixedLength(self.height),
+            _parent_alignment=self.alignment,
+        )
+    # endregion
+
+    # region Interface Methods
+    def draw(self, axes: plt.Axes) -> plt.Axes:
+        """Method used for drawing component on Axes."""
+        # Add slight margin below the bounding box
+        margin_y = self.style_settings.margin_y
+        bottom_left = self.rectilinear_transform.origin_pivot + Vec2D(x=0, y=-margin_y)
+        bottom_right = bottom_left + Vec2D(x=self.rectilinear_transform.width, y=0)
+        tick_height = self.style_settings.tick_height
+        
+        line_x = [bottom_left.x, bottom_left.x, bottom_right.x, bottom_right.x]
+        line_y = [bottom_left.y + tick_height, bottom_left.y, bottom_right.y, bottom_right.y + tick_height]
+        
+        axes.plot(
+            line_x, 
+            line_y, 
+            color=self.style_settings.line_color, 
+            linewidth=self.style_settings.line_width,
+            zorder=self.style_settings.zorder_line,
+        )
+        
+        center_x = (bottom_left.x + bottom_right.x) / 2.0
+        center_y = bottom_left.y
+        background_color = self.style_settings.background_color
+        
+        axes.text(
+            x=center_x,
+            y=center_y,
+            s=self.text_string,
+            fontsize=self.style_settings.font_size,
+            ha='center',
+            va='center',
+            color=self.style_settings.text_color,
+            bbox=dict(facecolor=background_color, edgecolor='none', pad=2.0),
+            zorder=self.style_settings.zorder_text,
+        )
         return axes
     # endregion

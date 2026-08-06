@@ -134,7 +134,7 @@ class Rx180Factory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
                 width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"{RotationAxis.X.value}",
+                header_text=f"${RotationAxis.X.value}$",
             )
 
         return BlockRotation(
@@ -165,7 +165,7 @@ class Rx90Factory(IOperationDrawComponentFactory[Rx90, IDrawComponent]):
                 width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"+{RotationAxis.X.value}/2",
+                header_text=f"$+{RotationAxis.X.value}/2$",
             )
 
         return BlockRotation(
@@ -196,7 +196,7 @@ class Rxm90Factory(IOperationDrawComponentFactory[Rxm90, IDrawComponent]):
                 width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"-{RotationAxis.X.value}/2",
+                header_text=f"$-{RotationAxis.X.value}/2$",
             )
 
         return BlockRotation(
@@ -221,6 +221,7 @@ class RxThetaFactory(IOperationDrawComponentFactory[RxTheta, IDrawComponent]):
         )
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X,
@@ -243,13 +244,15 @@ class Ry180Factory(IOperationDrawComponentFactory[Ry180, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"{RotationAxis.Y.value}",
+                header_text=f"${RotationAxis.Y.value}$",
             )
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
@@ -275,7 +278,7 @@ class Ry90Factory(IOperationDrawComponentFactory[Ry90, IDrawComponent]):
                 width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"+{RotationAxis.Y.value}/2",
+                header_text=f"$+{RotationAxis.Y.value}/2$",
             )
 
         return BlockRotation(
@@ -306,7 +309,7 @@ class Rym90Factory(IOperationDrawComponentFactory[Rym90, IDrawComponent]):
                 width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
-                header_text=f"-{RotationAxis.Y.value}/2",
+                header_text=f"$-{RotationAxis.Y.value}/2$",
             )
 
         return BlockRotation(
@@ -331,6 +334,7 @@ class RyThetaFactory(IOperationDrawComponentFactory[RyTheta, IDrawComponent]):
         )
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Y,
@@ -350,6 +354,7 @@ class RPhiThetaFactory(IOperationDrawComponentFactory[RPhiTheta, IDrawComponent]
         )
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.PHI,
@@ -372,6 +377,7 @@ class Rx180efFactory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
         if self.minimalist:
             return BlockHeaderBody(
                 pivot=transform.pivot,
+                width=transform.width,
                 height=transform.height,
                 alignment=transform.parent_alignment,
                 header_text=f"${RotationAxis.X.value}_{{12}}$",
@@ -379,6 +385,7 @@ class Rx180efFactory(IOperationDrawComponentFactory[Rx180, IDrawComponent]):
 
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.X_EF,
@@ -398,6 +405,7 @@ class ZPhaseFactory(IOperationDrawComponentFactory[VirtualPhase, IDrawComponent]
         )
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.Z,
@@ -417,6 +425,7 @@ class Rphi90Factory(IOperationDrawComponentFactory[VirtualPhase, IDrawComponent]
         )
         return BlockRotation(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             rotation_axes=RotationAxis.PHI,
@@ -574,6 +583,7 @@ class VirtualWaitFactory(IOperationDrawComponentFactory[VirtualWait, IDrawCompon
         )
         return BlockHeaderBody(
             pivot=transform.pivot,
+            width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
             header_text=operation.header_text,

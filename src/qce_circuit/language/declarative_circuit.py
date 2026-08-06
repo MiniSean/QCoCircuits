@@ -32,6 +32,7 @@ from qce_circuit.language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 
 
 class DeclarativeCircuit(IDeclarativeCircuit):
@@ -67,6 +68,11 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         return self._acquisition_registry
 
     @property
+    def annotations(self) -> List['CircuitAnnotation']:
+        """:return: Array-like of circuit annotations."""
+        return self._annotations
+
+    @property
     def start_time(self) -> float:
         """:return: Start time [a.u.]."""
         return self._structure.start_time
@@ -87,6 +93,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         self._added_operations: List[ICircuitOperation] = list()
         self._initial_state_lookup: Dict[int, InitialStateEnum] = {}
         self._acquisition_registry: AcquisitionRegistry = AcquisitionRegistry(circuit=self.circuit_structure)
+        self._annotations: List['CircuitAnnotation'] = list()
     # endregion
 
     # region Interface Methods
@@ -95,6 +102,11 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         self._structure.add(operation)
         self._added_operations.append(operation)
         return operation
+
+    def add_annotation(self, annotation: 'CircuitAnnotation') -> 'IDeclarativeCircuit':
+        """:return: Self. Adds annotation to circuit."""
+        self._annotations.append(annotation)
+        return self
 
     def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'ICircuitCompositeOperation':
         """:return: Added operation. Adds sub-circuit to circuit."""
