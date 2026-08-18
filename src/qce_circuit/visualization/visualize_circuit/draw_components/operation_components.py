@@ -25,6 +25,7 @@ from qce_circuit.visualization.visualize_circuit.style_manager import (
     ChannelStyleSettings,
 )
 
+TEXT_VA: str = 'center_baseline'
 
 @unique
 class RotationAxis(Enum):
@@ -137,7 +138,7 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -305,7 +306,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='right',
-            va='center',
+            va=TEXT_VA,
         )
         
         return axes
@@ -339,7 +340,7 @@ class BlockRotation(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -363,7 +364,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         axes.text(
             x=self.text_center.x,
@@ -372,7 +373,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.subtext_font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -395,7 +396,7 @@ class BlockGate(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             s=rf'$\mathtt{{{self.gate_type.value}^{{{self.rotation_angle.value}}}}}$',
             fontsize=self.style_settings.font_size,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -630,7 +631,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         # Draw RX
         text_center = Vec2D.from_vector(0.5 * (
@@ -644,7 +645,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
 
         return axes
