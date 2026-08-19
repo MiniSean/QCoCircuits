@@ -90,7 +90,7 @@ class VisualConnectivityDescription:
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -104,7 +104,7 @@ class VisualConnectivityDescription:
                     if stabilizer_type == StabilizerType.STABILIZER_X:
                         continue
                     draw_element = RectanglePlaquette(
-                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5 + self.pivot,
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5,
                         width=0.5 * diagonal_spacing,
                         height=0.5 * diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -117,7 +117,7 @@ class VisualConnectivityDescription:
                 if mean_center:
                     result.append(
                         DiagonalPlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -134,7 +134,7 @@ class VisualConnectivityDescription:
                 else:
                     result.append(
                         TrianglePlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -149,7 +149,7 @@ class VisualConnectivityDescription:
                             continue
                         triangle_scalar: float = 1 / math.sqrt(2)
                         draw_element = TrianglePlaquette(
-                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id),
                             width=triangle_scalar * diagonal_spacing,
                             height=triangle_scalar * diagonal_spacing,
                             rotation=self.get_rotation_offset_from_relative_direction(
@@ -177,7 +177,7 @@ class VisualConnectivityDescription:
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -191,7 +191,7 @@ class VisualConnectivityDescription:
                     if stabilizer_type == StabilizerType.STABILIZER_Z:
                         continue
                     draw_element = RectanglePlaquette(
-                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5 + self.pivot,
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5,
                         width=0.5 * diagonal_spacing,
                         height=0.5 * diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -204,7 +204,7 @@ class VisualConnectivityDescription:
                 if mean_center:
                     result.append(
                         DiagonalPlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -221,7 +221,7 @@ class VisualConnectivityDescription:
                 else:
                     result.append(
                         TrianglePlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -236,7 +236,7 @@ class VisualConnectivityDescription:
                             continue
                         triangle_scalar: float = 1 / math.sqrt(2)
                         draw_element = TrianglePlaquette(
-                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id),
                             width=triangle_scalar * diagonal_spacing,
                             height=triangle_scalar * diagonal_spacing,
                             rotation=self.get_rotation_offset_from_relative_direction(
@@ -254,12 +254,12 @@ class VisualConnectivityDescription:
         result: List[IDrawComponent] = []
         for qubit_id in self.connectivity.qubit_ids:
             result.append(DotComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                pivot=self.identifier_to_pivot(qubit_id),
                 alignment=TransformAlignment.MID_CENTER,
             ))
             if self.include_element_labels:
                 result.append(TextComponent(
-                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    pivot=self.identifier_to_pivot(qubit_id),
                     text=qubit_id.id,
                     alignment=TransformAlignment.MID_CENTER,
                 ))
@@ -269,8 +269,8 @@ class VisualConnectivityDescription:
         result: List[IDrawComponent] = []
         for edge_id in self.connectivity.edge_ids:
             result.append(LineComponent(
-                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]) + self.pivot,
-                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]) + self.pivot,
+                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]),
                 alignment=TransformAlignment.MID_CENTER,
             ))
         return result
@@ -278,15 +278,15 @@ class VisualConnectivityDescription:
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
             ParkingComponent(
-                pivot=self.identifier_to_pivot(identifier=operation.identifier) + self.pivot,
+                pivot=self.identifier_to_pivot(identifier=operation.identifier),
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.park_operations
         ]
         gate_components: List[IDrawComponent] = [
             GateOperationComponent(
-                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]) + self.pivot,
-                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]) + self.pivot,
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.gate_operations
@@ -395,7 +395,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -406,7 +406,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 2:
                 result.append(
                     TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -418,7 +418,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -429,7 +429,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 2:
                 result.append(
                     TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -466,7 +466,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                 background_color = self.element_highlight_color_overwrite
 
             result.append(DotComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                pivot=self.identifier_to_pivot(qubit_id),
                 alignment=TransformAlignment.MID_CENTER,
                 style_settings=ElementStyleSettings(
                     background_color=background_color,
@@ -477,7 +477,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
             ))
             if self.include_element_labels or (self.include_gate_sequence_labels and qubit_id in self.gate_sequence.qubit_ids):
                 result.append(TextComponent(
-                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    pivot=self.identifier_to_pivot(qubit_id),
                     text=qubit_id.id,
                     alignment=TransformAlignment.MID_CENTER,
                 ))
