@@ -41,9 +41,9 @@ class RotationAxis(Enum):
 @unique
 class RotationAngle(Enum):
     THETA = r'\theta'
-    RAD90 = r'+\frac{\pi}{2}'
+    RAD90 = r'+\pi/2'  # r'+\frac{\pi}{2}'
     RAD180 = r'+\pi'
-    RAD90M = r'-\frac{\pi}{2}'
+    RAD90M = r'-\pi/2'  # r'-\frac{\pi}{2}'
     RAD180M = r'-\pi'
     NONE = ''
 
