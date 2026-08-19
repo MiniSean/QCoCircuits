@@ -219,6 +219,7 @@ class UnderbraceAnnotationHighlight(IRectTransformComponent, IDrawComponent):
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
     style_settings: UnderbraceStyleSettings = field(default_factory=lambda: StyleManager.read_config().underbrace_style)
     text_string: str = field(default='')
+    text_vertical_offset: float = field(default=0.0)
 
     # region Interface Properties
     @property
@@ -242,7 +243,7 @@ class UnderbraceAnnotationHighlight(IRectTransformComponent, IDrawComponent):
         tick_height = self.style_settings.tick_height
         
         center_x = (bottom_left.x + bottom_right.x) / 2.0
-        center_y = bottom_left.y
+        center_y = bottom_left.y + self.text_vertical_offset
         
         # Draw Text (No background box)
         text_element = axes.text(

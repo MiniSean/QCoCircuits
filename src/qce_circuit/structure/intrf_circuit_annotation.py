@@ -13,6 +13,7 @@ class CircuitAnnotation:
     """
     operations: List[ICircuitOperation]
     text_string: str
+    text_vertical_offset: float = 0.0
 
     def copy(self, relation_transfer_lookup: Optional[Dict[ICircuitOperation, ICircuitOperation]] = None) -> 'CircuitAnnotation':
         """
@@ -30,4 +31,5 @@ class CircuitAnnotation:
         return CircuitAnnotation(
             operations=copied_operations,
             text_string=self.text_string,
+            text_vertical_offset=self.text_vertical_offset,
         )

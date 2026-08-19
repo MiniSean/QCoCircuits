@@ -170,6 +170,8 @@ class VisualCircuitDescription:
     """Channel identifier index to label mapping"""
     channel_color_map: Dict[int, str] = field(default_factory=dict)
     """Channel identifier index to color mapping"""
+    hidden_channels: List[int] = field(default_factory=list)
+    """Array of channel indices to hide from drawing."""
     minimalist: bool = field(default=False)
     """Minimalist drawing style, passed to factories"""
     channel_height_scaling: float = field(default_factory=lambda: StyleManager.read_config().channel_height_scaling)
@@ -310,7 +312,8 @@ class VisualCircuitDescription:
                     width=combined_transform.width,
                     height=combined_transform.height,
                     alignment=combined_transform.parent_alignment,
-                    text_string=annotation.text_string
+                    text_string=annotation.text_string,
+                    text_vertical_offset=annotation.text_vertical_offset,
                 )
             )
         return components
@@ -337,17 +340,18 @@ class VisualCircuitDescription:
 T = TypeVar("T")
 
 
-def reorder_indices(original_order: List[T], specific_order: List[T]) -> List[T]:
+def reorder_indices(original_order: List[T], specific_order: List[T], allow_new_indices: bool = False) -> List[T]:
     """
     Reorders an array of indices based on a specified order.
-    :raises: (ValueError) If any index in specific_order is not in original_order.
+    :raises: (ValueError) If any index in specific_order is not in original_order and allow_new_indices is False.
     :param original_order: (list of T) The original order of indices.
     :param specific_order: (list of T) The specific order to prioritize in the result.
+    :param allow_new_indices: (bool) Whether to allow indices in specific_order that are not in original_order.
     :return: (list of T) The reordered array of indices.
     """
 
     # Check if all elements in specific_order are in original_order
-    if not all(item in original_order for item in specific_order):
+    if not allow_new_indices and not all(item in original_order for item in specific_order):
         raise ValueError(f"All indices in specific_order must be in original_order. Instead got {specific_order}, {original_order}")
 
     # Create the reordered list
@@ -375,7 +379,7 @@ def reorder_map(original_order: Dict[T, Any], specific_order: List[T]) -> Dict[T
     return result
 
 
-def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, minimalist: bool = False) -> VisualCircuitDescription:
+def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_order: Optional[List[int]] = None, hidden_channels: Optional[List[int]] = None, custom_channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, minimalist: bool = False) -> VisualCircuitDescription:
     """:return: Draw description based on declarative circuit interface instance."""
     channel_indices: List[int] = unique_in_order([identifier.id for identifier in circuit.occupied_qubit_channels])
     # Construct custom channel color map
@@ -390,7 +394,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
             channel_index: str(channel_index)
             for channel_index in channel_indices
         }
-    channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order)
+    channel_indices = reorder_indices(original_order=channel_indices, specific_order=custom_channel_order, allow_new_indices=True)
     # Apply custom channel map
     custom_channel_map = {
         i: custom_channel_map.get(channel_index, channel_index)  # Default to channel_index: channel_index
@@ -406,6 +410,9 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         if operation.end_time > end_time:
             end_time = operation.end_time
 
+    if hidden_channels is None:
+        hidden_channels = []
+
     return VisualCircuitDescription(
         channel_width=end_time,
         channel_height=1.0,
@@ -416,6 +423,7 @@ def construct_visual_description(circuit: IDeclarativeCircuit, custom_channel_or
         operations=operations,
         composite_operations=circuit.composite_operations,
         annotations=circuit.annotations,
+        hidden_channels=hidden_channels,
         minimalist=minimalist,
     )
 
@@ -632,7 +640,7 @@ def plot_debug_schedule(**kwargs) -> IFigureAxesPair:
     return fig, ax
 
 
-def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, fixed_scale: Union[bool, float] = False, **kwargs) -> IFigureAxesPair:
+def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, hidden_channels: List[int] = None, channel_map: Optional[Dict[int, str]] = None, channel_color_map: Dict[int, str] = None, compact_visualization: bool = True, minimalist_visualization: bool = False, fixed_scale: Union[bool, float] = False, full_axes_width: bool = False, **kwargs) -> IFigureAxesPair:
     if compact_visualization:
         with temporary_override_get_registry_at(VISUALIZATION_DURATION_REGISTRY):
             with clear_lru_cache(RelationLink.get_start_time):
@@ -640,11 +648,13 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
                     description=construct_visual_description(
                         circuit=circuit,
                         custom_channel_order=channel_order,
+                        hidden_channels=hidden_channels,
                         custom_channel_map=channel_map,
                         channel_color_map=channel_color_map,
                         minimalist=minimalist_visualization,
                     ),
                     fixed_scale=fixed_scale,
+                    full_axes_width=full_axes_width,
                     **kwargs
                 )
         return fig, ax
@@ -653,17 +663,19 @@ def plot_circuit(circuit: IDeclarativeCircuit, channel_order: List[int] = None, 
         description=construct_visual_description(
             circuit=circuit,
             custom_channel_order=channel_order,
+            hidden_channels=hidden_channels,
             custom_channel_map=channel_map,
             channel_color_map=channel_color_map,
             minimalist=minimalist_visualization,
         ),
         fixed_scale=fixed_scale,
+        full_axes_width=full_axes_width,
         **kwargs
     )
     return fig, ax
 
 
-def plot_circuit_description(description: VisualCircuitDescription, fixed_scale: Union[bool, float] = False, **kwargs) -> IFigureAxesPair:
+def plot_circuit_description(description: VisualCircuitDescription, fixed_scale: Union[bool, float] = False, full_axes_width: bool = False, **kwargs) -> IFigureAxesPair:
     # Data allocation
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(
         SubplotKeywordEnum.AXES_FORMAT.value,
@@ -678,6 +690,30 @@ def plot_circuit_description(description: VisualCircuitDescription, fixed_scale:
         description.figure_size,
     )
     fig, ax = construct_subplot(**kwargs)
+
+    if full_axes_width:
+        style = StyleManager.read_config()
+        
+        has_highlights = len(description.get_highlight_draw_components()) > 0
+        highlight_margin_y: float = (style.margin_highlight_y + 0.0 if has_highlights else 0.0)
+        has_annotations = len(description.annotations) > 0
+        underbrace_margin_y: float = (style.margin_underbrace_y + 0.6 if has_annotations else 0.6)
+        y_max = 0.7 + highlight_margin_y
+        
+        lowest_channel_y = - (len(description.channel_indices) - 1) * description.channel_spacing if description.channel_indices else 0.0
+        y_min = lowest_channel_y - underbrace_margin_y - highlight_margin_y
+        data_height = y_max - y_min
+        
+        x_min = min(description.get_channel_header(i).rectilinear_transform.left_pivot.x for i in range(len(description.channel_indices))) if description.channel_indices else 0.0
+        
+        bbox = ax.get_window_extent().transformed(fig.dpi_scale_trans.inverted())
+        physical_width, physical_height = bbox.width, bbox.height
+        
+        if physical_height > 0:
+            data_width = data_height * (physical_width / physical_height)
+            object.__setattr__(description, 'channel_width', max(description.channel_width, x_min + data_width))
+            ax.set_xlim(x_min, x_min + data_width)
+            ax.set_ylim(y_min, y_max)
 
     if fixed_scale:
         style = StyleManager.read_config()
@@ -709,6 +745,9 @@ def plot_circuit_description(description: VisualCircuitDescription, fixed_scale:
         ax.set_ylim(y_min, y_max)
 
     for i, channel_index in enumerate(description.channel_indices):
+        if channel_index in description.hidden_channels:
+            continue
+
         transform: ChannelBar = description.get_channel_bar(index=i)
         transform.draw(axes=ax)
         # ax = draw_transform_component(transform, axes=ax)
