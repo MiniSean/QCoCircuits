@@ -792,6 +792,7 @@ class DispersiveMeasure(IAcquisitionOperation):
     qubit_index: int = field(init=True, repr=True)
     acquisition_strategy: IAcquisitionStrategy = field(init=True, repr=False)
     acquisition_tag: str = field(init=True, default='', repr=True)
+    state_label: str = field(init=True, default='$Z$', repr=True)
     relation: IRelationLink[ICircuitOperation] = field(default_factory=RelationLink.no_relation, repr=False)
     duration_strategy: IDurationStrategy = field(init=True, default=GlobalDurationStrategy(GlobalRegistryKey.READOUT), repr=False)
     _acquisition_identifier: AcquisitionIdentifier = field(init=False, repr=False)

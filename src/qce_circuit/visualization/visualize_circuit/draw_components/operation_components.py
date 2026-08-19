@@ -258,7 +258,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
-    measurement_basis: RotationAxis = field(default=RotationAxis.Z)
+    state_label: str = field(default='$Z$')
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     icon_style_settings: IconStyleSettings = field(default_factory=lambda: StyleManager.read_config().icon_style)
     _base_block: RectangleBlock = field(init=False)
@@ -302,7 +302,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
         axes.text(
             x=text_center.x,
             y=text_center.y,
-            s=rf'${self.measurement_basis.value}$',
+            s=self.state_label,
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='right',

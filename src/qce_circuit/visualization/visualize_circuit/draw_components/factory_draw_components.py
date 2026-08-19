@@ -606,6 +606,7 @@ class MeasureFactory(IOperationDrawComponentFactory[DispersiveMeasure, IDrawComp
             width=transform.width,
             height=transform.height,
             alignment=transform.parent_alignment,
+            state_label=operation.state_label,
         )
     # endregion
 
