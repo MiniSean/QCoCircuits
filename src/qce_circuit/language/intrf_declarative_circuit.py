@@ -56,6 +56,7 @@ class CodeDimension(Enum):
     """Enum class, describing code dimensions."""
     REPETITION_CODE = "1D"
     SURFACE_CODE = "2D"
+    STABILITY_CODE = "stability"
 
 
 @dataclass(frozen=True)
