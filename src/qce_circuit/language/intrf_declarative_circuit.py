@@ -93,11 +93,11 @@ class InitialStateContainer(Generic[T]):
         # Maps initial state to binary
         to_bit_conversion: Dict[InitialStateEnum, int] = {
             InitialStateEnum.ZERO: 0,
-            InitialStateEnum.MINUS: 0,
-            InitialStateEnum.MINUS_I: 0,
+            InitialStateEnum.PLUS: 0,
+            InitialStateEnum.PLUS_I: 0,
             InitialStateEnum.ONE: 1,
-            InitialStateEnum.PLUS: 1,
-            InitialStateEnum.PLUS_I: 1,
+            InitialStateEnum.MINUS: 1,
+            InitialStateEnum.MINUS_I: 1,
         }
         return np.asarray([to_bit_conversion[self.initial_states[index]] for index in sorted_indices])
 
