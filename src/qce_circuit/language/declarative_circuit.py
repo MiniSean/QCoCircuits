@@ -32,6 +32,7 @@ from qce_circuit.language.intrf_declarative_circuit import (
     IDeclarativeCircuit,
     InitialStateEnum,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 
 
 class DeclarativeCircuit(IDeclarativeCircuit):
@@ -67,6 +68,11 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         return self._acquisition_registry
 
     @property
+    def annotations(self) -> List[CircuitAnnotation]:
+        """:return: Array-like of circuit annotations."""
+        return self._structure.get_flattened_annotations()
+
+    @property
     def start_time(self) -> float:
         """:return: Start time [a.u.]."""
         return self._structure.start_time
@@ -87,6 +93,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         self._added_operations: List[ICircuitOperation] = list()
         self._initial_state_lookup: Dict[int, InitialStateEnum] = {}
         self._acquisition_registry: AcquisitionRegistry = AcquisitionRegistry(circuit=self.circuit_structure)
+        self._operation_lookup: Dict[ICircuitOperation, ICircuitOperation] = {}
     # endregion
 
     # region Interface Methods
@@ -96,10 +103,17 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         self._added_operations.append(operation)
         return operation
 
+    def add_annotation(self, annotation: 'CircuitAnnotation') -> 'IDeclarativeCircuit':
+        """:return: Self. Adds annotation to circuit."""
+        mapped_annotation = annotation.copy(relation_transfer_lookup=self._operation_lookup)
+        self._structure.annotations.append(mapped_annotation)
+        return self
+
     def add_sub_circuit(self, operation: ICircuitCompositeOperation) -> 'ICircuitCompositeOperation':
         """:return: Added operation. Adds sub-circuit to circuit."""
         reference_transfer_lookup = {operation: self._structure}
         copied_operation: ICircuitCompositeOperation = operation.copy(relation_transfer_lookup=reference_transfer_lookup)
+        self._operation_lookup.update(reference_transfer_lookup)
         self._structure.add(copied_operation)
         self._added_operations.append(copied_operation)
         return copied_operation
@@ -122,6 +136,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         )
         result._structure = self._structure.apply_modifiers_to_self()
         result._added_operations = self._added_operations
+        result._operation_lookup = self._operation_lookup
         return result
 
     def flatten(self) -> 'DeclarativeCircuit':
@@ -136,6 +151,7 @@ class DeclarativeCircuit(IDeclarativeCircuit):
         )
         result._structure = self._structure.apply_flatten_to_self()
         result._added_operations = self._added_operations
+        result._operation_lookup = self._operation_lookup
         return result
 
     def set_qubit_initial_state(self, channel_index: int, state: InitialStateEnum) -> 'DeclarativeCircuit':

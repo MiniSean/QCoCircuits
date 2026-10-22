@@ -193,6 +193,7 @@ class TextComponent(IRectTransformComponent, IDrawComponent):
             ha='center',
             va='center',
             zorder=self.style_settings.zorder,
+            clip_on=True,
         )
         return axes
     # endregion

@@ -2,7 +2,7 @@
 # Module containing implementation of surface-code connectivity structure.
 # -------------------------------------------
 from dataclasses import dataclass, field
-from typing import List, Union, Dict
+from typing import List, Union, Dict, Optional, Tuple
 import numpy as np
 from qce_circuit.utilities.singleton_base import SingletonABCMeta
 from qce_circuit.utilities.custom_exceptions import ElementNotIncludedException
@@ -19,11 +19,41 @@ from qce_circuit.connectivity.intrf_connectivity import IConnectivityLayer
 from qce_circuit.connectivity.intrf_connectivity_surface_code import (
     ISurfaceCodeLayer,
     IParityGroup,
-    IGateGroup,
+    IQubitStabilizerBasis,
     StabilizerType,
+    StabilizerBasis,
     FrequencyGroup,
     FrequencyGroupIdentifier,
 )
+from qce_circuit.utilities.geometric_definitions.vector_elements import Vec2D
+
+
+@dataclass(frozen=True)
+class QubitStabilizerBasis(IQubitStabilizerBasis, QubitIDObj):
+    _stabilizer_basis: StabilizerBasis
+
+    # region Interface Properties
+    @property
+    def stabilizer_basis(self) -> StabilizerBasis:
+        """:return: Stabilizer basis at which qubit-ID evaluates."""
+        return self._stabilizer_basis
+    # endregion
+
+    # region Class Methods
+    def __eq__(self, other):
+        """:returns: Boolean if other shares equal identifier, else InterfaceMethodException."""
+        if isinstance(other, IQubitStabilizerBasis):
+            return self.id.__eq__(other.id) and self._stabilizer_basis.__eq__(other.stabilizer_basis)
+        return super().__eq__(other)
+
+    @classmethod
+    def from_qubit_id(cls, qubit_id: IQubitID, stabilizer_basis: StabilizerBasis) -> 'QubitStabilizerBasis':
+        """:return: Class-method constructor"""
+        return QubitStabilizerBasis(
+            _id=qubit_id.id,
+            _stabilizer_basis=stabilizer_basis,
+        )
+    # endregion
 
 
 @dataclass(frozen=True)
@@ -35,10 +65,12 @@ class ParityGroup(IParityGroup):
     """X or Z type stabilizer."""
     _ancilla_qubit: IQubitID = field(init=True)
     """Ancilla qubit."""
-    _data_qubits: List[IQubitID] = field(init=True)
+    _data_qubits: List[Union[IQubitID, Tuple[IQubitID, StabilizerType]]] = field(init=True)
     """Data qubits."""
     _edges: List[IEdgeID] = field(init=False)
     """Edges between ancilla and data qubits."""
+    _data_qubit_to_stabilizer_type: Dict[IQubitID, StabilizerType] = field(init=False)
+    """Stabilizer type for data qubit lookup."""
 
     # region Interface Properties
     @property
@@ -54,7 +86,7 @@ class ParityGroup(IParityGroup):
     @property
     def data_ids(self) -> List[IQubitID]:
         """:return: (All) data-qubit-ID's from parity."""
-        return self._data_qubits
+        return [qubit_id for qubit_id, _ in self._data_qubits]
 
     @property
     def edge_ids(self) -> List[IEdgeID]:
@@ -70,10 +102,28 @@ class ParityGroup(IParityGroup):
         if element in self.edge_ids:
             return True
         return False
+
+    def get_stabilizer_type(self, data_qubit_id: IQubitID) -> Optional[StabilizerType]:
+        """:return: Stabilizer type for data qubit in stabilizer group (X or Z type stabilizer)."""
+        return self._data_qubit_to_stabilizer_type[data_qubit_id]
     # endregion
 
     # region Class Methods
     def __post_init__(self):
+        # Post-processing to convert backwards compatible behavior to new data-qubit linked stabilizer type
+        data_qubits = self._data_qubits
+        data_qubit_to_stabilizer_type: Dict[IQubitID, StabilizerType] = {}
+        for i, element in enumerate(data_qubits):
+            if isinstance(element, IQubitID):
+                data_qubits[i] = (element, self.parity_type)
+            element = data_qubits[i]
+            if isinstance(element, Tuple):
+                _qubit_id, _stabilizer_type = element
+                data_qubit_to_stabilizer_type[_qubit_id] = _stabilizer_type
+
+        object.__setattr__(self, '_data_qubits', data_qubits)
+        object.__setattr__(self, '_data_qubit_to_stabilizer_type', data_qubit_to_stabilizer_type)
+
         edges: List[IEdgeID] = [
             EdgeIDObj(
                 qubit_id0=self.ancilla_id,
@@ -89,6 +139,25 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     """
     Singleton class, implementing ISurfaceCodeLayer interface to describe a surface-17 layout.
     """
+    _qubit_coordinates_lookup: Dict[IQubitID, Vec2D] = {
+        QubitIDObj('Z3'): Vec2D(-2, -1),
+        QubitIDObj('D9'): Vec2D(0, 2),
+        QubitIDObj('X4'): Vec2D(-1, 2),
+        QubitIDObj('D8'): Vec2D(-1, 1),
+        QubitIDObj('Z4'): Vec2D(0, 1),
+        QubitIDObj('D6'): Vec2D(1, 1),
+        QubitIDObj('D7'): Vec2D(-2, 0),
+        QubitIDObj('X3'): Vec2D(-1, 0),
+        QubitIDObj('D5'): Vec2D(0, 0),
+        QubitIDObj('X2'): Vec2D(1, 0),
+        QubitIDObj('D3'): Vec2D(2, 0),
+        QubitIDObj('D4'): Vec2D(-1, -1),
+        QubitIDObj('Z1'): Vec2D(0, -1),
+        QubitIDObj('D2'): Vec2D(1, -1),
+        QubitIDObj('X1'): Vec2D(1, -2),
+        QubitIDObj('Z2'): Vec2D(2, 1),
+        QubitIDObj('D1'): Vec2D(0, -2),
+    }
     _feedline_qubit_lookup: Dict[IFeedlineID, List[IQubitID]] = {
         FeedlineIDObj('FL1'): [QubitIDObj('D9'), QubitIDObj('D8'), QubitIDObj('X4'), QubitIDObj('Z4'), QubitIDObj('Z2'), QubitIDObj('D6')],
         FeedlineIDObj('FL2'): [QubitIDObj('D3'), QubitIDObj('D7'), QubitIDObj('D2'), QubitIDObj('X3'), QubitIDObj('Z1'), QubitIDObj('X2'), QubitIDObj('Z3'), QubitIDObj('D5'), QubitIDObj('D4')],
@@ -238,6 +307,12 @@ class Surface17Layer(ISurfaceCodeLayer, metaclass=SingletonABCMeta):
     def get_frequency_group_identifier(self, element: IQubitID) -> FrequencyGroupIdentifier:
         """:return: Frequency group identifier based on qubit-ID."""
         return self._frequency_group_lookup[element]
+        
+    def get_qubit_coordinates(self, qubit_id: IQubitID) -> Vec2D:
+        """:return: The geometric coordinates for the given qubit ID."""
+        if qubit_id not in self._qubit_coordinates_lookup:
+            raise ElementNotIncludedException(f"Element: {qubit_id} has no coordinates defined.")
+        return self._qubit_coordinates_lookup[qubit_id]
     # endregion
 
     # region IDeviceLayer Interface Methods

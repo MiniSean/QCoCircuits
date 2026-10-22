@@ -135,6 +135,12 @@ class IGateSequenceLayer(ABC):
     def involved_qubit_ids(self) -> List[IQubitID]:
         """:return: (Only) involved qubit-ID's in gate sequence."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def involved_edge_ids(self) -> List[IEdgeID]:
+        """:return: (Only) involved edge-ID's in gate sequence."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods

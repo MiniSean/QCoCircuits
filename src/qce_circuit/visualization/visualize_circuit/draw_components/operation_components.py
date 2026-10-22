@@ -25,6 +25,7 @@ from qce_circuit.visualization.visualize_circuit.style_manager import (
     ChannelStyleSettings,
 )
 
+TEXT_VA: str = 'center_baseline'
 
 @unique
 class RotationAxis(Enum):
@@ -40,9 +41,9 @@ class RotationAxis(Enum):
 @unique
 class RotationAngle(Enum):
     THETA = r'\theta'
-    RAD90 = r'+\frac{\pi}{2}'
+    RAD90 = r'+\pi/2'  # r'+\frac{\pi}{2}'
     RAD180 = r'+\pi'
-    RAD90M = r'-\frac{\pi}{2}'
+    RAD90M = r'-\pi/2'  # r'-\frac{\pi}{2}'
     RAD180M = r'-\pi'
     NONE = ''
 
@@ -85,16 +86,29 @@ class RectangleBlock(IRectTransformComponent, IDrawComponent):
     # region Class Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
-        rectangle = patches.Rectangle(
-            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
-            width=self.rectilinear_transform.width,
-            height=self.rectilinear_transform.height,
-            linewidth=self.style_settings.border_width,
-            linestyle=self.style_settings.border_line_style,
-            edgecolor=self.style_settings.border_color,
-            facecolor=self.style_settings.background_color,
-            zorder=-1,
-        )
+        if self.style_settings.bevel_weight > 0.0:
+            rectangle = patches.FancyBboxPatch(
+                xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+                width=self.rectilinear_transform.width,
+                height=self.rectilinear_transform.height,
+                boxstyle=f"round,pad=0,rounding_size={self.style_settings.bevel_weight}",
+                linewidth=self.style_settings.border_width,
+                linestyle=self.style_settings.border_line_style,
+                edgecolor=self.style_settings.border_color,
+                facecolor=self.style_settings.background_color,
+                zorder=-1,
+            )
+        else:
+            rectangle = patches.Rectangle(
+                xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+                width=self.rectilinear_transform.width,
+                height=self.rectilinear_transform.height,
+                linewidth=self.style_settings.border_width,
+                linestyle=self.style_settings.border_line_style,
+                edgecolor=self.style_settings.border_color,
+                facecolor=self.style_settings.background_color,
+                zorder=-1,
+            )
         axes.add_patch(rectangle)
         return axes
     # endregion
@@ -124,7 +138,7 @@ class RectangleTextBlock(RectangleBlock, IRectTransformComponent, IDrawComponent
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -156,16 +170,29 @@ class RectangleVacantBlock(IRectTransformComponent, IDrawComponent):
     # region Class Methods
     def draw(self, axes: plt.Axes) -> plt.Axes:
         """Method used for drawing component on Axes."""
-        rectangle = patches.Rectangle(
-            xy=self.rectilinear_transform.origin_pivot.to_tuple(),
-            width=self.rectilinear_transform.width,
-            height=self.rectilinear_transform.height,
-            linewidth=self.style_settings.border_width,
-            linestyle='--',
-            edgecolor=self.style_settings.border_color,
-            facecolor=self.style_settings.background_color,
-            zorder=-1,
-        )
+        if self.style_settings.bevel_weight > 0.0:
+            rectangle = patches.FancyBboxPatch(
+                xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+                width=self.rectilinear_transform.width,
+                height=self.rectilinear_transform.height,
+                boxstyle=f"round,pad=0,rounding_size={self.style_settings.bevel_weight}",
+                linewidth=self.style_settings.border_width,
+                linestyle='--',
+                edgecolor=self.style_settings.border_color,
+                facecolor=self.style_settings.background_color,
+                zorder=-1,
+            )
+        else:
+            rectangle = patches.Rectangle(
+                xy=self.rectilinear_transform.origin_pivot.to_tuple(),
+                width=self.rectilinear_transform.width,
+                height=self.rectilinear_transform.height,
+                linewidth=self.style_settings.border_width,
+                linestyle='--',
+                edgecolor=self.style_settings.border_color,
+                facecolor=self.style_settings.background_color,
+                zorder=-1,
+            )
         axes.add_patch(rectangle)
         return axes
     # endregion
@@ -231,6 +258,7 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
     width: float
     height: float
     alignment: TransformAlignment = field(default=TransformAlignment.MID_LEFT)
+    state_label: str = field(default='$Z$')
     style_settings: OperationStyleSettings = field(default_factory=lambda: StyleManager.read_config().operation_style)
     icon_style_settings: IconStyleSettings = field(default_factory=lambda: StyleManager.read_config().icon_style)
     _base_block: RectangleBlock = field(init=False)
@@ -244,14 +272,18 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
 
     # region Class Properties
     @property
-    def icon(self) -> IconMeasure:
+    def icon_center(self) -> Vec2D:
         icon_radius: float = self.rectilinear_transform.height * 0.4
         block_center: Vec2D = self.rectilinear_transform.center_pivot
         block_right: Vec2D = self.rectilinear_transform.center_pivot + Vec2D(x=+0.5 * self.width, y=0)
         fixed_offset: Vec2D = Vec2D(x=-0.7 * self.height, y=-0.5 * icon_radius)
-        icon_center: Vec2D = Vec2D(x=max(block_right.x + fixed_offset.x, block_center.x), y=block_center.y + fixed_offset.y)
+        return Vec2D(x=max(block_right.x + fixed_offset.x, block_center.x), y=block_center.y + fixed_offset.y)
+
+    @property
+    def icon(self) -> IconMeasure:
+        icon_radius: float = self.rectilinear_transform.height * 0.4
         return IconMeasure(
-            center=icon_center,
+            center=self.icon_center,
             radius=icon_radius,
             style_settings=self.icon_style_settings
         )
@@ -262,6 +294,21 @@ class BlockMeasure(IRectTransformComponent, IDrawComponent):
         """Method used for drawing component on Axes."""
         axes = self._base_block.draw(axes=axes)
         axes = self.icon.draw(axes=axes)
+        
+        text_center = Vec2D(
+            x=self.icon_center.x - 0.25 * self.width,
+            y=self.rectilinear_transform.left_pivot.y,
+        )
+        axes.text(
+            x=text_center.x,
+            y=text_center.y,
+            s=self.state_label,
+            fontsize=self.style_settings.font_size,
+            color=self.style_settings.text_color,
+            ha='right',
+            va=TEXT_VA,
+        )
+        
         return axes
 
     def __post_init__(self):
@@ -293,7 +340,7 @@ class BlockRotation(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -317,7 +364,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         axes.text(
             x=self.text_center.x,
@@ -326,7 +373,7 @@ class BlockHeaderBody(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.subtext_font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -349,7 +396,7 @@ class BlockGate(SquareTextBlock, IRectTransformComponent, IDrawComponent):
             s=rf'$\mathtt{{{self.gate_type.value}^{{{self.rotation_angle.value}}}}}$',
             fontsize=self.style_settings.font_size,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         return axes
     # endregion
@@ -584,7 +631,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
         # Draw RX
         text_center = Vec2D.from_vector(0.5 * (
@@ -598,7 +645,7 @@ class DualityBlock(IRectTransformComponent, IDrawComponent):
             fontsize=self.style_settings.font_size,
             color=self.style_settings.text_color,
             ha='center',
-            va='center',
+            va=TEXT_VA,
         )
 
         return axes

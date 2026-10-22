@@ -3,7 +3,7 @@
 # -------------------------------------------
 from abc import ABC, ABCMeta, abstractmethod
 from dataclasses import dataclass
-from typing import List, Union
+from typing import List, Union, Optional
 from enum import Enum, unique, auto
 from qce_circuit.utilities.custom_exceptions import InterfaceMethodException
 from qce_circuit.connectivity.intrf_channel_identifier import (
@@ -18,6 +18,23 @@ class StabilizerType(Enum):
     STABILIZER_X = 0
     STABILIZER_Z = 1
     STABILIZER_Y = 2
+
+
+@unique
+class StabilizerBasis(Enum):
+    STABILIZER_X = 0
+    STABILIZER_Z = 1
+
+
+class IQubitStabilizerBasis(IQubitID, metaclass=ABCMeta):
+
+    # region Interface Properties
+    @property
+    @abstractmethod
+    def stabilizer_basis(self) -> StabilizerBasis:
+        """:return: Stabilizer basis at which qubit-ID evaluates."""
+        raise InterfaceMethodException
+    # endregion
 
 
 class IParityGroup(ABC):
@@ -55,6 +72,11 @@ class IParityGroup(ABC):
     @abstractmethod
     def contains(self, element: Union[IQubitID, IEdgeID]) -> bool:
         """:return: Boolean, whether element is part of parity group or not."""
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def get_stabilizer_type(self, data_qubit_id: IQubitID) -> Optional[StabilizerType]:
+        """:return: Stabilizer type for data qubit in stabilizer group (X or Z type stabilizer)."""
         raise InterfaceMethodException
     # endregion
 

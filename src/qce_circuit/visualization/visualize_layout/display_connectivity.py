@@ -3,12 +3,12 @@
 # -------------------------------------------
 from dataclasses import dataclass, field
 from collections.abc import Iterable
-from typing import Dict, List, Union
+from typing import Dict, List, Union, Optional
 import numpy as np
 import math
 from qce_circuit.connectivity.intrf_channel_identifier import IQubitID, QubitIDObj
 from qce_circuit.connectivity.intrf_connectivity_surface_code import ISurfaceCodeLayer, IParityGroup
-from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer
+from qce_circuit.connectivity.connectivity_surface_code import Surface17Layer, StabilizerType
 from qce_circuit.connectivity.intrf_connectivity_gate_sequence import (
     GateSequenceLayer,
 )
@@ -90,7 +90,7 @@ class VisualConnectivityDescription:
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -98,11 +98,26 @@ class VisualConnectivityDescription:
                         style_settings=StyleManager.read_config().plaquette_style_x,
                     )
                 )
+                # Process unique data-qubit stabilizer type plaquettes
+                for parity_data_qubit_id in parity_group.data_ids:
+                    stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                    if stabilizer_type == StabilizerType.STABILIZER_X:
+                        continue
+                    draw_element = RectanglePlaquette(
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5,
+                        width=0.5 * diagonal_spacing,
+                        height=0.5 * diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group),
+                        alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_z,
+                    )
+                    result.append(draw_element)
+
             if len(parity_group.data_ids) == 2:
                 if mean_center:
                     result.append(
                         DiagonalPlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -110,10 +125,16 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_x,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        raise NotImplementedError(f"Unique data-qubit stabilizer visualization not yet supported for diagonal stabilizers.")
                 else:
                     result.append(
                         TrianglePlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -121,6 +142,26 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_x,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_X:
+                            continue
+                        triangle_scalar: float = 1 / math.sqrt(2)
+                        draw_element = TrianglePlaquette(
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id),
+                            width=triangle_scalar * diagonal_spacing,
+                            height=triangle_scalar * diagonal_spacing,
+                            rotation=self.get_rotation_offset_from_relative_direction(
+                                start=self.identifier_to_pivot(parity_group.ancilla_id),
+                                end=self.identifier_to_pivot(parity_data_qubit_id),
+                                mean_relative_coordinates=mean_relative_coordinates,
+                            ) + 45,
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_z,
+                        )
+                        result.append(draw_element)
+
         for parity_group in self.connectivity.parity_group_z:
             ancilla_coordinates: Vec2D = self.identifier_to_pivot(identifier=parity_group.ancilla_id)
             relative_coordinates: List[Vec2D] = [
@@ -136,7 +177,7 @@ class VisualConnectivityDescription:
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -144,11 +185,26 @@ class VisualConnectivityDescription:
                         style_settings=StyleManager.read_config().plaquette_style_z,
                     )
                 )
+                # Process unique data-qubit stabilizer type plaquettes
+                for parity_data_qubit_id in parity_group.data_ids:
+                    stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                    if stabilizer_type == StabilizerType.STABILIZER_Z:
+                        continue
+                    draw_element = RectanglePlaquette(
+                        pivot=(self.identifier_to_pivot(parity_data_qubit_id) + self.identifier_to_pivot(parity_group.ancilla_id)) * 0.5,
+                        width=0.5 * diagonal_spacing,
+                        height=0.5 * diagonal_spacing,
+                        rotation=self.identifier_to_rotation(parity_group),
+                        alignment=TransformAlignment.MID_CENTER,
+                        style_settings=StyleManager.read_config().plaquette_style_x,
+                    )
+                    result.append(draw_element)
+
             if len(parity_group.data_ids) == 2:
                 if mean_center:
                     result.append(
                         DiagonalPlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -156,10 +212,16 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_z,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        raise NotImplementedError(f"Unique data-qubit stabilizer visualization not yet supported for diagonal stabilizers.")
                 else:
                     result.append(
                         TrianglePlaquette(
-                            pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                            pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                             width=diagonal_spacing,
                             height=diagonal_spacing,
                             rotation=self.identifier_to_rotation(parity_group),
@@ -167,18 +229,37 @@ class VisualConnectivityDescription:
                             style_settings=StyleManager.read_config().plaquette_style_z,
                         )
                     )
+                    # Process unique data-qubit stabilizer type plaquettes
+                    for parity_data_qubit_id in parity_group.data_ids:
+                        stabilizer_type: StabilizerType = parity_group.get_stabilizer_type(parity_data_qubit_id)
+                        if stabilizer_type == StabilizerType.STABILIZER_Z:
+                            continue
+                        triangle_scalar: float = 1 / math.sqrt(2)
+                        draw_element = TrianglePlaquette(
+                            pivot=mean_relative_coordinates + self.identifier_to_pivot(parity_group.ancilla_id),
+                            width=triangle_scalar * diagonal_spacing,
+                            height=triangle_scalar * diagonal_spacing,
+                            rotation=self.get_rotation_offset_from_relative_direction(
+                                start=self.identifier_to_pivot(parity_group.ancilla_id),
+                                end=self.identifier_to_pivot(parity_data_qubit_id),
+                                mean_relative_coordinates=mean_relative_coordinates,
+                            ) + 45,
+                            alignment=TransformAlignment.MID_CENTER,
+                            style_settings=StyleManager.read_config().plaquette_style_x,
+                        )
+                        result.append(draw_element)
         return result
 
     def get_element_components(self) -> List[IDrawComponent]:
         result: List[IDrawComponent] = []
         for qubit_id in self.connectivity.qubit_ids:
             result.append(DotComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                pivot=self.identifier_to_pivot(qubit_id),
                 alignment=TransformAlignment.MID_CENTER,
             ))
             if self.include_element_labels:
                 result.append(TextComponent(
-                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    pivot=self.identifier_to_pivot(qubit_id),
                     text=qubit_id.id,
                     alignment=TransformAlignment.MID_CENTER,
                 ))
@@ -188,8 +269,8 @@ class VisualConnectivityDescription:
         result: List[IDrawComponent] = []
         for edge_id in self.connectivity.edge_ids:
             result.append(LineComponent(
-                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]) + self.pivot,
-                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]) + self.pivot,
+                pivot0=self.identifier_to_pivot(edge_id.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(edge_id.qubit_ids[1]),
                 alignment=TransformAlignment.MID_CENTER,
             ))
         return result
@@ -197,15 +278,15 @@ class VisualConnectivityDescription:
     def get_operation_components(self) -> List[IDrawComponent]:
         park_components: List[IDrawComponent] = [
             ParkingComponent(
-                pivot=self.identifier_to_pivot(identifier=operation.identifier) + self.pivot,
+                pivot=self.identifier_to_pivot(identifier=operation.identifier),
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.park_operations
         ]
         gate_components: List[IDrawComponent] = [
             GateOperationComponent(
-                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]) + self.pivot,
-                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]) + self.pivot,
+                pivot0=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[0]),
+                pivot1=self.identifier_to_pivot(identifier=operation.identifier.qubit_ids[1]),
                 alignment=TransformAlignment.MID_CENTER,
             )
             for operation in self.gate_sequence.gate_operations
@@ -214,28 +295,12 @@ class VisualConnectivityDescription:
 
     def identifier_to_pivot(self, identifier: IQubitID) -> Vec2D:
         """:return: Pivot based on qubit identifier."""
-        # Surface-17 layout
-        map_qubits: Dict[IQubitID, Vec2D] = {
-            QubitIDObj('Z3'): Vec2D(-2, -1) * self.layout_spacing,
-            QubitIDObj('D9'): Vec2D(0, 2) * self.layout_spacing,
-            QubitIDObj('X4'): Vec2D(-1, 2) * self.layout_spacing,
-            QubitIDObj('D8'): Vec2D(-1, 1) * self.layout_spacing,
-            QubitIDObj('Z4'): Vec2D(0, 1) * self.layout_spacing,
-            QubitIDObj('D6'): Vec2D(1, 1) * self.layout_spacing,
-            QubitIDObj('D7'): Vec2D(-2, 0) * self.layout_spacing,
-            QubitIDObj('X3'): Vec2D(-1, 0) * self.layout_spacing,
-            QubitIDObj('D5'): Vec2D(0, 0) * self.layout_spacing,
-            QubitIDObj('X2'): Vec2D(1, 0) * self.layout_spacing,
-            QubitIDObj('D3'): Vec2D(2, 0) * self.layout_spacing,
-            QubitIDObj('D4'): Vec2D(-1, -1) * self.layout_spacing,
-            QubitIDObj('Z1'): Vec2D(0, -1) * self.layout_spacing,
-            QubitIDObj('D2'): Vec2D(1, -1) * self.layout_spacing,
-            QubitIDObj('X1'): Vec2D(1, -2) * self.layout_spacing,
-            QubitIDObj('Z2'): Vec2D(2, 1) * self.layout_spacing,
-            QubitIDObj('D1'): Vec2D(0, -2) * self.layout_spacing,
-        }
-        if identifier in map_qubits:
-            return map_qubits[identifier].rotate(np.deg2rad(self.rotation)) + self.pivot
+        if hasattr(self.connectivity, 'get_qubit_coordinates'):
+            try:
+                coord = self.connectivity.get_qubit_coordinates(identifier)
+                return (coord * self.layout_spacing).rotate(np.deg2rad(self.rotation)) + self.pivot
+            except Exception:
+                return self.pivot
         return self.pivot  # Default
 
     def identifier_to_rotation(self, identifier: Union[IQubitID, IParityGroup]) -> float:
@@ -263,11 +328,32 @@ class VisualConnectivityDescription:
             x=np.mean([v.x for v in relative_coordinates]),
             y=np.mean([v.y for v in relative_coordinates]),
         )
+        rotation_offset += self.get_rotation_offset_from_relative_direction(
+            start=relative_coordinates[0],
+            end=relative_coordinates[1],
+            mean_relative_coordinates=mean_relative_coordinates,
+        )
+
+        if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
+            return self.rotation + rotation_offset
+        return self.rotation  # default
+    # endregion
+
+    @staticmethod
+    def get_rotation_offset_from_relative_direction(start: Vec2D, end: Vec2D, mean_relative_coordinates: Vec2D) -> float:
+        """
+        :param start: Starting pivot of line from which we want to determine the rotation offset.
+        :param end: Ending pivot of line from which we want to determine the rotation offset.
+        :param mean_relative_coordinates: Relative mean coordinate of all data qubits compared to ancilla qubit.
+            Needed to distinguish between (triangle) weight-2 and (diagonal) wheight-2 stabilizers.
+        :return: Rotation offset [degree].
+        """
+        rotation_offset: float = 0
+        absolute_tolerance: float = 1e-9
         mean_center: bool = all(np.isclose(mean_relative_coordinates.to_vector(), Vec2D(0.0, 0.0).to_vector()))
 
-        absolute_tolerance: float = 1e-9
         if mean_center:  # Weight-2 diagonal
-            line = Line2D(start=relative_coordinates[0], end=relative_coordinates[1])
+            line = Line2D(start=start, end=end)
             slope = (line.end.y - line.start.y) / (line.end.x - line.start.x)
             if math.isclose(slope, +1.0, abs_tol=absolute_tolerance):
                 pass
@@ -282,11 +368,7 @@ class VisualConnectivityDescription:
                 rotation_offset += 0
             elif mean_relative_coordinates.x < 0.0 and math.isclose(mean_relative_coordinates.y, 0.0, abs_tol=absolute_tolerance):
                 rotation_offset += 180
-
-        if identifier.ancilla_id in self.connectivity.ancilla_qubit_ids:
-            return self.rotation + rotation_offset
-        return self.rotation  # default
-    # endregion
+        return rotation_offset
 
 
 @dataclass(frozen=True)
@@ -313,7 +395,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -324,7 +406,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 2:
                 result.append(
                     TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -336,7 +418,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 4:
                 result.append(
                     RectanglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -347,7 +429,7 @@ class AllGreyVisualConnectivityDescription(VisualConnectivityDescription):
             if len(parity_group.data_ids) == 2:
                 result.append(
                     TrianglePlaquette(
-                        pivot=self.identifier_to_pivot(parity_group.ancilla_id) + self.pivot,
+                        pivot=self.identifier_to_pivot(parity_group.ancilla_id),
                         width=diagonal_spacing,
                         height=diagonal_spacing,
                         rotation=self.identifier_to_rotation(parity_group),
@@ -384,7 +466,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
                 background_color = self.element_highlight_color_overwrite
 
             result.append(DotComponent(
-                pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                pivot=self.identifier_to_pivot(qubit_id),
                 alignment=TransformAlignment.MID_CENTER,
                 style_settings=ElementStyleSettings(
                     background_color=background_color,
@@ -395,7 +477,7 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
             ))
             if self.include_element_labels or (self.include_gate_sequence_labels and qubit_id in self.gate_sequence.qubit_ids):
                 result.append(TextComponent(
-                    pivot=self.identifier_to_pivot(qubit_id) + self.pivot,
+                    pivot=self.identifier_to_pivot(qubit_id),
                     text=qubit_id.id,
                     alignment=TransformAlignment.MID_CENTER,
                 ))
@@ -404,8 +486,18 @@ class StabilizerGroupVisualConnectivityDescription(VisualConnectivityDescription
 
 
 def plot_layout_description(description: VisualConnectivityDescription, **kwargs) -> IFigureAxesPair:
+    # Calculate span to adapt figure size automatically
+    x_coords = [description.identifier_to_pivot(qubit_id).x for qubit_id in description.connectivity.qubit_ids]
+    y_coords = [description.identifier_to_pivot(qubit_id).y for qubit_id in description.connectivity.qubit_ids]
+    x_span = (max(x_coords) - min(x_coords)) if x_coords else 5
+    y_span = (max(y_coords) - min(y_coords)) if y_coords else 5
+    
+    # Use a base scaling factor to maintain text-to-circle proportion
+    # Default Surface-17 size is roughly span=4 -> figure_size=5. So factor = 1.25.
+    default_fig_size = (x_span * 1.25 + 1.0, y_span * 1.25 + 1.0)
+
     # Data allocation
-    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, (5, 5))
+    kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = kwargs.get(SubplotKeywordEnum.FIGURE_SIZE.value, default_fig_size)
     kwargs[SubplotKeywordEnum.AXES_FORMAT.value] = kwargs.get(SubplotKeywordEnum.AXES_FORMAT.value, CircuitAxesFormat())
     kwargs[SubplotKeywordEnum.LABEL_FORMAT.value] = LabelFormat(x_label='', y_label='')
     fig, ax = construct_subplot(**kwargs)
@@ -423,8 +515,11 @@ def plot_layout_description(description: VisualConnectivityDescription, **kwargs
         draw_component.draw(axes=ax)
 
     ax.set_aspect('equal')
-    ax.set_xlim([-3, 3])
-    ax.set_ylim([-3, 3])
+    ax.autoscale(enable=True, axis='both', tight=True)
+    ax.margins(0.01)
+    ax.relim()
+    ax.autoscale_view()
+    fig.tight_layout()
     return fig, ax
 
 
@@ -437,7 +532,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
 
     for i, ax in enumerate(axes):
         descriptor: VisualConnectivityDescription = VisualConnectivityDescription(
-            connectivity=Surface17Layer(),
+            connectivity=description.background_surface_layer,
             gate_sequence=description.get_gate_sequence_at_index(i),
             layout_spacing=1.0
         )
@@ -446,7 +541,7 @@ def plot_gate_sequences(description: IGenericSurfaceCodeLayer, **kwargs) -> IFig
     return fig, axes[0]
 
 
-def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: ISurfaceCodeLayer = Surface17Layer(), **kwargs) -> IFigureAxesPair:
+def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLayer, include_element_labels: bool = True, include_gate_sequence_element_labels: bool = True, connectivity: Optional[ISurfaceCodeLayer] = None, **kwargs) -> IFigureAxesPair:
     """
     Constructs a similar gate sequence plot as 'plot_gate_sequences'.
     However, the gate-sequence info is taken from description parameter
@@ -456,8 +551,12 @@ def plot_stabilizer_specific_gate_sequences(description: IGenericSurfaceCodeLaye
     :param kwargs: Keyword arguments passed to figure constructor.
     :param include_element_labels: Boolean to enable or disable element label text.
     :param include_gate_sequence_element_labels: Boolean to enable or disable (gate sequence only) element label text.
+    :param connectivity: Optional connectivity layer to use as background. If None, uses description.background_surface_layer.
     :return: Figure and Axes pair.
     """
+    if connectivity is None:
+        connectivity = description.background_surface_layer
+
     sequence_count: int = description.gate_sequence_count
     kwargs[SubplotKeywordEnum.FIGURE_SIZE.value] = (5 * sequence_count, 5)
     fig, axes = construct_subplot(ncols=sequence_count, **kwargs)

@@ -19,6 +19,7 @@ from qce_circuit.structure.intrf_circuit_operation import (
 from qce_circuit.structure.intrf_circuit_operation_composite import (
     ICircuitCompositeOperation,
 )
+from qce_circuit.structure.intrf_circuit_annotation import CircuitAnnotation
 from qce_circuit.structure.intrf_acquisition_operation import (
     AcquisitionTag,
 )
@@ -44,8 +45,8 @@ class InitialStateEnum(Enum):
     """Enum class, containing different initial state options. Mostly for cosmetic purposes."""
     ZERO = '0'
     ONE = '1'
-    PLUS = '+'
-    MINUS = '-'
+    PLUS = r'\mathrm{+}'
+    MINUS = r'\mathrm{-}'
     PLUS_I = '+i'
     MINUS_I = '-i'
 
@@ -55,6 +56,7 @@ class CodeDimension(Enum):
     """Enum class, describing code dimensions."""
     REPETITION_CODE = "1D"
     SURFACE_CODE = "2D"
+    STABILITY_CODE = "stability"
 
 
 @dataclass(frozen=True)
@@ -91,11 +93,11 @@ class InitialStateContainer(Generic[T]):
         # Maps initial state to binary
         to_bit_conversion: Dict[InitialStateEnum, int] = {
             InitialStateEnum.ZERO: 0,
-            InitialStateEnum.MINUS: 0,
-            InitialStateEnum.MINUS_I: 0,
+            InitialStateEnum.PLUS: 0,
+            InitialStateEnum.PLUS_I: 0,
             InitialStateEnum.ONE: 1,
-            InitialStateEnum.PLUS: 1,
-            InitialStateEnum.PLUS_I: 1,
+            InitialStateEnum.MINUS: 1,
+            InitialStateEnum.MINUS_I: 1,
         }
         return np.asarray([to_bit_conversion[self.initial_states[index]] for index in sorted_indices])
 
@@ -236,6 +238,12 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     def acquisition_registry(self) -> AcquisitionRegistry:
         """:return: Acquisition Registry."""
         raise InterfaceMethodException
+
+    @property
+    @abstractmethod
+    def annotations(self) -> List['CircuitAnnotation']:
+        """:return: Array-like of circuit annotations."""
+        raise InterfaceMethodException
     # endregion
 
     # region Interface Methods
@@ -256,6 +264,11 @@ class IDeclarativeCircuit(IDurationComponent, IIndexKernelComponent, metaclass=A
     @abstractmethod
     def add_operation(self, operation: ICircuitOperation) -> 'ICircuitOperation':
         """:return: Added operation. Adds operation to circuit."""
+        raise InterfaceMethodException
+
+    @abstractmethod
+    def add_annotation(self, annotation: 'CircuitAnnotation') -> 'IDeclarativeCircuit':
+        """:return: Self. Adds annotation to circuit."""
         raise InterfaceMethodException
 
     @abstractmethod
