@@ -131,7 +131,7 @@ class CircuitAnnotationTestCase(unittest.TestCase):
         circuit = DeclarativeCircuit(nr_qubits=2)
         op_a = circuit.add(Rx180(qubit_index=0))
         op_b = circuit.add(Rx180(qubit_index=1, relation=RelationLink(op_a, RelationType.JOINED_START)))
-        op_c = circuit.add(Rx90(qubit_index=0, relation=RelationLink(op_a, RelationType.FOLLOWED_BY)))
+        circuit.add(Rx90(qubit_index=0, relation=RelationLink(op_a, RelationType.FOLLOWED_BY)))
 
         circuit.add_annotation(CircuitAnnotation(
             operations=[op_a, op_b],

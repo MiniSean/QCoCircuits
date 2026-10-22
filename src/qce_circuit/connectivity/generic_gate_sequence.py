@@ -4,7 +4,7 @@
 import warnings
 import math
 from abc import ABC, ABCMeta, abstractmethod
-from typing import List, Union, Optional, Dict
+from typing import List, Union, Optional, Dict, Tuple
 from qce_circuit.utilities.custom_exceptions import (
     ElementNotIncludedException,
     InterfaceMethodException,

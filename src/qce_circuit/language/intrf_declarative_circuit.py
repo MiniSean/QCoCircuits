@@ -45,8 +45,8 @@ class InitialStateEnum(Enum):
     """Enum class, containing different initial state options. Mostly for cosmetic purposes."""
     ZERO = '0'
     ONE = '1'
-    PLUS = '\mathrm{+}'
-    MINUS = '\mathrm{-}'
+    PLUS = r'\mathrm{+}'
+    MINUS = r'\mathrm{-}'
     PLUS_I = '+i'
     MINUS_I = '-i'
 

@@ -67,7 +67,6 @@ class SurfaceCodeZXXZTestCase(unittest.TestCase):
 
         # In ZXXZ Surface-17, weight-4 ancillas must contain BOTH X and Z stabilizers
         weight_4_ancillas = [QubitIDObj('X2'), QubitIDObj('X3'), QubitIDObj('Z1'), QubitIDObj('Z4')]
-        all_zxxz_groups = self.zxxz_code.parity_group_x + self.zxxz_code.parity_group_z
 
         for ancilla_id in weight_4_ancillas:
             pg: IParityGroup = self.zxxz_code.get_parity_group(ancilla_id)[0]
